@@ -407,7 +407,7 @@ app = workflow.compile()
 > [!CAUTION]
 > Các quy tắc bắt buộc tuân thủ — vi phạm có thể dẫn đến **disqualification**:
 
-1. **KHÔNG** gọi bất kỳ external LLM API nào (OpenAI, Anthropic, Google)
+1. **KHÔNG** sử dụng bất kỳ closed-source model nào (GPT, Claude, Gemini...) — kể cả gọi API lẫn chạy local. Chỉ được dùng **open-source LLM ≤ 8B** tham số. Vi phạm → **disqualification**
 2. **KHÔNG** sử dụng field `idx` trong codebase — field này không tồn tại trong API schema
 3. `answer` và `explanation` là **bắt buộc** — không bao giờ trả response thiếu 2 field này
 4. Luôn wrap LLM calls trong `try/except` — API endpoint không được phép crash
@@ -417,3 +417,4 @@ app = workflow.compile()
 8. **Không chạy song song** `transformers` và `vLLM` trong cùng process — chọn một backend qua `configs/config.yaml`
 9. Mọi Solver đều phải trả về `SolverResult` struct trước khi truyền cho Explainer Agent — không truyền raw dict tùy tiện
 10. Mọi request phải hoàn thành trong **30 giây** — thiết lập `asyncio.timeout(30)` ở API Gateway
+11. **Phải công khai mọi external dataset** sử dụng để fine-tune LLM hoặc Symbolic Engine. Mọi nguồn dữ liệu bên ngoài phải được khai báo rõ ràng trong tài liệu. Giấu nguồn dữ liệu → **disqualification**
