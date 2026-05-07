@@ -79,10 +79,7 @@ EXACT2026-NeuroSymbolic-QA/
 └── docs/                 # 📚 [DOCUMENTATION] — Tài liệu kỹ thuật và nghiên cứu
     ├── SYSTEM.md         #     🏗️ SSOT (Single Source of Truth) — mô tả toàn bộ kiến trúc pipeline,
     │                     #        state schema, tech stack, fallback strategy, API schema, dev rules
-    ├── CONTEXT.md        #     🎯 Bối cảnh cuộc thi EXACT 2026 — quy định, timeline, ràng buộc
-    ├── APPROACHES.md     #     💡 Phân tích các hướng tiếp cận — so sánh pipeline strategies
-    ├── SETUP.md          #     🛠️ Hướng dẫn cài đặt môi trường — Python, GPU, model download
-    └── SKILLS.md         #     🎓 Tài liệu skill cho AI agent — hướng dẫn phân tích lỗi pipeline
+    └── CONTEXT.md        #     🎯 Bối cảnh cuộc thi EXACT 2026 — quy định, timeline, ràng buộc
 ```
 
 ---
