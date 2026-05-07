@@ -10,5 +10,5 @@ checkpoints/
 .pytest_cache/
 .ruff_cache/
 docs/SKILLS.md
-docs/PIPELINE.md
-docs/RESEARCH.md
+docs/APPROACHES.md
+docs/SETUP.md

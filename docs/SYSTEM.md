@@ -63,9 +63,9 @@
    ┌────────────────────────┐                        │
 4a │ LOGIC EVALUATOR NODE   │                        │
    │ Kiểm tra cú pháp FOL   │                        │
-   │ Lỗi → Loop về ③a       │                        ▼
+   │ Nếu lỗi → Loop về 3a   │                        ▼
    │   (tối đa 3 lần)       │               ┌────────────────────────────┐
-   │ Đúng → tiếp tục ↓      │          4b   │ FORMULA RAG / EXPERT NODE  │
+   │ Nếu đúng → tiếp tục ↓  │          4b   │ FORMULA RAG / EXPERT NODE  │
    └────────┬───────────────┘               │ Truy xuất công thức phù    │
             │                               │ hợp từ Vector DB (FAISS)   │
             ▼                               └────────┬───────────────────┘
@@ -137,7 +137,7 @@ def classify_query(question: str, premises: list[str]) -> Literal["type1", "type
 | 2 | Router Agent | `question`, `premises` | `query_type`: "type1" / "type2" | Default → type1 nếu không xác định |
 | 3a | Text Parser Agent | `premises-NL` (list[str]) | FOL list (list[str]) | Dùng `premises-NL` thô làm context |
 | 3b | Physics Parser Agent | `question` (str) | `{given, find, domain, formulas}` | LLM tự suy luận với CoT prompt |
-| 4a | Logic Evaluator | FOL list | FOL đã validate | Loop về ③a (max 3 lần), rồi fallback RAG |
+| 4a | Logic Evaluator | FOL list | FOL đã validate | Loop về 3a (max 3 lần), rồi fallback RAG |
 | 4b | Formula RAG | `domain`, `formulas` | Công thức chính xác từ Vector DB | Dùng công thức LLM đề xuất |
 | 5a | Z3 Solver | FOL validated + options | `{answer, supporting_premises, proof_steps}` | RAG + LLM reasoning (timeout > 5s) |
 | 5b | SymPy Solver | `{given, find, formulas}` | `{answer, unit, steps}` | LLM tự tính + confidence = 0.5 |
@@ -179,7 +179,7 @@ class PipelineState(TypedDict):
 
 ### Interface trung gian — SolverResult
 
-Để Explainer Agent (⑦) không cần biết kết quả đến từ track nào, cả Z3 và SymPy đều phải trả về cùng một struct trước khi truyền xuống:
+Để Explainer Agent (7) không cần biết kết quả đến từ track nào, cả Z3 và SymPy đều phải trả về cùng một struct trước khi truyền xuống:
 
 ```python
 from typing import TypedDict, Optional, Literal
@@ -241,7 +241,7 @@ Explainer Agent nhận `SolverResult` và sinh `explanation` mà không cần if
 
 | Thư viện / Tool | Vai trò trong pipeline | Bước sử dụng |
 |-----------------|----------------------|---------------|
-| **Python logging** (JSON format) | Ghi log mỗi request: question, type, answer, confidence, có FOL/CoT hay không — phục vụ debug và demo live | Toàn bộ pipeline |
+| **Python logging** (JSON format) | Ghi log mỗi request: question, type, answer, confidence, có FOL/CoT hay không — phục vụ debug và demo live. Bắt buộc log thêm: fol_retries (số lần loop 4a), fallback_triggered (True/False), z3_timeout (True/False), solver_source ("z3"/"sympy"/"llm_fallback") — các field này là input cho /exact-error-analysis skill | Toàn bộ pipeline |
 | **YAML config** (`configs/config.yaml`) | Cấu hình mặc định của hệ thống: model name, timeout, temperature... Được commit lên Git, dùng chung cho cả team | Toàn bộ |
 | **`.env`** | Cấu hình riêng từng máy (device, model path...). Ghi đè lên config.yaml. **Không** commit lên Git | Toàn bộ |
 
