@@ -11,8 +11,8 @@ Competition timeline: Registration Apr 10–May 10, active competition May 5–3
 ## Setup
 
 ```bash
-python -m venv venv
-source venv/Scripts/activate  # Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/Scripts/activate  # Windows: .venv\Scripts\activate
 pip install fastapi uvicorn z3-solver sympy transformers torch peft bitsandbytes \
     trl sentence-transformers faiss-cpu langchain pytest python-dotenv pyyaml
 ```
@@ -23,13 +23,13 @@ Copy `.env.example` to `.env` and set `LLM_MODEL_NAME`, `LLM_MODEL_PATH`, `API_H
 
 ```bash
 # Start API server
-uvicorn exact2026.api.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Run all tests
 pytest tests/ -v
 
 # Run a single test file
-pytest tests/test_type1_pipeline.py -v
+pytest tests/test_type1.py -v
 
 # Run tests matching a keyword
 pytest tests/ -k "type1" -v
@@ -51,22 +51,47 @@ Request → Physics Parser (LLM) → SymPy Solver (symbolic math) → CoT Builde
 ```
 Covers circuits and electrostatics. SymPy handles numerical/symbolic computation; LLM extracts variables and narrates the solution.
 
+**Type Router logic** (`api/router.py`):
+1. If `premises` list is non-empty → **Type 1**
+2. If physics keywords found in question → **Type 2**
+3. Default fallback → **Type 1**
+
 **Fallback strategy**: if Z3/SymPy fails, fall back to LLM-only generation. Log the failure and include a lower confidence score.
 
-## Planned Project Structure
+## Project Structure
 
 ```
-exact2026/
-├── api/           # FastAPI app, request/response schemas
-├── pipeline/
-│   ├── type1/     # FOL parsing, Z3 integration, explainer
-│   └── type2/     # Physics parsing, SymPy integration, CoT builder
-├── llm/           # Model loading, inference wrapper
-├── data/          # Dataset loaders, preprocessing
-├── configs/       # config.yaml, prompt templates
-tests/
+api/
+├── main.py          # FastAPI app — /query and /health endpoints
+├── schemas.py       # QueryRequest / QueryResponse Pydantic models
+├── router.py        # Type 1/2 classifier
+└── logger.py        # JSON log formatter
+pipeline/
+├── type1/
+│   ├── nl_to_fol.py   # NL → FOL translation (stub)
+│   ├── z3_solver.py   # Z3 integration (stub)
+│   └── explainer.py   # Explanation generator (stub)
+└── type2/
+    ├── physics_parser.py  # Variable extraction (stub)
+    ├── sympy_solver.py    # SymPy solver (stub)
+    └── cot_builder.py     # CoT narrator (stub)
+llm/
+├── loader.py      # Model loading (stub)
+└── inference.py   # Inference wrapper (stub)
 configs/
+└── config.yaml    # LLM, pipeline, API, logging config
+data/
+├── train/
+└── eval/
+docs/
+└── SYSTEM.md      # Full architecture reference (430+ lines)
+tests/
+├── test_api.py
+├── test_type1.py
+└── test_type2.py
 ```
+
+**Implementation status**: API scaffolding and config complete. All pipeline, LLM, and test files are stubs — not yet implemented.
 
 ## API Response Schema
 
@@ -74,13 +99,13 @@ The competition API expects JSON with these fields:
 
 ```python
 {
-    "answer": str,        # required
-    "explanation": str,   # required
+    "answer": str,           # required
+    "explanation": str,      # required
     # optional extended fields:
-    "fol": str,           # first-order logic formula (Type 1)
-    "cot": str,           # chain-of-thought steps
-    "premises": list,     # supporting premises used
-    "confidence": float,  # 0.0–1.0
+    "fol": str,              # first-order logic formula (Type 1)
+    "cot": list[str],        # chain-of-thought steps
+    "premises": list[str],   # supporting premises used
+    "confidence": float,     # 0.0–1.0
 }
 ```
 
@@ -105,3 +130,28 @@ huggingface-cli download Qwen/Qwen2.5-7B-Instruct --local-dir models/qwen2.5-7b
 ```
 
 Set `LLM_MODEL_PATH` in `.env` to point to the downloaded directory.
+
+## Config Reference (`configs/config.yaml`)
+
+```yaml
+llm:
+  model_name: "Qwen/Qwen2.5-7B-Instruct"
+  model_path: "./models/qwen2.5-7b"
+  device: "cuda"        # cuda | cpu | mps
+  max_new_tokens: 1024
+  temperature: 0.1
+  do_sample: false      # deterministic output preferred for competition
+
+pipeline:
+  z3_timeout: 5         # seconds before Z3 fallback
+  sympy_timeout: 10
+  retry_attempts: 2
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+
+logging:
+  level: "INFO"
+  format: "json"
+```
