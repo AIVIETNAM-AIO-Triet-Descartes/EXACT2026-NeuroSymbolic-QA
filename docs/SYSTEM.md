@@ -80,7 +80,16 @@
             │                                        │
             │                                        ▼
             │                               ┌────────────────────────────┐
-            │                          6b   │ COT BUILDER                │
+            │                          6b   │ SELF-VERIFIER NODE         │
+            │                               │ Substitute kết quả ngược   │
+            │                               │ vào phương trình gốc để    │
+            │                               │ kiểm tra tính đúng đắn     │
+            │                               │ Sai → trigger fallback     │
+            │                               └────────┬───────────────────┘
+            │                                        │
+            │                                        ▼
+            │                               ┌────────────────────────────┐
+            │                          6c   │ COT BUILDER                │
             │                               │ Xây dựng Chain-of-Thought  │
             │                               │ từ các bước giải SymPy     │
             │                               └────────┬───────────────────┘
@@ -141,7 +150,8 @@ def classify_query(question: str, premises: list[str]) -> Literal["type1", "type
 | 4b | Formula RAG | `domain`, `formulas` | Công thức chính xác từ Vector DB | Dùng công thức LLM đề xuất |
 | 5a | Z3 Solver | FOL validated + options | `{answer, supporting_premises, proof_steps}` | RAG + LLM reasoning (timeout > 5s) |
 | 5b | SymPy Solver | `{given, find, formulas}` | `{answer, unit, steps}` | LLM tự tính + confidence = 0.5 |
-| 6b | CoT Builder | `parsed` + `solver_steps` | `cot: list[str]` | — |
+| 6b | Self-Verifier | `{answer, unit, given, formulas}` | `{verified: bool}` | Log warning + giảm confidence, không block pipeline |
+| 6c | CoT Builder | `parsed` + `solver_steps` | `cot: list[str]` | — |
 | 7 | Explainer Agent | Kết quả solver + question gốc | `explanation: str` | Retry 1 lần với simplified prompt |
 | 8 | Response Builder | Tất cả kết quả | JSON theo API schema | Luôn đảm bảo có `answer` + `explanation` |
 
@@ -175,6 +185,9 @@ class PipelineState(TypedDict):
     answer: Optional[str]
     explanation: Optional[str]
     confidence: Optional[float]
+
+    solver_result: Optional[SolverResult]  # Critical: unified interface cho Explainer
+    fol_retries: int                       # Critical: LangGraph retry loop cần biết đã retry bao nhiêu lần
 ```
 
 ### Interface trung gian — SolverResult
@@ -278,6 +291,99 @@ TOTAL_REQUEST_TIMEOUT = 30s  ← Budget tổng cho toàn bộ request
 
 ---
 
+## 5.1. Self-Verification — Kiểm tra tính đúng đắn của SymPy (Type 2)
+
+Sau khi SymPy tính được kết quả, **substitute ngược lại vào phương trình gốc** để xác minh. Đây là practical tip được ban tổ chức khuyến nghị tại kick-off workshop.
+
+**Cơ chế hoạt động:**
+```python
+def self_verify(answer: float, unit: str, given: dict, formula: str) -> bool:
+    """
+    Ví dụ: tính được R = 5Ω từ V=10V, I=2A
+    Substitute ngược: V/R = 10/5 = 2 → khớp I = 2A ✅
+
+    Nếu không khớp (tolerance > 1e-6) → verified = False
+    → Giảm confidence xuống 0.4, log warning
+    → Không block pipeline — vẫn trả về answer nhưng confidence thấp
+    """
+    from sympy import symbols, solve, Eq, N
+    try:
+        # Parse formula và substitute các giá trị đã biết
+        # So sánh kết quả tính ngược với given values
+        ...
+        return abs(computed - expected) < 1e-6
+    except Exception:
+        return True  # Không verify được → không penalty, tiếp tục bình thường
+```
+
+**Lưu ý quan trọng:**
+- Self-verification **không block pipeline** — nếu fail, chỉ giảm `confidence` và log, không trigger full fallback
+- Nếu verify thành công → `confidence` giữ nguyên (1.0)
+- Nếu verify thất bại → `confidence` = 0.4, log `self_verify_failed=True`
+- Nếu không verify được (formula phức tạp) → bỏ qua, `confidence` giữ nguyên
+
+---
+
+## 5.2. Fine-Tuning — Optional Optimization (sau khi có baseline)
+
+> ⚠️ **Không phải bước bắt buộc.** Chỉ thực hiện sau khi pipeline cơ bản đã chạy được và có kết quả eval từ `/exact-eval-run`.
+
+Ban tổ chức khuyến nghị: *"Fine-tune on training data to adapt the LLM to the specific question format."*
+
+**Khi nào nên fine-tune:**
+- FOL parsability rate < 70% sau khi đã tối ưu prompt hết mức
+- Physics Parser trích xuất sai biến số/đơn vị trên > 30% mẫu
+- Explanation không đúng format mong đợi của BTC
+
+**Cách tiếp cận (QLoRA):**
+```python
+# Chỉ fine-tune node có vấn đề, không fine-tune toàn bộ
+qlora_config = {
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "target_modules": ["q_proj", "v_proj"],
+    "bits": 4,
+}
+# Training data format: instruction → output theo đúng format API
+# Bắt buộc khai báo mọi external dataset dùng để fine-tune (rules cuộc thi)
+```
+
+**Thứ tự ưu tiên:**
+```
+Prompt engineering → Đo eval → Nếu chưa đủ: LoRA fine-tune node cụ thể → Đo lại
+```
+
+---
+
+## 5.3. Ensemble — Optional, High Effort
+
+> ⚠️ **Optional hoàn toàn** — chỉ xem xét nếu còn thời gian sau khi pipeline chính đã ổn định và đạt baseline tốt.
+
+Ban tổ chức đề xuất: *"Ensemble multiple approaches and select the most consistent answer."*
+
+**Ý tưởng:** Chạy song song nhiều approaches cho cùng 1 query, chọn answer xuất hiện nhiều nhất (majority vote):
+
+```
+Query
+  │
+  ├──► Approach A: Z3 Symbolic    → answer_A
+  ├──► Approach B: RAG + LLM      → answer_B
+  └──► Approach C: Pure LLM CoT   → answer_C
+                │
+                ▼
+        Majority Vote / Confidence-weighted
+                │
+                ▼
+        Final answer (answer xuất hiện nhiều nhất)
+```
+
+**Ràng buộc cần nhớ:** Tổng tham số của tất cả LLM trong ensemble **phải ≤ 8B**. Nếu dùng 1 model 7B thì không thể chạy thêm model khác song song.
+
+**Thực tế:** Với 1 model ≤ 8B, ensemble khả thi nhất là chạy **cùng 1 model với nhiều prompt khác nhau** (temperature sampling) rồi majority vote — không cần nhiều model.
+
+---
+
 ## 6. API Schema
 
 ### Request
@@ -335,6 +441,7 @@ workflow.add_node("z3_solver",       z3_solver_node)
 workflow.add_node("physics_parser",  physics_parser_agent)
 workflow.add_node("formula_rag",     formula_rag_node)
 workflow.add_node("sympy_solver",    sympy_solver_node)
+workflow.add_node("self_verifier",    self_verifier_node)
 workflow.add_node("cot_builder",     cot_builder_node)
 workflow.add_node("explainer",       explainer_agent)
 workflow.add_node("response_builder",response_builder_node)
@@ -360,8 +467,9 @@ workflow.add_edge("z3_solver", "explainer")
 # Track 2: physics_parser → formula_rag → sympy_solver → cot_builder
 workflow.add_edge("physics_parser", "formula_rag")
 workflow.add_edge("formula_rag",    "sympy_solver")
-workflow.add_edge("sympy_solver",   "cot_builder")
-workflow.add_edge("cot_builder",    "explainer")
+workflow.add_edge("sympy_solver",    "self_verifier")
+workflow.add_edge("self_verifier",   "cot_builder")
+workflow.add_edge("cot_builder",     "explainer")
 
 # Shared ending
 workflow.add_edge("explainer",       "response_builder")
