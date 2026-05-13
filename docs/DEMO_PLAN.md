@@ -65,10 +65,10 @@ class PipelineState(TypedDict):
 
 ```
 Người 1 ──────────────────────────────────► API Gateway + Router
-Người 2 ──────────────────────────────────► Type 1 Track (③a → ④a → ⑤a)
-Người 3 ──────────────────────────────────► Type 2 Track (③b → ④b → ⑤b → ⑥b)
+Người 2 ──────────────────────────────────► Type 1 Track (③a → ④a → ⑤a) + Explainer Type 1
+Người 3 ──────────────────────────────────► Type 2 Track (③b → ④b → ⑤b → ⑥b) + Explainer Type 2
 Người 4 ──────────────────────────────────► LLM Loader + Inference Wrapper
-Người 5 ──────────────────────────────────► Explainer + Response Builder + Integration
+Người 5 ──────────────────────────────────► Response Builder + Integration
                                                               ▲
                                                   Điểm hội tụ cuối cùng
 ```
@@ -112,10 +112,10 @@ async def handle_query(request: QueryRequest):
 
 ---
 
-## Người 2 — Type 1 Track
+## Người 2 — Type 1 Track + Explainer Type 1
 
 **Phụ thuộc:** `call_llm()` từ Người 4 — dùng `call_llm_mock()` trước khi Người 4 xong.
-**Unblocks:** Người 5 (cần `SolverResult` từ Type 1 để build Explainer).
+**Unblocks:** Người 5 (cần `SolverResult` + `explain_type1()` từ Type 1 để wire pipeline).
 
 ### Việc cần làm
 
@@ -123,7 +123,7 @@ async def handle_query(request: QueryRequest):
 |---|---|---|
 | NL → FOL | `pipeline/type1/nl_to_fol.py` | Gọi LLM, nhận `premises_nl`, trả về `list[str]` FOL |
 | FOL Validator | `pipeline/type1/z3_solver.py` | Parse FOL, chạy Z3, trả về `SolverResult` |
-| Interface Explainer | `pipeline/type1/explainer.py` | Chỉ định nghĩa function signature, Người 5 implement |
+| Explainer Type 1 | `pipeline/type1/explainer.py` | Implement `explain_type1(solver_result, question) -> str` |
 
 ### Prompt tối giản (chưa cần tối ưu)
 
@@ -158,13 +158,15 @@ return SolverResult(
 - [ ] Khi Z3 timeout hoặc parse fail → trả về `SolverResult` với `source="llm_fallback"`, không raise exception
 - [ ] Toàn bộ Type 1 track chạy end-to-end: `premises_nl` → `SolverResult` — dù answer sai cũng được
 - [ ] Không có unhandled exception khi input là string rỗng hoặc premises list rỗng
+- [ ] `explain_type1(solver_result, question) -> str` trả về string không rỗng
+- [ ] `explain_type1` không crash khi `solver_result["steps"]` là list rỗng
 
 ---
 
-## Người 3 — Type 2 Track
+## Người 3 — Type 2 Track + Explainer Type 2
 
 **Phụ thuộc:** `call_llm()` từ Người 4 — dùng `call_llm_mock()` trước khi Người 4 xong.
-**Unblocks:** Người 5 (cần `SolverResult` từ Type 2 để build Explainer).
+**Unblocks:** Người 5 (cần `SolverResult` + `explain_type2()` từ Type 2 để wire pipeline).
 
 ### Việc cần làm
 
@@ -173,6 +175,7 @@ return SolverResult(
 | Physics Parser | `pipeline/type2/physics_parser.py` | Gọi LLM, trích xuất given/find/formulas |
 | SymPy Solver | `pipeline/type2/sympy_solver.py` | Giải phương trình, trả về `SolverResult` |
 | CoT Builder | `pipeline/type2/cot_builder.py` | Format solver steps thành `list[str]` |
+| Explainer Type 2 | `pipeline/type2/explainer.py` | Implement `explain_type2(solver_result, question) -> str` |
 
 ### Prompt tối giản (chưa cần tối ưu)
 
@@ -208,6 +211,8 @@ UNIT_CONVERSIONS = {
 - [ ] Khi SymPy fail → trả về `SolverResult` với `source="llm_fallback"`, không raise exception
 - [ ] Toàn bộ Type 2 track chạy end-to-end: `question` → `SolverResult` — dù answer sai cũng được
 - [ ] Unit conversion hoạt động đúng với ít nhất: μF, kΩ, mJ, mA, kV
+- [ ] `explain_type2(solver_result, question) -> str` trả về string không rỗng
+- [ ] `explain_type2` không crash khi `solver_result["steps"]` là list rỗng
 
 ---
 
@@ -262,27 +267,31 @@ def call_llm(prompt: str, system: str = "", max_retries: int = 2) -> str:
 
 ---
 
-## Người 5 — Explainer + Response Builder + Integration
+## Người 5 — Response Builder + Integration
 
 **Phụ thuộc:** Tất cả — bắt đầu muộn hơn, nhưng có việc làm ngay từ đầu.
 **Owns:** Điểm hội tụ cuối — chịu trách nhiệm pipeline chạy end-to-end.
 
+> ✅ `pipeline/state.py` đã hoàn thành — không cần làm lại. Import trực tiếp:
+> ```python
+> from pipeline.state import SolverResult, PipelineState
+> ```
+
 ### Việc cần làm
 
-| Task | File | Phụ thuộc | Làm khi nào |
-|---|---|---|---|
-| State definitions | `pipeline/state.py` | Không ai | **Ngay đầu tiên** |
-| Logging setup | `utils/logger.py` | Không ai | **Ngay đầu tiên** |
-| Explainer Type 1 | `pipeline/type1/explainer.py` | Người 2 done | Sau khi P2 xong |
-| Explainer Type 2 | `pipeline/type2/explainer.py` | Người 3 done | Sau khi P3 xong |
-| Response Builder | `api/response_builder.py` | Schemas từ P1 | Sau khi P1 xong |
-| Wire pipeline | `api/main.py` | Tất cả done | Cuối cùng |
-| End-to-end test | `tests/test_api.py` | Wire xong | Cuối cùng |
+| Task | File | Phụ thuộc | Làm khi nào | Trạng thái |
+|---|---|---|---|---|
+| Logging setup | `api/logger.py` | Không ai | **Bắt đầu ngay** | 🔴 Chưa làm |
+| Response Builder | `api/response_builder.py` | `api/schemas.py` (✅ có mock) | **Bắt đầu ngay** | 🔴 Chưa làm |
+| Wire pipeline | `api/main.py` | Người 2, 3 done | Sau khi P2 + P3 xong | ⏳ Chờ |
+| End-to-end test | `tests/test_api.py` | Wire xong | Cuối cùng | ⏳ Chờ |
 
-### Logging Setup — `utils/logger.py`
+### File 1 — `api/logger.py` (làm trước tiên)
 
 Mỗi request phải được log đầy đủ theo JSON format (yêu cầu từ `SYSTEM.md §4.5`).
 Các node khác **chỉ import `get_logger()`** từ file này — không tự cấu hình logging riêng.
+
+**Spec cần implement** (file hiện có TODO-FIX — thiếu `ts` và chưa merge `extra`):
 
 ```python
 import logging
@@ -292,13 +301,13 @@ from datetime import datetime, timezone
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         payload = {
-            "ts":       datetime.now(timezone.utc).isoformat(),
-            "level":    record.levelname,
-            "logger":   record.name,
-            "msg":      record.getMessage(),
+            "ts":     datetime.now(timezone.utc).isoformat(),
+            "level":  record.levelname,
+            "logger": record.name,
+            "msg":    record.getMessage(),
         }
         if hasattr(record, "extra"):
-            payload.update(record.extra)
+            payload.update(record.extra)   # merge các field nghiệp vụ vào JSON
         return json.dumps(payload, ensure_ascii=False)
 
 def get_logger(name: str) -> logging.Logger:
@@ -311,28 +320,94 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 ```
 
-**Cách dùng tại mỗi node (ví dụ):**
+**Cách dùng tại `api/main.py` (cuối mỗi request — 7 field bắt buộc):**
 
 ```python
-from utils.logger import get_logger
+from api.logger import get_logger
 logger = get_logger(__name__)
 
-# Cuối mỗi request — log các field bắt buộc (SYSTEM.md §4.5)
 logger.info("request", extra={
     "extra": {
-        "question":          request.question[:80],   # truncate cho gọn
-        "query_type":        query_type,              # "type1" | "type2"
-        "answer":            solver_result["answer"],
-        "confidence":        solver_result["confidence"],
-        "solver_source":     solver_result["source"], # "z3"|"sympy"|"llm_fallback"
-        "fol_retries":       state.get("fol_retries", 0),
+        "question":           request.question[:80],
+        "query_type":         query_type,
+        "answer":             solver_result["answer"],
+        "confidence":         solver_result["confidence"],
+        "solver_source":      solver_result["source"],
+        "fol_retries":        state.get("fol_retries", 0),
         "fallback_triggered": solver_result["source"] == "llm_fallback",
-        "z3_timeout":        False,                   # set True nếu Z3 bị timeout
+        "z3_timeout":         False,
     }
 })
 ```
 
-### Prompt Explainer tối giản
+---
+
+### File 2 — `api/response_builder.py` (làm song song với logger)
+
+Đóng gói `SolverResult` + `explanation` thành `QueryResponse`.
+
+**Không cần chờ Người 1** — `api/schemas.py` đã có sẵn, và `response_builder.py` có mock nội bộ để dùng tạm:
+
+```python
+# Dùng tạm (mock nội bộ đã có trong file):
+from api.response_builder import QueryResponse
+
+# Khi Người 1 xong → chỉ đổi 1 dòng:
+from api.schemas import QueryResponse
+```
+
+**Spec `build_response` cần implement:**
+
+```python
+from pipeline.state import SolverResult
+
+def build_response(solver_result: SolverResult, explanation: str) -> QueryResponse:
+    # answer      = solver_result["answer"]
+    # confidence  = solver_result["confidence"]
+    # fol         = ", ".join(solver_result["fol"]) nếu có, else None
+    # cot         = solver_result["steps"] nếu source là "sympy", else None
+    # explanation luôn được truyền thẳng, không để rỗng
+    ...
+```
+
+**Mock `SolverResult` để test `build_response` ngay (không cần chờ P2, P3):**
+
+```python
+from pipeline.state import SolverResult
+
+mock_type1 = SolverResult(
+    answer="A", unit=None,
+    steps=["∀x (A(x) → B(x))", "A(socrates)", "∴ B(socrates)"],
+    fol=["∀x (A(x) → B(x))", "A(socrates)"],
+    source="z3", confidence=1.0,
+)
+mock_type2 = SolverResult(
+    answer="0.045", unit="J",
+    steps=["E = 0.5 * C * U^2", "E = 0.5 * 100e-6 * 30^2", "E = 0.045"],
+    fol=None, source="sympy", confidence=1.0,
+)
+
+response = build_response(mock_type1, "The conclusion follows from premise 1 and 2.")
+assert response.answer == "A"
+assert response.explanation != ""
+```
+
+---
+
+### File 3 — `api/main.py` (wire pipeline — sau khi P2 + P3 xong)
+
+**Mock explainer để wire pipeline trước khi P2, P3 deliver:**
+
+```python
+# Dùng tạm — xóa khi Người 2 và 3 deliver explainer thật
+def explain_type1(solver_result, question) -> str:
+    return f"[MOCK] Logical conclusion: {solver_result['answer']}"
+
+def explain_type2(solver_result, question) -> str:
+    return f"[MOCK] Calculated result: {solver_result['answer']} {solver_result.get('unit', '')}"
+```
+
+### Prompt Explainer tối giản (dùng khi cần fallback)
 
 ```python
 EXPLAINER_PROMPT = """Given the following solution, write a clear explanation in English.
@@ -368,14 +443,13 @@ async def handle_query(request: QueryRequest):
 
 ### Tiêu chí hoàn thành
 
-- [ ] `pipeline/state.py` với `SolverResult` và `PipelineState` được cả team review và approve — **xong trong buổi sáng Ngày 1**
-- [ ] `utils/logger.py` với `get_logger()` import được từ mọi module — **xong trong buổi sáng Ngày 1**
+- [x] `pipeline/state.py` với `SolverResult` và `PipelineState` — **đã xong**
+- [ ] `api/logger.py` với `get_logger()` import được từ mọi module — **xong trong buổi sáng Ngày 1**
 - [ ] Mỗi request log ra stdout đủ 7 field bắt buộc: `question`, `query_type`, `answer`, `confidence`, `solver_source`, `fol_retries`, `fallback_triggered`
 - [ ] Log output là **valid JSON** mỗi dòng — parse được bằng `json.loads(line)`
 - [ ] `logger.error()` được gọi trong `except` block của `handle_query` với message chứa traceback
-- [ ] `explain_type1(solver_result, question) -> str` trả về string không rỗng
-- [ ] `explain_type2(solver_result, question) -> str` trả về string không rỗng
 - [ ] `build_response(solver_result, explanation) -> QueryResponse` không bao giờ thiếu `answer` hoặc `explanation`
+- [ ] `build_response` pass với cả `mock_type1` và `mock_type2` trước khi wire thật
 - [ ] `POST /query` với câu hỏi Type 1 thật từ training data → trả về JSON có `answer` và `explanation`
 - [ ] `POST /query` với câu hỏi Type 2 thật từ training data → trả về JSON có `answer` và `explanation`
 - [ ] Pipeline không crash khi bất kỳ node nào trả về fallback result
