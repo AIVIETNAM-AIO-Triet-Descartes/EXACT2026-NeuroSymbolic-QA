@@ -150,6 +150,7 @@ def classify_query(question: str, premises: list[str]) -> Literal["type1", "type
 | 4b | Formula RAG | `domain`, `formulas` | Công thức chính xác từ Vector DB | Dùng công thức LLM đề xuất |
 | 5a | Z3 Solver | FOL validated + options | `{answer, supporting_premises, proof_steps}` | RAG + LLM reasoning (timeout > 5s) |
 | 5b | SymPy Solver | `{given, find, formulas}` | `{answer, unit, steps}` | LLM tự tính + confidence = 0.5 |
+| 5b* | Code Agent *(optional, sau demo)* | `question` (str) | `SolverResult` | Fallback về SymPy Solver truyền thống |
 | 6b | Self-Verifier | `{answer, unit, given, formulas}` | `{verified: bool}` | Log warning + giảm confidence, không block pipeline |
 | 6c | CoT Builder | `parsed` + `solver_steps` | `cot: list[str]` | — |
 | 7 | Explainer Agent | Kết quả solver + question gốc | `explanation: str` | Retry 1 lần với simplified prompt |
@@ -257,6 +258,15 @@ Explainer Agent nhận `SolverResult` và sinh `explanation` mà không cần if
 | **Python logging** (JSON format) | Ghi log mỗi request: question, type, answer, confidence, có FOL/CoT hay không — phục vụ debug và demo live. Bắt buộc log thêm: fol_retries (số lần loop 4a), fallback_triggered (True/False), z3_timeout (True/False), solver_source ("z3"/"sympy"/"llm_fallback") — các field này là input cho /exact-error-analysis skill | Toàn bộ pipeline |
 | **YAML config** (`configs/config.yaml`) | Cấu hình mặc định của hệ thống: model name, timeout, temperature... Được commit lên Git, dùng chung cho cả team | Toàn bộ |
 | **`.env`** | Cấu hình riêng từng máy (device, model path...). Ghi đè lên config.yaml. **Không** commit lên Git | Toàn bộ |
+
+### 4.6. Code Execution Sandbox (Type 2 — Optional Enhancement)
+
+> Áp dụng sau demo khi muốn nâng cấp node ⑤b. Thay thế hoặc chạy song song với SymPy Solver hiện tại.
+
+| Thư viện / Tool | Vai trò | Bước sử dụng |
+|---|---|---|
+| **RestrictedPython** | Sandbox nhẹ, chạy trong cùng process Python — block các lệnh nguy hiểm (`import os`, `open`, network calls), chỉ cho phép math/sympy operations | ⑤b Code Agent |
+| **subprocess + venv** | Sandbox nặng hơn — chạy code trong subprocess riêng với timeout, hoàn toàn isolated khỏi main process | ⑤b Code Agent (fallback nếu RestrictedPython không đủ) |
 
 ---
 
@@ -381,6 +391,124 @@ Query
 **Ràng buộc cần nhớ:** Tổng tham số của tất cả LLM trong ensemble **phải ≤ 8B**. Nếu dùng 1 model 7B thì không thể chạy thêm model khác song song.
 
 **Thực tế:** Với 1 model ≤ 8B, ensemble khả thi nhất là chạy **cùng 1 model với nhiều prompt khác nhau** (temperature sampling) rồi majority vote — không cần nhiều model.
+
+---
+
+## 5.4. Code Agent cho Type 2 — Optional Enhancement
+
+> ⚠️ **Thực hiện sau demo** — chỉ khi SymPy Solver hiện tại không đủ xử lý các bài toán phức tạp (hệ nhiều phương trình, mạch điện phức hợp). Thay thế hoặc chạy **song song** với node ⑤b hiện tại.
+
+Ban tổ chức đề xuất tại kick-off workshop: *"LLM generates Python/SymPy code for computation, execute code to get precise numerical answers."*
+
+### Cơ chế hoạt động
+
+Thay vì parse cứng input → gọi SymPy API, LLM **tự sinh Python code** rồi execute trong sandbox:
+
+```
+Physics Parser (③b)
+        │
+        ▼
+Code Agent (⑤b nâng cấp)
+        │
+        ├─► LLM sinh Python/SymPy code giải bài toán
+        │       prompt: "Write Python code using SymPy to solve: {question}"
+        │
+        ├─► Execute trong sandbox (RestrictedPython hoặc subprocess)
+        │
+        ├─► Lấy stdout làm numerical answer
+        │
+        └─► Self-Verifier (⑥b) kiểm tra kết quả như bình thường
+```
+
+### Implementation tối giản
+
+```python
+import RestrictedPython
+from RestrictedPython import compile_restricted, safe_globals
+
+CODE_GEN_PROMPT = """Write a Python script using SymPy to solve the following physics problem.
+The script must:
+1. Import only sympy and math
+2. Print ONLY the final numerical answer followed by its unit on the last line
+   Format: "ANSWER: <value> <unit>"
+3. Show intermediate calculation steps as comments
+
+Problem: {question}
+"""
+
+def code_agent_solve(question: str) -> SolverResult:
+    # Bước 1: LLM sinh code
+    raw_code = call_llm(
+        prompt=CODE_GEN_PROMPT.format(question=question),
+        system="You are a physics problem solver. Generate clean, correct Python code."
+    )
+    code = extract_code_block(raw_code)  # strip markdown fences
+
+    # Bước 2: Execute trong sandbox với timeout
+    try:
+        result = execute_sandboxed(code, timeout=10)
+        answer, unit = parse_answer_line(result.stdout)
+        steps = extract_comments_as_steps(code)
+        return SolverResult(
+            answer=answer, unit=unit, steps=steps,
+            fol=None, source="sympy", confidence=1.0
+        )
+    except (TimeoutError, SyntaxError, Exception) as e:
+        logger.warning(f"code_agent_failed: {e}")
+        # Fallback về SymPy parser truyền thống
+        return sympy_solver_fallback(question)
+
+
+def execute_sandboxed(code: str, timeout: int = 10) -> subprocess.CompletedProcess:
+    """
+    Chạy code trong subprocess riêng biệt với timeout.
+    Hoàn toàn isolated — không thể truy cập filesystem hay network.
+    """
+    return subprocess.run(
+        ["python3", "-c", code],
+        capture_output=True, text=True,
+        timeout=timeout,
+        # Không truyền env vars — giảm attack surface
+        env={"PATH": "/usr/bin:/bin"}
+    )
+```
+
+### Tích hợp vào LangGraph
+
+Không cần thêm node mới — Code Agent **thay thế bên trong node ⑤b**:
+
+```python
+def sympy_solver_node(state: PipelineState) -> PipelineState:
+    parsed = state["parsed_physics"]
+
+    # Thử Code Agent trước (linh hoạt hơn)
+    result = code_agent_solve(state["question"])
+
+    # Nếu Code Agent fail → fallback về SymPy parser truyền thống
+    if result["source"] == "llm_fallback":
+        result = sympy_solver_classic(parsed)
+
+    return {**state, "solver_result": result}
+```
+
+### So sánh với SymPy Parser truyền thống
+
+| | SymPy Parser (hiện tại) | Code Agent (nâng cấp) |
+|---|---|---|
+| **Bài đơn giản** | ✅ Nhanh, ổn định | ✅ Tốt |
+| **Hệ nhiều phương trình** | ⚠️ Cần parse phức tạp | ✅ LLM tự xử lý |
+| **Mạch điện phức hợp** | ⚠️ Khó parse | ✅ LLM viết code linh hoạt |
+| **Rủi ro sai** | Thấp (deterministic) | Trung bình (LLM có thể bug) |
+| **Cần sandbox** | ❌ Không | ✅ Bắt buộc |
+| **Khi nào dùng** | Demo + baseline | Sau demo, khi SymPy không đủ |
+
+### Quy tắc bắt buộc khi implement
+
+- **Bắt buộc dùng sandbox** — không bao giờ `exec()` hay `eval()` code LLM sinh ra trực tiếp trong main process
+- **Timeout cứng 10 giây** — code LLM có thể sinh ra infinite loop
+- **Chỉ cho phép import** `sympy`, `math`, `cmath` — block tất cả các module khác
+- **Parse stdout nghiêm ngặt** — chỉ đọc dòng `ANSWER: <value> <unit>`, ignore toàn bộ output khác
+- **Luôn có fallback** về SymPy parser truyền thống nếu Code Agent fail
 
 ---
 
@@ -526,3 +654,4 @@ app = workflow.compile()
 9. Mọi Solver đều phải trả về `SolverResult` struct trước khi truyền cho Explainer Agent — không truyền raw dict tùy tiện
 10. Mọi request phải hoàn thành trong **30 giây** — thiết lập `asyncio.timeout(30)` ở API Gateway
 11. **Phải công khai mọi external dataset** sử dụng để fine-tune LLM hoặc Symbolic Engine. Mọi nguồn dữ liệu bên ngoài phải được khai báo rõ ràng trong tài liệu. Giấu nguồn dữ liệu → **disqualification**
+12. **Khi dùng Code Agent (⑤b*):** bắt buộc chạy trong sandbox, timeout cứng 10s, chỉ cho phép import `sympy`/`math`/`cmath` — tuyệt đối không `exec()` code LLM trực tiếp trong main process
