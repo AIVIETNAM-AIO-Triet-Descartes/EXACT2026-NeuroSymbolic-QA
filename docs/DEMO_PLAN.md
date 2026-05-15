@@ -82,12 +82,12 @@ Người 5 ───────────────────────
 
 ### Việc cần làm
 
-| Task | File | Mô tả |
-|---|---|---|
-| Định nghĩa schemas | `api/schemas.py` | `QueryRequest`, `QueryResponse` Pydantic models |
-| Router logic | `api/router.py` | Phân loại type1/type2 theo premises và keyword |
-| FastAPI app | `api/main.py` | `POST /query`, `GET /health`, mock response tạm |
-| Cấu hình server | `configs/config.yaml` | host, port, timeout |
+| Task               | File                  | Mô tả                                           |
+| ------------------ | --------------------- | ----------------------------------------------- |
+| Định nghĩa schemas | `api/schemas.py`      | `QueryRequest`, `QueryResponse` Pydantic models |
+| Router logic       | `api/router.py`       | Phân loại type1/type2 theo premises và keyword  |
+| FastAPI app        | `api/main.py`         | `POST /query`, `GET /health`, mock response tạm |
+| Cấu hình server    | `configs/config.yaml` | host, port, timeout                             |
 
 ### Mock tạm để team test ngay
 
@@ -103,12 +103,12 @@ async def handle_query(request: QueryRequest):
 
 ### Tiêu chí hoàn thành
 
-- [ ] `GET /health` trả về `{"status": "ok"}` — không exception
-- [ ] `POST /query` với payload hợp lệ trả về JSON đúng schema `QueryResponse`
-- [ ] `POST /query` thiếu field `question` trả về HTTP 422, không crash server
-- [ ] Router phân loại đúng: request có `premises` → `type1`; câu hỏi chứa "calculate", "voltage", "resistance"... → `type2`
-- [ ] Router test pass trên 10 mẫu thủ công (5 type1 + 5 type2)
-- [ ] Server khởi động bằng `uvicorn api.main:app --reload` không có lỗi import
+- [x] `GET /health` trả về `{"status": "ok"}` — không exception ✅
+- [x] `POST /query` với payload hợp lệ trả về JSON đúng schema `QueryResponse` — đang trả mock, chờ wire pipeline thật
+- [x] `POST /query` thiếu field `question` trả về HTTP 422, không crash server ✅ (Pydantic validation)
+- [x] Router phân loại đúng: request có `premises` → `type1`; câu hỏi chứa "calculate", "voltage", "resistance"... → `type2` ✅
+- [x] Router test pass trên 10 mẫu thủ công (5 type1 + 5 type2) — dùng official training data
+- [x] Server khởi động bằng `uvicorn api.main:app --reload` không có lỗi import — port 8000 đang được instance khác giữ
 
 ---
 
@@ -119,10 +119,10 @@ async def handle_query(request: QueryRequest):
 
 ### Việc cần làm
 
-| Task | File | Mô tả |
-|---|---|---|
-| NL → FOL | `pipeline/type1/nl_to_fol.py` | Gọi LLM, nhận `premises_nl`, trả về `list[str]` FOL |
-| FOL Validator | `pipeline/type1/z3_solver.py` | Parse FOL, chạy Z3, trả về `SolverResult` |
+| Task             | File                          | Mô tả                                                     |
+| ---------------- | ----------------------------- | --------------------------------------------------------- |
+| NL → FOL         | `pipeline/type1/nl_to_fol.py` | Gọi LLM, nhận `premises_nl`, trả về `list[str]` FOL       |
+| FOL Validator    | `pipeline/type1/z3_solver.py` | Parse FOL, chạy Z3, trả về `SolverResult`                 |
 | Explainer Type 1 | `pipeline/type1/explainer.py` | Implement `explain_type1(solver_result, question) -> str` |
 
 ### Prompt tối giản (chưa cần tối ưu)
@@ -170,12 +170,12 @@ return SolverResult(
 
 ### Việc cần làm
 
-| Task | File | Mô tả |
-|---|---|---|
-| Physics Parser | `pipeline/type2/physics_parser.py` | Gọi LLM, trích xuất given/find/formulas |
-| SymPy Solver | `pipeline/type2/sympy_solver.py` | Giải phương trình, trả về `SolverResult` |
-| CoT Builder | `pipeline/type2/cot_builder.py` | Format solver steps thành `list[str]` |
-| Explainer Type 2 | `pipeline/type2/explainer.py` | Implement `explain_type2(solver_result, question) -> str` |
+| Task             | File                               | Mô tả                                                     |
+| ---------------- | ---------------------------------- | --------------------------------------------------------- |
+| Physics Parser   | `pipeline/type2/physics_parser.py` | Gọi LLM, trích xuất given/find/formulas                   |
+| SymPy Solver     | `pipeline/type2/sympy_solver.py`   | Giải phương trình, trả về `SolverResult`                  |
+| CoT Builder      | `pipeline/type2/cot_builder.py`    | Format solver steps thành `list[str]`                     |
+| Explainer Type 2 | `pipeline/type2/explainer.py`      | Implement `explain_type2(solver_result, question) -> str` |
 
 ### Prompt tối giản (chưa cần tối ưu)
 
@@ -224,11 +224,11 @@ UNIT_CONVERSIONS = {
 
 ### Việc cần làm
 
-| Task | File | Mô tả | Ưu tiên |
-|---|---|---|---|
-| Mock LLM | `llm/inference.py` | `call_llm_mock()` trả về dummy output đúng format | 🔴 Cao nhất |
-| Model loader | `llm/loader.py` | Load model từ config, singleton pattern | 🟡 Sau mock |
-| Real inference | `llm/inference.py` | `call_llm()` thật với transformers backend | 🟡 Sau loader |
+| Task           | File               | Mô tả                                             | Ưu tiên       |
+| -------------- | ------------------ | ------------------------------------------------- | ------------- |
+| Mock LLM       | `llm/inference.py` | `call_llm_mock()` trả về dummy output đúng format | 🔴 Cao nhất   |
+| Model loader   | `llm/loader.py`    | Load model từ config, singleton pattern           | 🟡 Sau mock   |
+| Real inference | `llm/inference.py` | `call_llm()` thật với transformers backend        | 🟡 Sau loader |
 
 ### Mock version — viết trước tiên
 
@@ -273,18 +273,19 @@ def call_llm(prompt: str, system: str = "", max_retries: int = 2) -> str:
 **Owns:** Điểm hội tụ cuối — chịu trách nhiệm pipeline chạy end-to-end.
 
 > ✅ `pipeline/state.py` đã hoàn thành — không cần làm lại. Import trực tiếp:
+>
 > ```python
 > from pipeline.state import SolverResult, PipelineState
 > ```
 
 ### Việc cần làm
 
-| Task | File | Phụ thuộc | Làm khi nào | Trạng thái |
-|---|---|---|---|---|
-| Logging setup | `api/logger.py` | Không ai | **Bắt đầu ngay** | 🔴 Chưa làm |
-| Response Builder | `api/response_builder.py` | `api/schemas.py` (✅ có mock) | **Bắt đầu ngay** | 🔴 Chưa làm |
-| Wire pipeline | `api/main.py` | Người 2, 3 done | Sau khi P2 + P3 xong | ⏳ Chờ |
-| End-to-end test | `tests/test_api.py` | Wire xong | Cuối cùng | ⏳ Chờ |
+| Task             | File                      | Phụ thuộc                     | Làm khi nào          | Trạng thái  |
+| ---------------- | ------------------------- | ----------------------------- | -------------------- | ----------- |
+| Logging setup    | `api/logger.py`           | Không ai                      | **Bắt đầu ngay**     | 🔴 Chưa làm |
+| Response Builder | `api/response_builder.py` | `api/schemas.py` (✅ có mock) | **Bắt đầu ngay**     | 🔴 Chưa làm |
+| Wire pipeline    | `api/main.py`             | Người 2, 3 done               | Sau khi P2 + P3 xong | ⏳ Chờ      |
+| End-to-end test  | `tests/test_api.py`       | Wire xong                     | Cuối cùng            | ⏳ Chờ      |
 
 ### File 1 — `api/logger.py` (làm trước tiên)
 
@@ -476,12 +477,12 @@ async def handle_query(request: QueryRequest):
     └─ P5: ────────────────────────────────────────── explainer ─► wire ───► DEMO ✅
 ```
 
-| Ngày | Mục tiêu | Milestone |
-|---|---|---|
-| **Ngày 1** | Setup + Interface + Mock | `state.py` approved, `call_llm_mock()` chạy được, API skeleton trả về mock response |
+| Ngày       | Mục tiêu                   | Milestone                                                                              |
+| ---------- | -------------------------- | -------------------------------------------------------------------------------------- |
+| **Ngày 1** | Setup + Interface + Mock   | `state.py` approved, `call_llm_mock()` chạy được, API skeleton trả về mock response    |
 | **Ngày 2** | Build từng track song song | Type 1: `nl_to_fol` + `z3_solver` xong; Type 2: `physics_parser` + `sympy_solver` xong |
-| **Ngày 3** | Explainer + Integration | `explainer` xong, wire pipeline thật vào `main.py`, chạy thử với câu hỏi thật |
-| **Ngày 4** | Test + Fix + Buffer | Chạy checklist demo, fix bug, buffer cho sự cố bất ngờ |
+| **Ngày 3** | Explainer + Integration    | `explainer` xong, wire pipeline thật vào `main.py`, chạy thử với câu hỏi thật          |
+| **Ngày 4** | Test + Fix + Buffer        | Chạy checklist demo, fix bug, buffer cho sự cố bất ngờ                                 |
 
 **Target: Demo hoạt động cuối Ngày 3, Ngày 4 dành để polish và test.**
 
@@ -562,4 +563,4 @@ curl -X POST http://localhost:8000/query \
 
 ---
 
-*Sau khi demo xong (Ngày 3–4) → chuyển sang giai đoạn tối ưu chất lượng: prompt engineering, FOL accuracy, SymPy coverage, self-verification.*
+_Sau khi demo xong (Ngày 3–4) → chuyển sang giai đoạn tối ưu chất lượng: prompt engineering, FOL accuracy, SymPy coverage, self-verification._
