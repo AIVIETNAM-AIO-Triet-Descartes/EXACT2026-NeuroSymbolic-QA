@@ -281,7 +281,7 @@ def call_llm(prompt: str, system: str = "", max_retries: int = 2) -> str:
 
 | Task | File | Phụ thuộc | Làm khi nào | Trạng thái |
 |---|---|---|---|---|
-| Logging setup | `api/logger.py` | Không ai | **Bắt đầu ngay** | 🔴 Chưa làm |
+| Logging setup | `api/logger.py` | Không ai | **Bắt đầu ngay** |  Đã xong (feature/mtri/logger_builder) |
 | Response Builder | `api/response_builder.py` | `api/schemas.py` (✅ có mock) | **Bắt đầu ngay** | 🔴 Chưa làm |
 | Wire pipeline | `api/main.py` | Người 2, 3 done | Sau khi P2 + P3 xong | ⏳ Chờ |
 | End-to-end test | `tests/test_api.py` | Wire xong | Cuối cùng | ⏳ Chờ |
