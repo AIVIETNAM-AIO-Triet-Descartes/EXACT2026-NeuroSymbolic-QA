@@ -149,10 +149,10 @@ from z3 import *
 # ══════════════════════════════════════════════════════════════
 
 ANSWER_EXTRACT_PATTERNS = [
-    r'ANSWER:\s*([A-D])\b',
-    r'ANSWER:\s*(Yes|No|Unknown)',
-    r'(?:answer is|correct answer is|conclusion is)\s*[:\s]*([A-D])\b',
-    r'(?:answer is|correct answer is)\s*[:\s]*(Yes|No|Unknown)',
-    r'\b(Yes|No|Unknown)\s*[,.]?\s*$',
+    r'(?i)\**ANSWER:\**\s*\**([A-D])\**\b',
+    r'(?i)\**ANSWER:\**\s*\**(Yes|No|Unknown)\**',
+    r'(?i)(?:answer is|correct answer is|conclusion is)\s*[:\s]*\**([A-D])\**\b',
+    r'(?i)(?:answer is|correct answer is)\s*[:\s]*\**(Yes|No|Unknown)\**',
+    r'(?i)\b(Yes|No|Unknown)\s*[,.]?\s*$',
     r'^([A-D])\s*[.\)]',
 ]

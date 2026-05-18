@@ -239,7 +239,10 @@ class LLMReasoner:
         )
 
         # Extract answer from response
+        logger.debug(f"[LLM_COT] Raw Response:\n{response}\n")
         answer = self._extract_answer(response)
+        if not answer:
+            logger.warning("[LLM_COT] Failed to extract answer from raw response. Returning None.")
 
         return {
             'answer': answer,
