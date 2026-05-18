@@ -397,20 +397,13 @@ class NeuroSymbolicPipeline:
                                 }
 
             elif classified.question_type == QuestionType.MCQ:
-                # For MCQ, evaluate each option using keyword matching
-                if classified.options:
-                    for key, option_text in classified.options.items():
-                        option_kws = self.classifier.classify(
-                            option_text
-                        ).keywords
-                        for kw in option_kws:
-                            for derived in derived_preds:
-                                if kw.lower() in derived.lower():
-                                    return {
-                                        'answer': key,
-                                        'premises_used':
-                                            logic_tree.get_all_used_premises(),
-                                    }
+                # Logic Tree operates purely on symbolic FOL predicates.
+                # Since MCQ options are in Natural Language and can contain complex logic
+                # (like counting premises or nested implications), a simple keyword match
+                # is logically unsound and leads to wrong answers (e.g. vacuously matching "PEP 8").
+                # 
+                # Proper solution: Fallback to Z3 or LLM-CoT which can handle natural language reasoning.
+                return None
 
         except Exception as e:
             logger.debug(f"Logic Tree failed: {e}")
