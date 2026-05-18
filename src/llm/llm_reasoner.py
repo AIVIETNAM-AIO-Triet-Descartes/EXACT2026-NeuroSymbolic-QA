@@ -1,0 +1,407 @@
+"""
+LLM Reasoner - Wrapper cho Qwen 2.5 7B Instruct via llama-cpp-python.
+
+Cung cấp các chức năng:
+    1. generate_explanation: Sinh giải thích NL khi đã biết đáp án (post-Z3)
+    2. solve_with_cot: Giải bài toán bằng Chain-of-Thought (fallback)
+    3. generate_z3_code: Sinh Z3 Python code từ FOL (LLM-assisted translation)
+
+References:
+    - Logic-LM Self-Refinement: Pan et al., ACL 2023
+    - Chain-of-Thought Prompting: Wei et al., NeurIPS 2022
+"""
+
+import re
+import os
+from typing import Optional, Dict, List
+from loguru import logger
+
+from src.llm.prompt_templates import (
+    SYSTEM_PROMPT_LOGIC,
+    SYSTEM_PROMPT_Z3,
+    EXPLANATION_PROMPT,
+    COT_MCQ_PROMPT,
+    COT_YESNO_PROMPT,
+    Z3_CODE_GENERATION_PROMPT,
+    Z3_REFINEMENT_PROMPT,
+    ANSWER_EXTRACT_PATTERNS,
+)
+
+
+class LLMReasoner:
+    """
+    LLM Reasoning Engine sử dụng Qwen 2.5 7B Instruct (GGUF).
+
+    Architecture:
+        - Model loaded via llama-cpp-python for efficient GPU inference
+        - Low temperature (0.1) for deterministic logical output
+        - Structured prompts enforce consistent output format
+
+    Attributes:
+        model_path: Đường dẫn đến file GGUF.
+        n_ctx: Context window size.
+        n_gpu_layers: Số layer offload lên GPU.
+    """
+
+    def __init__(
+        self,
+        model_path: str,
+        n_ctx: int = 4096,
+        n_gpu_layers: int = -1,
+        temperature: float = 0.1,
+        verbose: bool = False,
+    ):
+        """
+        Khởi tạo LLM Reasoner.
+
+        Args:
+            model_path: Đường dẫn file .gguf model.
+            n_ctx: Kích thước context window.
+            n_gpu_layers: Số layer GPU (-1 = tất cả).
+            temperature: Nhiệt độ sampling.
+            verbose: Hiển thị log từ llama.cpp.
+        """
+        self.model_path = model_path
+        self.n_ctx = n_ctx
+        self.n_gpu_layers = n_gpu_layers
+        self.temperature = temperature
+        self.llm = None
+
+        # Lazy loading - only load model when first needed
+        self._model_loaded = False
+        self._verbose = verbose
+
+    def _ensure_model_loaded(self):
+        """Lazy load model on first use."""
+        if self._model_loaded:
+            return
+
+        try:
+            from llama_cpp import Llama
+
+            logger.info(f"Loading LLM model from {self.model_path}...")
+            self.llm = Llama(
+                model_path=self.model_path,
+                n_ctx=self.n_ctx,
+                n_gpu_layers=self.n_gpu_layers,
+                verbose=self._verbose,
+            )
+            self._model_loaded = True
+            logger.info("LLM model loaded successfully.")
+
+        except ImportError:
+            logger.error(
+                "llama-cpp-python not installed. "
+                "Install with: pip install llama-cpp-python"
+            )
+            raise
+        except Exception as e:
+            logger.error(f"Failed to load LLM model: {e}")
+            raise
+
+    def _chat(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        max_tokens: int = 512,
+        temperature: Optional[float] = None,
+    ) -> str:
+        """
+        Gửi chat completion request đến model.
+
+        Args:
+            system_prompt: System message.
+            user_prompt: User message.
+            max_tokens: Giới hạn output tokens.
+            temperature: Override temperature.
+
+        Returns:
+            Generated text response.
+        """
+        self._ensure_model_loaded()
+
+        temp = temperature or self.temperature
+
+        try:
+            output = self.llm.create_chat_completion(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=temp,
+                max_tokens=max_tokens,
+                stop=["\n\n\n"],  # Prevent excessive output
+            )
+            return output['choices'][0]['message']['content'].strip()
+
+        except Exception as e:
+            logger.error(f"LLM chat completion failed: {e}")
+            return ""
+
+    # ══════════════════════════════════════════════════════════
+    # Public API
+    # ══════════════════════════════════════════════════════════
+
+    def generate_explanation(
+        self,
+        premises_nl: List[str],
+        question: str,
+        answer: str,
+        premises_used: List[int],
+    ) -> str:
+        """
+        Sinh giải thích NL cho đáp án đã verified bởi Z3.
+
+        Đây là Phase 1 (post-Z3): LLM chỉ đóng vai "dịch giả",
+        không cần suy luận logic vì đáp án đã chính xác.
+
+        Args:
+            premises_nl: Danh sách premises dạng NL.
+            question: Câu hỏi gốc.
+            answer: Đáp án đã verified.
+            premises_used: Danh sách index premises đã dùng (1-based).
+
+        Returns:
+            Explanation text.
+        """
+        # Format premises with numbers
+        premises_text = "\n".join(
+            f"  Premise {i+1}: {p}" for i, p in enumerate(premises_nl)
+        )
+
+        # Format used premises
+        used_text = ", ".join(f"Premise {idx}" for idx in premises_used) \
+                    if premises_used else "all premises"
+
+        prompt = EXPLANATION_PROMPT.format(
+            premises_nl=premises_text,
+            question=question,
+            answer=answer,
+            premises_used=used_text,
+        )
+
+        explanation = self._chat(
+            system_prompt=SYSTEM_PROMPT_LOGIC,
+            user_prompt=prompt,
+            max_tokens=256,
+        )
+
+        return explanation if explanation else (
+            f"Based on the given premises, the answer is {answer}."
+        )
+
+    def solve_with_cot(
+        self,
+        premises_nl: List[str],
+        premises_fol: List[str],
+        question: str,
+        question_type: str = "mcq",
+    ) -> Dict:
+        """
+        Giải bài toán bằng Chain-of-Thought (fallback khi Z3 fail).
+
+        Args:
+            premises_nl: Danh sách premises NL.
+            premises_fol: Danh sách premises FOL.
+            question: Câu hỏi gốc.
+            question_type: "mcq" hoặc "yes_no".
+
+        Returns:
+            Dict với keys: answer, explanation, method
+        """
+        # Format premises
+        nl_text = "\n".join(
+            f"  {i+1}. {p}" for i, p in enumerate(premises_nl)
+        )
+        fol_text = "\n".join(
+            f"  {i+1}. {p}" for i, p in enumerate(premises_fol)
+        )
+
+        # Select appropriate prompt
+        if question_type == "mcq":
+            prompt = COT_MCQ_PROMPT.format(
+                premises_nl=nl_text,
+                premises_fol=fol_text,
+                question=question,
+            )
+        else:
+            prompt = COT_YESNO_PROMPT.format(
+                premises_nl=nl_text,
+                premises_fol=fol_text,
+                question=question,
+            )
+
+        response = self._chat(
+            system_prompt=SYSTEM_PROMPT_LOGIC,
+            user_prompt=prompt,
+            max_tokens=512,
+            temperature=0.1,
+        )
+
+        # Extract answer from response
+        answer = self._extract_answer(response)
+
+        return {
+            'answer': answer,
+            'explanation': response,
+            'method': 'llm_cot',
+        }
+
+    def generate_z3_code(
+        self,
+        premises_fol: List[str],
+        premises_nl: List[str],
+        question: str,
+    ) -> str:
+        """
+        Sinh Z3 Python code từ FOL premises (LLM-assisted translation).
+
+        Args:
+            premises_fol: Danh sách premises FOL.
+            premises_nl: Danh sách premises NL.
+            question: Câu hỏi cần kiểm tra.
+
+        Returns:
+            Z3 Python code string.
+        """
+        fol_text = "\n".join(
+            f"  {i+1}. {p}" for i, p in enumerate(premises_fol)
+        )
+        nl_text = "\n".join(
+            f"  {i+1}. {p}" for i, p in enumerate(premises_nl)
+        )
+
+        prompt = Z3_CODE_GENERATION_PROMPT.format(
+            premises_fol=fol_text,
+            premises_nl=nl_text,
+            question=question,
+        )
+
+        code = self._chat(
+            system_prompt=SYSTEM_PROMPT_Z3,
+            user_prompt=prompt,
+            max_tokens=1024,
+            temperature=0.0,
+        )
+
+        # Clean up code: remove markdown fences
+        code = self._clean_code(code)
+        return code
+
+    def refine_z3_code(
+        self,
+        previous_code: str,
+        error_message: str,
+        premises_fol: List[str],
+    ) -> str:
+        """
+        Self-refinement: sửa Z3 code bị lỗi (Logic-LM style).
+
+        Args:
+            previous_code: Code Z3 trước đó bị lỗi.
+            error_message: Thông báo lỗi từ Z3 execution.
+            premises_fol: FOL premises gốc.
+
+        Returns:
+            Corrected Z3 Python code string.
+        """
+        fol_text = "\n".join(
+            f"  {i+1}. {p}" for i, p in enumerate(premises_fol)
+        )
+
+        prompt = Z3_REFINEMENT_PROMPT.format(
+            previous_code=previous_code,
+            error_message=error_message,
+            premises_fol=fol_text,
+        )
+
+        code = self._chat(
+            system_prompt=SYSTEM_PROMPT_Z3,
+            user_prompt=prompt,
+            max_tokens=1024,
+            temperature=0.0,
+        )
+
+        return self._clean_code(code)
+
+    # ══════════════════════════════════════════════════════════
+    # Private Helpers
+    # ══════════════════════════════════════════════════════════
+
+    def _extract_answer(self, response: str) -> Optional[str]:
+        """
+        Trích xuất đáp án từ LLM response.
+
+        Thử nhiều pattern khác nhau để robust extraction.
+        """
+        if not response:
+            return None
+
+        for pattern in ANSWER_EXTRACT_PATTERNS:
+            match = re.search(pattern, response, re.IGNORECASE | re.MULTILINE)
+            if match:
+                answer = match.group(1).strip()
+                # Normalize
+                if answer in ('A', 'B', 'C', 'D'):
+                    return answer
+                if answer.lower() in ('yes', 'no', 'unknown'):
+                    return answer.capitalize()
+
+        # Last resort: check last line
+        lines = response.strip().split('\n')
+        last_line = lines[-1].strip()
+        for ch in ('A', 'B', 'C', 'D'):
+            if last_line == ch or last_line.startswith(f"{ch}.") or \
+               last_line.startswith(f"{ch})"):
+                return ch
+        for word in ('Yes', 'No', 'Unknown'):
+            if last_line.lower().startswith(word.lower()):
+                return word
+
+        return None
+
+    def _clean_code(self, code: str) -> str:
+        """Remove markdown fences and clean up generated code."""
+        # Remove ```python ... ``` blocks
+        code = re.sub(r'```python\s*\n?', '', code)
+        code = re.sub(r'```\s*$', '', code, flags=re.MULTILINE)
+        code = code.strip()
+
+        # Ensure it starts with from z3 import
+        if not code.startswith('from z3'):
+            code = "from z3 import *\n" + code
+
+        return code
+
+
+# ══════════════════════════════════════════════════════════════
+# Factory Function
+# ══════════════════════════════════════════════════════════════
+
+def create_reasoner(
+    model_dir: str = ".",
+    model_name: str = "qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf",
+    **kwargs,
+) -> LLMReasoner:
+    """
+    Factory function để tạo LLMReasoner với cấu hình mặc định.
+
+    Args:
+        model_dir: Thư mục chứa model file.
+        model_name: Tên file GGUF.
+        **kwargs: Override parameters.
+
+    Returns:
+        LLMReasoner instance.
+    """
+    model_path = os.path.join(model_dir, model_name)
+
+    defaults = {
+        'n_ctx': 4096,
+        'n_gpu_layers': -1,
+        'temperature': 0.1,
+        'verbose': False,
+    }
+    defaults.update(kwargs)
+
+    return LLMReasoner(model_path=model_path, **defaults)
