@@ -397,7 +397,8 @@ class LLMReasoner:
             code
         )
 
-        # 3. Auto-fix A -> B to Implies(A, B)
+        # 3. Auto-fix A -> B (and A >> B) to Implies(A, B)
+        code = code.replace('>>', '->')
         while '->' in code:
             idx = code.find('->')
             
@@ -454,6 +455,9 @@ class LLMReasoner:
             
             new_expr = f"Implies({lhs.strip()}, {rhs.strip()})"
             code = code[:left_start] + new_expr + code[right_end+1:]
+
+        # Auto-fix Implies(d, BA) to d == BA (equality check hallucination)
+        code = re.sub(r'Implies\(\s*([A-Za-z0-9_]+)\s*,\s*([A-Za-z0-9_]+)\s*\)', r'\1 == \2', code)
 
         # 4. Auto-declare missing variables and fix strings in predicates
         ignore_words = {'from', 'z3', 'import', 's', 'Solver', 'Entity', 'DeclareSort', 

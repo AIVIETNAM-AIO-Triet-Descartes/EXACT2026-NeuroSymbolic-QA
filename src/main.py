@@ -278,9 +278,12 @@ class NeuroSymbolicPipeline:
             4. LLM CoT (lowest confidence, always available)
         """
         q_result = QuestionResult()
+        
+        # Determine if it's a "long" question (too hard for 7B Z3)
+        is_long_question = len(premises_fol) > 7
 
         # ── Strategy 1: LLM-Assisted Z3 ──
-        if self.config.use_z3 and self.config.use_llm:
+        if self.config.use_z3 and self.config.use_llm and not is_long_question:
             z3_result = self._try_llm_z3(
                 premises_fol, premises_nl, classified
             )
