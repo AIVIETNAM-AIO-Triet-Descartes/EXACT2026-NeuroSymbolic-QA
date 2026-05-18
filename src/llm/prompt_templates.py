@@ -160,6 +160,8 @@ Generate a complete, executable Python script using the z3 library that:
 
 IMPORTANT RULES:
 - Output ONLY raw Python code. No markdown, no explanations.
+- CRITICAL: NEVER use the '->' symbol for implication. You MUST use the Z3 function Implies(A, B).
+- CRITICAL: You MUST declare ALL Entity constants and Boolean Functions (predicates) before using them in s.add().
 - For MCQ options: translate each option into a ForAll expression, then check if Not(ForAll(...)) is unsat.
 - You MUST check ALL options A, B, C, D. Do NOT stop after checking only one.
 - Carefully match predicates: read each option's natural language and use the CORRECT predicate names.
@@ -202,11 +204,12 @@ ORIGINAL PREMISES (FOL):
 {premises_fol}
 
 COMMON MISTAKES TO FIX:
-1. Named entities (John, Sophia, etc.) must be declared: John = Const('John', Entity)
-2. For MCQ: you MUST check ALL 4 options (A, B, C, D) with push/pop, not just one.
-3. Each option check must use ForAll: s.add(Not(ForAll([x], option_expr)))
-4. Ensure predicate names exactly match the FOL premises.
-5. Use Not() instead of NOT() - Python z3 uses Not, And, Or, Implies.
+1. Named entities (John, Sophia, etc.) and ALL functions MUST be declared: John = Const('John', Entity)
+2. NEVER use '->' for implication. Python Z3 does NOT support it. Use Implies(A, B).
+3. For MCQ: you MUST check ALL 4 options (A, B, C, D) with push/pop, not just one.
+4. Each option check must use ForAll: s.add(Not(ForAll([x], option_expr)))
+5. Ensure predicate names exactly match the FOL premises.
+6. Use Not() instead of NOT() - Python z3 uses Not, And, Or, Implies.
 
 Output ONLY the corrected Python code. No markdown, no explanations.
 """
