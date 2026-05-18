@@ -596,22 +596,15 @@ def execute_z3_code(code: str, timeout_sec: int = 30) -> Optional[str]:
     sys.stdout = buffer = io.StringIO()
 
     try:
-        # Execute in restricted namespace
-        exec_globals = {
-            'z3': z3,
-            '__builtins__': {
-                'print': print, 'int': int, 'str': str,
-                'len': len, 'range': range, 'list': list,
-                'dict': dict, 'set': set, 'True': True,
-                'False': False, 'None': None,
-            }
-        }
+        # We need to allow standard imports like 'from z3 import *'
+        # So we pass a normal dictionary for globals
+        exec_globals = {}
         exec(code, exec_globals)
         output = buffer.getvalue().strip()
         return output
 
     except Exception as e:
-        logger.debug(f"Z3 code execution failed: {e}")
+        logger.error(f"Z3 code execution failed:\n{traceback.format_exc()}")
         return None
 
     finally:
