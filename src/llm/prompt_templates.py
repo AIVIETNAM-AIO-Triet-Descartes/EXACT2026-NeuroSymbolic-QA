@@ -109,23 +109,33 @@ PREMISES (Natural Language):
 QUESTION: {question}
 
 Generate a complete, executable Python script using the z3 library that:
-1. Declares an Entity sort
-2. Declares all predicates as z3.Function objects
-3. Declares all named entities as z3.Const objects
-4. Asserts all premises into a z3.Solver()
+1. Declare an Entity sort: Entity = z3.DeclareSort('Entity')
+2. Declare a variable x: x = z3.Const('x', Entity)
+3. Declare ALL predicates as z3.Function objects (e.g., WT = z3.Function('WT', Entity, z3.BoolSort()))
+4. Assert all premises into a z3.Solver()
 5. For Yes/No questions: checks whether the question's statement is entailed (if Not(statement) is unsat, print("Yes"), else print("No") or print("Unknown"))
 6. For Multiple Choice questions (A, B, C, D): evaluates each option to see which is logically entailed, and prints ONLY the correct letter (e.g., print("A"))
 7. Prints EXACTLY one line of output.
 
 IMPORTANT RULES:
 - Use s = z3.Solver() to manage assertions
-- Use z3.DeclareSort('Entity') for the entity sort
-- Use z3.Function('name', Entity, BoolSort()) for unary predicates
 - Use z3.ForAll([x], z3.Implies(...)) for universal rules
 - Output ONLY the raw Python code, do not output any markdown formatting (like ```python) or explanations.
 
-```python
+Use the following exact skeleton:
 from z3 import *
+s = Solver()
+Entity = DeclareSort('Entity')
+x = Const('x', Entity)
+
+# 1. Declare Predicates
+# e.g., WT = Function('WT', Entity, BoolSort())
+
+# 2. Add Premises
+# e.g., s.add(ForAll([x], Implies(WT(x), O(x))))
+
+# 3. Check Question / Options
+# e.g., s.push(); s.add(Not(Option_A)); if s.check() == unsat: print("A")
 """
 
 Z3_REFINEMENT_PROMPT = """The previous Z3 code produced an error. Fix it.
@@ -139,10 +149,17 @@ ERROR MESSAGE:
 ORIGINAL PREMISES (FOL):
 {premises_fol}
 
-Fix the code and output ONLY the corrected Python code.
+Fix the code and output ONLY the corrected Python code (no explanations, no markdown fences like ```python).
+Ensure all variables and predicates are properly declared before use!
 
-```python
+Use this skeleton:
 from z3 import *
+s = Solver()
+Entity = DeclareSort('Entity')
+x = Const('x', Entity)
+# 1. Declare Predicates: e.g., WT = Function('WT', Entity, BoolSort())
+# 2. Add Premises: e.g., s.add(ForAll([x], Implies(WT(x), O(x))))
+# 3. Check Question: e.g., s.push(); s.add(Not(Option_A)); if s.check() == unsat: print("A")
 """
 
 # ══════════════════════════════════════════════════════════════
