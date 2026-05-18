@@ -464,21 +464,43 @@ class NeuroSymbolicPipeline:
         return f"Based on the given premises, the answer is {answer}."
 
     def _parse_z3_output(self, output: str, classified) -> Optional[str]:
-        """Parse Z3 execution output to extract answer."""
-        output = output.strip().lower()
+        """Parse Z3 execution output to extract answer.
+        
+        Handles two formats:
+        1. Direct letter output: "A" or "B" etc.
+        2. Multi-line Yes/No from MCQ option checks: maps first "Yes" to corresponding letter.
+        """
+        raw = output.strip()
+        lines = [l.strip().lower() for l in raw.split('\n') if l.strip()]
+        
+        logger.debug(f"[Z3_PARSE] Raw output: {repr(raw)}, classified type: {classified.question_type}")
 
-        # Direct Yes/No/Unknown
-        if 'yes' in output:
-            return 'Yes'
-        if 'no' in output:
-            return 'No'
-        if 'unknown' in output:
-            return 'Unknown'
+        # ── Case 1: Direct MCQ letter answer ──
+        for line in lines:
+            for ch in ('a', 'b', 'c', 'd'):
+                if line == ch or line.startswith(f"{ch}.") or line.startswith(f"{ch})"):
+                    return ch.upper()
 
-        # MCQ answer
-        for ch in ('a', 'b', 'c', 'd'):
-            if output.strip() == ch or output.strip().startswith(f"{ch}."):
-                return ch.upper()
+        # ── Case 2: MCQ with multi-line Yes/No ──
+        # When Z3 code checks all 4 options and prints Yes/No for each,
+        # map the first "Yes" to the corresponding option letter.
+        if classified.question_type == QuestionType.MCQ and len(lines) >= 2:
+            option_letters = ['A', 'B', 'C', 'D']
+            for i, line in enumerate(lines):
+                if i < len(option_letters) and line in ('yes', 'true'):
+                    return option_letters[i]
+            # If no "Yes" found among multi-line output, return None
+            return None
+
+        # ── Case 3: Yes/No question ──
+        if classified.question_type != QuestionType.MCQ:
+            full = raw.lower()
+            if 'yes' in full:
+                return 'Yes'
+            if 'no' in full:
+                return 'No'
+            if 'unknown' in full:
+                return 'Unknown'
 
         return None
 
