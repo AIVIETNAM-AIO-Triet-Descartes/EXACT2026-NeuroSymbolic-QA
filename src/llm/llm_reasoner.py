@@ -375,7 +375,15 @@ class LLMReasoner:
         return None
 
     def _clean_code(self, code: str) -> str:
-        """Remove markdown fences and clean up generated code."""
+        """Remove markdown fences, clean up, and normalize entailment logic.
+        
+        Critical fix: LLM sometimes inverts the entailment check output.
+        Standard Z3 entailment pattern:
+            s.add(Not(goal))  →  unsat means goal IS entailed → "Yes"
+        But LLM sometimes generates:
+            print("No" if s.check() == unsat else "Yes")  ← WRONG
+        This method normalizes all such inversions.
+        """
         # Remove ```python ... ``` blocks
         code = re.sub(r'```python\s*\n?', '', code)
         code = re.sub(r'```\s*$', '', code, flags=re.MULTILINE)
@@ -384,6 +392,22 @@ class LLMReasoner:
         # Ensure it starts with from z3 import
         if not code.startswith('from z3'):
             code = "from z3 import *\n" + code
+
+        # ── Normalize inverted entailment checks ──
+        # Fix: print("No" if s.check() == unsat else "Yes")
+        #   →  print("Yes" if s.check() == unsat else "No")
+        code = re.sub(
+            r'print\s*\(\s*"No"\s+if\s+s\.check\(\)\s*==\s*unsat\s+else\s+"Yes"\s*\)',
+            'print("Yes" if s.check() == unsat else "No")',
+            code
+        )
+        # Fix: print("Yes" if s.check() == sat else "No")
+        #   →  print("Yes" if s.check() == unsat else "No")
+        code = re.sub(
+            r'print\s*\(\s*"Yes"\s+if\s+s\.check\(\)\s*==\s*sat\s+else\s+"No"\s*\)',
+            'print("Yes" if s.check() == unsat else "No")',
+            code
+        )
 
         return code
 
