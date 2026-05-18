@@ -166,31 +166,68 @@ IMPORTANT RULES:
 - You MUST check ALL options A, B, C, D. Do NOT stop after checking only one.
 - Carefully match predicates: read each option's natural language and use the CORRECT predicate names.
 
-SKELETON FOR YES/NO:
-from z3 import *
-s = Solver()
-Entity = DeclareSort('Entity')
-x = Const('x', Entity)
-# Declare predicates...
-# Add premises...
-# Check: s.push(); s.add(Not(ForAll([x], statement))); print("Yes" if s.check() == unsat else "No"); s.pop()
+EXAMPLE 1 (YES/NO):
+PREMISES (First-Order Logic):
+1. ForAll(x, WT(x) -> GR(x))
+2. WT(John)
 
-SKELETON FOR MCQ:
+QUESTION: Yes or No: Is it true that John is GR?
+CODE:
 from z3 import *
 s = Solver()
 Entity = DeclareSort('Entity')
 x = Const('x', Entity)
-# Declare predicates...
-# Add premises...
-# Check ALL options:
+WT = Function('WT', Entity, BoolSort())
+GR = Function('GR', Entity, BoolSort())
+John = Const('John', Entity)
+
+s.add(ForAll([x], Implies(WT(x), GR(x))))
+s.add(WT(John))
+
+s.push()
+s.add(Not(ForAll([x], GR(John))))
+print("Yes" if s.check() == unsat else "No")
+s.pop()
+
+EXAMPLE 2 (MCQ):
+PREMISES (First-Order Logic):
+1. ForAll(x, A(x) -> B(x))
+2. ForAll(x, B(x) -> C(x))
+3. A(John)
+
+QUESTION: Based on the premises, which is true?
+A. C(John)
+B. Not(B(John))
+C. Not(A(John))
+D. None of the above
+
+CODE:
+from z3 import *
+s = Solver()
+Entity = DeclareSort('Entity')
+x = Const('x', Entity)
+A = Function('A', Entity, BoolSort())
+B = Function('B', Entity, BoolSort())
+C = Function('C', Entity, BoolSort())
+John = Const('John', Entity)
+
+s.add(ForAll([x], Implies(A(x), B(x))))
+s.add(ForAll([x], Implies(B(x), C(x))))
+s.add(A(John))
+
 results = []
-s.push(); s.add(Not(ForAll([x], option_A_expr))); results.append(('A', s.check())); s.pop()
-s.push(); s.add(Not(ForAll([x], option_B_expr))); results.append(('B', s.check())); s.pop()
-s.push(); s.add(Not(ForAll([x], option_C_expr))); results.append(('C', s.check())); s.pop()
-s.push(); s.add(Not(ForAll([x], option_D_expr))); results.append(('D', s.check())); s.pop()
+s.push(); s.add(Not(ForAll([x], C(John)))); results.append(('A', s.check())); s.pop()
+s.push(); s.add(Not(ForAll([x], Not(B(John))))); results.append(('B', s.check())); s.pop()
+s.push(); s.add(Not(ForAll([x], Not(A(John))))); results.append(('C', s.check())); s.pop()
+s.push(); s.add(Not(ForAll([x], And(Not(C(John)), B(John), A(John))))); results.append(('D', s.check())); s.pop()
+
 entailed = [r[0] for r in results if r[1] == unsat]
 if entailed: print(entailed[0])
 """
+
+# ══════════════════════════════════════════════════════════════
+# Z3 Refinement Prompt
+# ══════════════════════════════════════════════════════════════
 
 Z3_REFINEMENT_PROMPT = """The previous Z3 code produced an error or no output. Fix it.
 

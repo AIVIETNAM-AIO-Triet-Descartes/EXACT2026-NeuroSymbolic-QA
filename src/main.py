@@ -269,68 +269,77 @@ class NeuroSymbolicPipeline:
         q_idx: int,
     ) -> QuestionResult:
         """
-        Giải một câu hỏi cụ thể với chiến lược phân tầng.
-
-        Strategy Priority:
-            1. Z3 Solver (highest confidence)
-            2. LLM-assisted Z3 (medium confidence)
-            3. Logic Tree heuristic (medium confidence)
-            4. LLM CoT (lowest confidence, always available)
+        Giải câu hỏi bằng kiến trúc Lai ghép Đồng thuận (Consensus Hybridization).
+        
+        Strategy:
+            1. Run Logic Tree (Fast)
+            2. Run LLM CoT (Semantic)
+            3. Cross-Check for Consensus
+            4. Fallback to Z3
         """
         q_result = QuestionResult()
-        
-        # Determine if it's a "long" question (too hard for 7B Z3)
         is_long_question = len(premises_fol) > 7
 
-        # ── Strategy 1: LLM-Assisted Z3 ──
+        # 1. Run Fast Logic Tree
+        tree_ans = None
+        tree_result = None
+        if logic_tree:
+            tree_result = self._try_logic_tree(logic_tree, classified, premises_fol)
+            if tree_result and tree_result.get('answer'):
+                tree_ans = tree_result['answer']
+
+        # 2. Run LLM CoT
+        cot_ans = None
+        cot_result = None
+        if self.config.use_llm:
+            cot_result = self._try_llm_cot(premises_fol, premises_nl, classified, logic_tree)
+            if cot_result and cot_result.get('answer'):
+                cot_ans = cot_result['answer']
+
+        # 3. Cross-Check & Consensus
+        if tree_ans and cot_ans:
+            if tree_ans == cot_ans:
+                q_result.answer = cot_ans
+                q_result.method = 'hybrid_consensus'
+                q_result.confidence = 1.0
+                q_result.explanation = "Consensus Reached (Logic Tree & CoT agreed):\n" + cot_result.get('explanation', '')
+                self.stats['llm_solved'] += 1
+                return q_result
+            else:
+                # Conflict: Trust CoT because it's stronger for 7B models
+                q_result.answer = cot_ans
+                q_result.method = 'llm_cot_override'
+                q_result.confidence = 0.6
+                q_result.explanation = "Conflict detected. Overrode Logic Tree with CoT:\n" + cot_result.get('explanation', '')
+                self.stats['llm_solved'] += 1
+                return q_result
+        elif cot_ans:
+            q_result.answer = cot_ans
+            q_result.method = 'llm_cot'
+            q_result.confidence = 0.8
+            q_result.explanation = cot_result.get('explanation', '')
+            self.stats['llm_solved'] += 1
+            return q_result
+        elif tree_ans:
+            q_result.answer = tree_ans
+            q_result.method = 'logic_tree'
+            q_result.confidence = 0.7
+            q_result.explanation = "Derived exclusively by Logic Tree."
+            self.stats['logic_tree_solved'] += 1
+            return q_result
+
+        # 4. Fallback to Z3 (For short questions only if everything else failed)
         if self.config.use_z3 and self.config.use_llm and not is_long_question:
-            z3_result = self._try_llm_z3(
-                premises_fol, premises_nl, classified
-            )
+            z3_result = self._try_llm_z3(premises_fol, premises_nl, classified)
             if z3_result and z3_result.get('answer'):
                 q_result.answer = z3_result['answer']
                 q_result.method = 'llm_z3'
-                q_result.confidence = 0.9
-                q_result.premises_used = z3_result.get('premises_used', [])
-                # Generate explanation
-                q_result.explanation = self._generate_explanation(
-                    premises_nl, classified.original,
-                    q_result.answer, q_result.premises_used
-                )
+                q_result.confidence = 0.6
+                q_result.explanation = "Derived by Z3."
                 self.stats['z3_solved'] += 1
                 return q_result
-
-        # ── Strategy 2: Logic Tree ──
-        if logic_tree:
-            tree_result = self._try_logic_tree(
-                logic_tree, classified, premises_fol
-            )
-            if tree_result and tree_result.get('answer'):
-                q_result.answer = tree_result['answer']
-                q_result.method = 'logic_tree'
-                q_result.confidence = 0.7
-                q_result.premises_used = tree_result.get('premises_used', [])
-                q_result.explanation = self._generate_explanation(
-                    premises_nl, classified.original,
-                    q_result.answer, q_result.premises_used
-                )
-                self.stats['logic_tree_solved'] += 1
-                return q_result
-
-        # ── Strategy 3: LLM Chain-of-Thought (Fallback) ──
-        if self.config.use_llm:
-            cot_result = self._try_llm_cot(
-                premises_fol, premises_nl, classified, logic_tree
-            )
-            if cot_result and cot_result.get('answer'):
-                q_result.answer = cot_result['answer']
-                q_result.explanation = cot_result.get('explanation', '')
-                q_result.method = 'llm_cot'
-                q_result.confidence = 0.5
-                self.stats['llm_solved'] += 1
-                return q_result
-
-        # ── Fallback: Default answer ──
+                
+        # 5. Ultimate Fallback
         q_result.answer = "Unknown"
         q_result.explanation = "Insufficient information to determine the answer."
         q_result.method = 'default'
