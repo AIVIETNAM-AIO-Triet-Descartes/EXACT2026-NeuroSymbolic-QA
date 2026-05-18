@@ -375,16 +375,8 @@ class LLMReasoner:
         return None
 
     def _clean_code(self, code: str) -> str:
-        """Remove markdown fences, clean up, and normalize entailment logic.
-        
-        Critical fix: LLM sometimes inverts the entailment check output.
-        Standard Z3 entailment pattern:
-            s.add(Not(goal))  →  unsat means goal IS entailed → "Yes"
-        But LLM sometimes generates:
-            print("No" if s.check() == unsat else "Yes")  ← WRONG
-        This method normalizes all such inversions.
-        """
-        # Remove ```python ... ``` blocks
+        """Remove markdown fences, clean up, and auto-fix common LLM hallucinations."""
+        # 1. Remove ```python ... ``` blocks
         code = re.sub(r'```python\s*\n?', '', code)
         code = re.sub(r'```\s*$', '', code, flags=re.MULTILINE)
         code = code.strip()
@@ -393,21 +385,141 @@ class LLMReasoner:
         if not code.startswith('from z3'):
             code = "from z3 import *\n" + code
 
-        # ── Normalize inverted entailment checks ──
-        # Fix: print("No" if s.check() == unsat else "Yes")
-        #   →  print("Yes" if s.check() == unsat else "No")
+        # 2. Normalize inverted entailment checks
         code = re.sub(
             r'print\s*\(\s*"No"\s+if\s+s\.check\(\)\s*==\s*unsat\s+else\s+"Yes"\s*\)',
             'print("Yes" if s.check() == unsat else "No")',
             code
         )
-        # Fix: print("Yes" if s.check() == sat else "No")
-        #   →  print("Yes" if s.check() == unsat else "No")
         code = re.sub(
             r'print\s*\(\s*"Yes"\s+if\s+s\.check\(\)\s*==\s*sat\s+else\s+"No"\s*\)',
             'print("Yes" if s.check() == unsat else "No")',
             code
         )
+
+        # 3. Auto-fix A -> B to Implies(A, B)
+        while '->' in code:
+            idx = code.find('->')
+            
+            # Find LHS
+            left_end = idx - 1
+            while left_end > 0 and code[left_end].isspace():
+                left_end -= 1
+            
+            parens = 0
+            left_start = left_end
+            while left_start >= 0:
+                char = code[left_start]
+                if char == ')':
+                    parens += 1
+                elif char == '(':
+                    parens -= 1
+                    if parens < 0:
+                        left_start += 1
+                        break
+                elif parens == 0 and char in (',', '[', ']', '\n'):
+                    left_start += 1
+                    break
+                left_start -= 1
+            if left_start < 0: left_start = 0
+            while left_start < len(code) and code[left_start].isspace():
+                left_start += 1
+                
+            lhs = code[left_start:left_end+1]
+            
+            # Find RHS
+            right_start = idx + 2
+            while right_start < len(code) and code[right_start].isspace():
+                right_start += 1
+                
+            parens = 0
+            right_end = right_start
+            while right_end < len(code):
+                char = code[right_end]
+                if char == '(':
+                    parens += 1
+                elif char == ')':
+                    parens -= 1
+                    if parens < 0:
+                        right_end -= 1
+                        break
+                elif parens == 0 and char in (',', '\n'):
+                    right_end -= 1
+                    break
+                right_end += 1
+            if right_end >= len(code):
+                right_end = len(code) - 1
+                
+            rhs = code[right_start:right_end+1]
+            
+            new_expr = f"Implies({lhs.strip()}, {rhs.strip()})"
+            code = code[:left_start] + new_expr + code[right_end+1:]
+
+        # 4. Auto-declare missing variables and fix strings in predicates
+        ignore_words = {'from', 'z3', 'import', 's', 'Solver', 'Entity', 'DeclareSort', 
+                        'Const', 'Function', 'BoolSort', 'ForAll', 'Exists', 'Implies', 
+                        'And', 'Or', 'Not', 'unsat', 'sat', 'print', 'if', 'else', 
+                        'push', 'pop', 'check', 'results', 'append', 'entailed', 'for', 'in',
+                        'True', 'False', 'x', 'y', 'z', 'a', 'b', 'c', 'd'}
+        ignore_strings = {'Yes', 'No', 'A', 'B', 'C', 'D', 'Entity'}
+        
+        defined_vars = set(re.findall(r'\b([A-Za-z_][A-Za-z0-9_]*)\s*=', code))
+        missing_funcs = set()
+        missing_consts = set()
+
+        def replace_strings_in_args(match):
+            func_name = match.group(1)
+            args_str = match.group(2)
+            if func_name in ('Const', 'Function', 'DeclareSort', 'print', 'append'):
+                return match.group(0)
+            
+            def string_replacer(s_match):
+                lit = s_match.group(1)
+                if lit in ignore_strings:
+                    return s_match.group(0)
+                missing_consts.add(lit)
+                return lit
+            
+            new_args = re.sub(r"['\"]([A-Za-z0-9_]+)['\"]", string_replacer, args_str)
+            return f"{func_name}({new_args})"
+            
+        code = re.sub(r'\b([A-Za-z_][A-Za-z0-9_]*)\s*\(([^)]*)\)', replace_strings_in_args, code)
+
+        for match in re.finditer(r'\b([A-Za-z_][A-Za-z0-9_]*)\b(\s*\()?', code):
+            word = match.group(1)
+            is_func_call = bool(match.group(2))
+            if word in ignore_words or word in defined_vars:
+                continue
+            if is_func_call:
+                missing_funcs.add(word)
+            elif word[0].isupper() or word in missing_consts:
+                missing_consts.add(word)
+
+        injections = []
+        for f in missing_funcs:
+            injections.append(f"{f} = Function('{f}', Entity, BoolSort())")
+        for c in missing_consts:
+            if c not in defined_vars:
+                injections.append(f"{c} = Const('{c}', Entity)")
+            
+        if injections:
+            if "Entity = DeclareSort('Entity')" in code:
+                code = code.replace("Entity = DeclareSort('Entity')", "Entity = DeclareSort('Entity')\n" + "\n".join(injections))
+            else:
+                code = "Entity = DeclareSort('Entity')\n" + "\n".join(injections) + "\n" + code
+
+        # 5. Fix unbalanced parentheses per statement (e.g. LLM forgot closing ')')
+        statements = code.split(';')
+        for i, stmt in enumerate(statements):
+            lines = stmt.split('\n')
+            for j, line in enumerate(lines):
+                if line.strip().startswith('s.add(') or line.strip().startswith('results.append('):
+                    open_p = line.count('(')
+                    close_p = line.count(')')
+                    if open_p > close_p:
+                        lines[j] = line + ')' * (open_p - close_p)
+            statements[i] = '\n'.join(lines)
+        code = ';'.join(statements)
 
         return code
 
