@@ -67,21 +67,34 @@ QUESTION:
 {question}
 
 ---
-FEW-SHOT EXAMPLE:
+FEW-SHOT EXAMPLE 1 (Contraposition):
 PREMISES:
   1. If a project is optimized, then it is fast.
   2. The project is not fast.
-QUESTION:
-Which of the following logically follows from the premises?
+QUESTION: Which of the following logically follows from the premises?
   A. The project is not optimized.
   B. The project is optimized.
   C. The project is slow.
 STEP-BY-STEP REASONING:
-  - We know the fact: "The project is not fast" (~Fast).
-  - We have the rule: "If optimized, then fast" (Optimized -> Fast).
-  - The contrapositive of this rule is: "If not fast, then not optimized" (~Fast -> ~Optimized).
-  - Applying Modus Ponens on the contrapositive using our fact (~Fast), we derive "The project is not optimized" (~Optimized).
-  - This matches Option A.
+  - Fact: "The project is not fast" (~Fast) from Premise 2.
+  - Rule: "If optimized, then fast" (Optimized -> Fast) from Premise 1.
+  - Contrapositive: (~Fast -> ~Optimized). Applying with our fact: ~Optimized.
+  - This matches Option A. (Uses 2 premises)
+ANSWER: A
+
+FEW-SHOT EXAMPLE 2 (Fewest Premises):
+PREMISES:
+  1. If it rains, the ground is wet. (Rain -> Wet)
+  2. If the ground is wet, plants grow. (Wet -> Grow)
+  3. It is raining.
+QUESTION: Which conclusion follows with the fewest premises?
+  A. The ground is wet.
+  B. Plants grow.
+STEP-BY-STEP REASONING:
+  - The question asks for the option using the FEWEST premises.
+  - Option A: Rain -> Wet (Premise 1) + It rains (Premise 3) = 2 premises.
+  - Option B: Rain -> Wet -> Grow (Premises 1, 2) + It rains (Premise 3) = 3 premises.
+  - Both are logically valid, but A uses fewer premises.
 ANSWER: A
 ---
 
@@ -89,8 +102,13 @@ STEP-BY-STEP REASONING:
 1. Identify the known facts (premises without conditions) and any given HINTS.
 2. Identify the rules (if-then statements) and actively apply Contraposition (If P -> Q, then ~Q -> ~P).
 3. Apply rules to facts using Modus Ponens to derive new conclusions.
-4. Evaluate each answer option against your derived facts.
-5. Select the option that is logically supported.
+4. Evaluate each answer option against your derived facts. For EACH valid option, note HOW MANY premises are needed.
+5. CAREFULLY READ THE QUESTION. Apply the specific criterion it asks for:
+   - "fewest premises" -> pick the valid option that uses the LEAST number of premises.
+   - "strongest conclusion" -> pick the most specific/powerful valid conclusion.
+   - "correct conclusion" or "logically follows" -> pick any valid option.
+   - If a contrapositive uses only 1 original premise, it counts as 1 premise.
+6. If multiple options are valid AND the question does NOT specify a selection criterion, choose the strongest one.
 
 You MUST output your final answer in EXACTLY this format on the last line:
 ANSWER: [single letter A, B, C, or D]"""
@@ -131,57 +149,66 @@ PREMISES (Natural Language):
 QUESTION: {question}
 
 Generate a complete, executable Python script using the z3 library that:
-1. Declare an Entity sort: Entity = z3.DeclareSort('Entity')
-2. Declare a variable x: x = z3.Const('x', Entity)
-3. Declare ALL predicates as z3.Function objects (e.g., WT = z3.Function('WT', Entity, z3.BoolSort()))
-4. Assert all premises into a z3.Solver()
-5. For Yes/No questions: checks whether the question's statement is entailed (if Not(statement) is unsat, print("Yes"), else print("No") or print("Unknown"))
-6. For Multiple Choice questions (A, B, C, D): evaluates each option to see which is logically entailed, and prints ONLY the correct letter (e.g., print("A"))
-7. Prints EXACTLY one line of output.
+1. Declare an Entity sort: Entity = DeclareSort('Entity')
+2. Declare a variable x: x = Const('x', Entity)
+3. Declare ALL predicates as Function objects (e.g., WT = Function('WT', Entity, BoolSort()))
+4. If any named entities exist (e.g., John, Sophia), declare them: John = Const('John', Entity)
+5. Assert all premises into a Solver()
+6. For Yes/No questions: check entailment with Not(statement), if unsat print("Yes"), else print("No")
+7. For MCQ (A, B, C, D): you MUST check ALL FOUR options separately using push/pop. Print the letter of the FIRST entailed option.
+8. Prints EXACTLY one line of output.
 
 IMPORTANT RULES:
-- Use s = z3.Solver() to manage assertions
-- Use z3.ForAll([x], z3.Implies(...)) for universal rules
-- Output ONLY the raw Python code, do not output any markdown formatting (like ```python) or explanations.
+- Output ONLY raw Python code. No markdown, no explanations.
+- For MCQ options: translate each option into a ForAll expression, then check if Not(ForAll(...)) is unsat.
+- You MUST check ALL options A, B, C, D. Do NOT stop after checking only one.
+- Carefully match predicates: read each option's natural language and use the CORRECT predicate names.
 
-Use the following exact skeleton:
+SKELETON FOR YES/NO:
 from z3 import *
 s = Solver()
 Entity = DeclareSort('Entity')
 x = Const('x', Entity)
+# Declare predicates...
+# Add premises...
+# Check: s.push(); s.add(Not(ForAll([x], statement))); print("Yes" if s.check() == unsat else "No"); s.pop()
 
-# 1. Declare Predicates
-# e.g., WT = Function('WT', Entity, BoolSort())
-
-# 2. Add Premises
-# e.g., s.add(ForAll([x], Implies(WT(x), O(x))))
-
-# 3. Check Question / Options
-# e.g., s.push(); s.add(Not(Option_A)); if s.check() == unsat: print("A")
+SKELETON FOR MCQ:
+from z3 import *
+s = Solver()
+Entity = DeclareSort('Entity')
+x = Const('x', Entity)
+# Declare predicates...
+# Add premises...
+# Check ALL options:
+results = []
+s.push(); s.add(Not(ForAll([x], option_A_expr))); results.append(('A', s.check())); s.pop()
+s.push(); s.add(Not(ForAll([x], option_B_expr))); results.append(('B', s.check())); s.pop()
+s.push(); s.add(Not(ForAll([x], option_C_expr))); results.append(('C', s.check())); s.pop()
+s.push(); s.add(Not(ForAll([x], option_D_expr))); results.append(('D', s.check())); s.pop()
+entailed = [r[0] for r in results if r[1] == unsat]
+if entailed: print(entailed[0])
 """
 
-Z3_REFINEMENT_PROMPT = """The previous Z3 code produced an error. Fix it.
+Z3_REFINEMENT_PROMPT = """The previous Z3 code produced an error or no output. Fix it.
 
 PREVIOUS CODE:
 {previous_code}
 
-ERROR MESSAGE:
+ERROR/ISSUE:
 {error_message}
 
 ORIGINAL PREMISES (FOL):
 {premises_fol}
 
-Fix the code and output ONLY the corrected Python code (no explanations, no markdown fences like ```python).
-Ensure all variables and predicates are properly declared before use!
+COMMON MISTAKES TO FIX:
+1. Named entities (John, Sophia, etc.) must be declared: John = Const('John', Entity)
+2. For MCQ: you MUST check ALL 4 options (A, B, C, D) with push/pop, not just one.
+3. Each option check must use ForAll: s.add(Not(ForAll([x], option_expr)))
+4. Ensure predicate names exactly match the FOL premises.
+5. Use Not() instead of NOT() - Python z3 uses Not, And, Or, Implies.
 
-Use this skeleton:
-from z3 import *
-s = Solver()
-Entity = DeclareSort('Entity')
-x = Const('x', Entity)
-# 1. Declare Predicates: e.g., WT = Function('WT', Entity, BoolSort())
-# 2. Add Premises: e.g., s.add(ForAll([x], Implies(WT(x), O(x))))
-# 3. Check Question: e.g., s.push(); s.add(Not(Option_A)); if s.check() == unsat: print("A")
+Output ONLY the corrected Python code. No markdown, no explanations.
 """
 
 # ══════════════════════════════════════════════════════════════
