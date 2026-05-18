@@ -234,7 +234,7 @@ class LLMReasoner:
         response = self._chat(
             system_prompt=SYSTEM_PROMPT_LOGIC,
             user_prompt=prompt,
-            max_tokens=512,
+            max_tokens=1024,
             temperature=0.1,
         )
 
@@ -286,6 +286,7 @@ class LLMReasoner:
             max_tokens=1024,
             temperature=0.0,
         )
+        logger.debug(f"[Z3_GEN] Raw Generated Code:\n{code}\n")
 
         # Clean up code: remove markdown fences
         code = self._clean_code(code)
@@ -324,6 +325,7 @@ class LLMReasoner:
             max_tokens=1024,
             temperature=0.0,
         )
+        logger.debug(f"[Z3_REFINE] Refined Generated Code:\n{code}\n")
 
         return self._clean_code(code)
 

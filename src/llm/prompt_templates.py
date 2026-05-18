@@ -112,16 +112,17 @@ Generate a complete, executable Python script using the z3 library that:
 1. Declares an Entity sort
 2. Declares all predicates as z3.Function objects
 3. Declares all named entities as z3.Const objects
-4. Asserts all premises
-5. Checks whether the question's statement is entailed (proof by contradiction)
-6. Prints EXACTLY one of: "Yes", "No", or "Unknown"
+4. Asserts all premises into a z3.Solver()
+5. For Yes/No questions: checks whether the question's statement is entailed (if Not(statement) is unsat, print("Yes"), else print("No") or print("Unknown"))
+6. For Multiple Choice questions (A, B, C, D): evaluates each option to see which is logically entailed, and prints ONLY the correct letter (e.g., print("A"))
+7. Prints EXACTLY one line of output.
 
 IMPORTANT RULES:
+- Use s = z3.Solver() to manage assertions
 - Use z3.DeclareSort('Entity') for the entity sort
 - Use z3.Function('name', Entity, BoolSort()) for unary predicates
 - Use z3.ForAll([x], z3.Implies(...)) for universal rules
-- To check entailment: add Not(conclusion), if unsat → "Yes"
-- Output ONLY the Python code, nothing else
+- Output ONLY the raw Python code, do not output any markdown formatting (like ```python) or explanations.
 
 ```python
 from z3 import *
