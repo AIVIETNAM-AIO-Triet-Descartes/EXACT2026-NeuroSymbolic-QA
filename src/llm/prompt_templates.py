@@ -61,16 +61,36 @@ PREMISES:
 PREMISES (Formal Logic):
 {premises_fol}
 
+{hints}
+
 QUESTION:
 {question}
 
+---
+FEW-SHOT EXAMPLE:
+PREMISES:
+  1. If a project is optimized, then it is fast.
+  2. The project is not fast.
+QUESTION:
+Which of the following logically follows from the premises?
+  A. The project is not optimized.
+  B. The project is optimized.
+  C. The project is slow.
 STEP-BY-STEP REASONING:
-1. Identify the known facts (premises without conditions).
-2. Identify the rules (if-then statements).
+  - We know the fact: "The project is not fast" (~Fast).
+  - We have the rule: "If optimized, then fast" (Optimized -> Fast).
+  - The contrapositive of this rule is: "If not fast, then not optimized" (~Fast -> ~Optimized).
+  - Applying Modus Ponens on the contrapositive using our fact (~Fast), we derive "The project is not optimized" (~Optimized).
+  - This matches Option A.
+ANSWER: A
+---
+
+STEP-BY-STEP REASONING:
+1. Identify the known facts (premises without conditions) and any given HINTS.
+2. Identify the rules (if-then statements) and actively apply Contraposition (If P -> Q, then ~Q -> ~P).
 3. Apply rules to facts using Modus Ponens to derive new conclusions.
-4. If a premise states NOT something, note which rules are blocked.
-5. Evaluate each answer option against your derived facts.
-6. Select the option that is logically supported.
+4. Evaluate each answer option against your derived facts.
+5. Select the option that is logically supported.
 
 You MUST output your final answer in EXACTLY this format on the last line:
 ANSWER: [single letter A, B, C, or D]"""
@@ -82,6 +102,8 @@ PREMISES:
 
 PREMISES (Formal Logic):
 {premises_fol}
+
+{hints}
 
 STATEMENT TO VERIFY:
 {question}

@@ -317,7 +317,7 @@ class NeuroSymbolicPipeline:
         # ── Strategy 3: LLM Chain-of-Thought (Fallback) ──
         if self.config.use_llm:
             cot_result = self._try_llm_cot(
-                premises_fol, premises_nl, classified
+                premises_fol, premises_nl, classified, logic_tree
             )
             if cot_result and cot_result.get('answer'):
                 q_result.answer = cot_result['answer']
@@ -411,7 +411,7 @@ class NeuroSymbolicPipeline:
         return None
 
     def _try_llm_cot(
-        self, premises_fol, premises_nl, classified
+        self, premises_fol, premises_nl, classified, logic_tree: Optional[Any] = None
     ) -> Optional[Dict]:
         """LLM direct Chain-of-Thought reasoning."""
         try:
@@ -422,9 +422,23 @@ class NeuroSymbolicPipeline:
             q_type = "mcq" if classified.question_type == QuestionType.MCQ \
                      else "yes_no"
 
+            # Extract symbolic hints from LogicTree
+            derived_facts = []
+            if logic_tree:
+                for fact in logic_tree.facts:
+                    neg = "~" if fact.is_negated else ""
+                    args = f"({', '.join(fact.arguments)})" if fact.arguments else "(x)"
+                    derived_facts.append(f"{neg}{fact.predicate}{args}")
+                for node in logic_tree.derived:
+                    neg = "~" if node.is_negated else ""
+                    args = f"({', '.join(node.arguments)})" if node.arguments else "(x)"
+                    derived_facts.append(f"{neg}{node.predicate}{args}")
+                # Remove duplicates
+                derived_facts = list(dict.fromkeys(derived_facts))
+
             result = self.llm.solve_with_cot(
                 premises_nl, premises_fol,
-                classified.original, q_type
+                classified.original, q_type, derived_facts
             )
 
             return result

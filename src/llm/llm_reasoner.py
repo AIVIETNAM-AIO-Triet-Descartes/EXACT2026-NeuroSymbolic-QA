@@ -196,6 +196,7 @@ class LLMReasoner:
         premises_fol: List[str],
         question: str,
         question_type: str = "mcq",
+        derived_facts: Optional[List[str]] = None,
     ) -> Dict:
         """
         Giải bài toán bằng Chain-of-Thought (fallback khi Z3 fail).
@@ -205,6 +206,7 @@ class LLMReasoner:
             premises_fol: Danh sách premises FOL.
             question: Câu hỏi gốc.
             question_type: "mcq" hoặc "yes_no".
+            derived_facts: Các sự thật đã được Logic Tree chứng minh.
 
         Returns:
             Dict với keys: answer, explanation, method
@@ -217,17 +219,24 @@ class LLMReasoner:
             f"  {i+1}. {p}" for i, p in enumerate(premises_fol)
         )
 
+        hints_text = ""
+        if derived_facts:
+            facts_str = "\n".join(f"  - {f}" for f in derived_facts)
+            hints_text = f"SYMBOLIC SOLVER HINTS (Guaranteed True Facts):\n{facts_str}\n"
+
         # Select appropriate prompt
         if question_type == "mcq":
             prompt = COT_MCQ_PROMPT.format(
                 premises_nl=nl_text,
                 premises_fol=fol_text,
+                hints=hints_text,
                 question=question,
             )
         else:
             prompt = COT_YESNO_PROMPT.format(
                 premises_nl=nl_text,
                 premises_fol=fol_text,
+                hints=hints_text,
                 question=question,
             )
 
