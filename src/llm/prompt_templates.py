@@ -96,6 +96,23 @@ STEP-BY-STEP REASONING:
   - Option B: Rain -> Wet -> Grow (Premises 1, 2) + It rains (Premise 3) = 3 premises.
   - Both are logically valid, but A uses fewer premises.
 ANSWER: A
+
+FEW-SHOT EXAMPLE 3 (Insufficient Information → Unknown):
+PREMISES:
+  1. If a student studies hard, they pass the exam.
+  2. If a student passes the exam, they graduate.
+QUESTION: Which statement is correct?
+  A. All students graduate.
+  B. Some students study hard.
+  C. If a student studies hard, they graduate.
+STEP-BY-STEP REASONING:
+  - Option A: We only know "IF studies hard THEN pass THEN graduate", but there are NO ground facts (no specific student is mentioned). We CANNOT conclude "all students graduate" without knowing who studies hard. NOT derivable.
+  - Option B: No premise states any student actually studies hard. NOT derivable.
+  - Option C: By Hypothetical Syllogism: studies_hard -> pass (P1) and pass -> graduate (P2), so studies_hard -> graduate. This is VALID.
+  - WAIT: Option C is valid. But if the question has NO concrete ground facts and the rules are only conditional (if-then), we must check if ANY option is provably true. If none of the options can be proven true or false from the premises alone, answer Unknown.
+  - Here, Option C IS derivable. So the answer is C.
+  - NOTE: If NONE of the options were derivable, the answer would be "Unknown".
+ANSWER: C
 ---
 
 STEP-BY-STEP REASONING:
@@ -111,9 +128,12 @@ STEP-BY-STEP REASONING:
    - "correct conclusion" or "logically follows" -> pick any valid option.
    - If a contrapositive uses only 1 original premise, it counts as 1 premise.
 6. If multiple options are valid AND the question does NOT specify a selection criterion, choose the strongest one.
+7. CRITICAL: If NO option can be logically derived from the premises (all are unsupported assumptions), answer "Unknown".
+   - An option that only restates a conditional rule (if-then) WITHOUT a matching ground fact is NOT provable.
+   - If the premises contain NO ground facts (only rules), and all options require ground facts, answer "Unknown".
 
 You MUST output your final answer in EXACTLY this format on the last line:
-ANSWER: [single letter A, B, C, or D]"""
+ANSWER: [A, B, C, D, or Unknown]"""
 
 COT_YESNO_PROMPT = """Determine whether the following statement logically follows from the premises.
 
@@ -128,16 +148,51 @@ PREMISES (Formal Logic):
 STATEMENT TO VERIFY:
 {question}
 
+---
+FEW-SHOT EXAMPLE (Broken Chain → No):
+PREMISES:
+  1. If a student studies, they understand the material.
+  2. If a student understands the material, they pass the exam.
+  3. If a student passes the exam, they graduate.
+STATEMENT: There exists a complete pathway from studying to getting a job.
+STEP-BY-STEP REASONING:
+  1. studies -> understands (Premise 1) ✓
+  2. understands -> passes_exam (Premise 2) ✓
+  3. passes_exam -> graduates (Premise 3) ✓
+  4. graduates -> gets_a_job ← NO SUCH PREMISE EXISTS! Chain is BROKEN.
+  Since the chain from studying to getting a job is INCOMPLETE (missing the last link), the statement is NOT supported.
+ANSWER: No
+
+FEW-SHOT EXAMPLE (Insufficient Information → Unknown):
+PREMISES:
+  1. If it rains, the ground is wet.
+  2. If the ground is wet, flowers bloom.
+STATEMENT: The flowers are blooming.
+STEP-BY-STEP REASONING:
+  1. We have rules: rain -> wet (P1), wet -> bloom (P2).
+  2. But there is NO fact stating "it rains" or "the ground is wet".
+  3. Without a ground fact to trigger the chain, we CANNOT determine if flowers bloom.
+  4. The statement is neither provably true nor provably false.
+ANSWER: Unknown
+---
+
 STEP-BY-STEP REASONING:
 1. Identify which premises are relevant.
 2. Break down the STATEMENT TO VERIFY into its required conditions.
 3. For EACH required condition, check if it is EXPLICITLY stated or logically derived from the premises.
    - WARNING: You CANNOT assume any missing conditions (e.g., if a rule requires 'field is X' but the field is not stated, the condition FAILS).
    - WARNING: You CANNOT assume common sense relations not explicitly stated in the premises.
-4. If ALL required conditions are provably met → "Yes". If ANY condition is missing, unstated, or contradicted → "No".
+4. CRITICAL — Chain Completeness Check:
+   - If the statement claims a "pathway", "chain", "causal chain", or "leads to" relationship, you MUST verify EVERY SINGLE LINK in the chain has an explicit premise.
+   - List each link as: A -> B (Premise N) ✓ or A -> B ← MISSING ✗
+   - If ANY link is missing, the chain is BROKEN and the answer is "No".
+5. Decision rules:
+   - If ALL required conditions are provably met → "Yes".
+   - If ANY condition is missing, unstated, or contradicted → "No".
+   - If the premises contain NO ground facts and the statement requires specific instances (not just conditional rules), answer "Unknown".
 
 You MUST output your final answer in EXACTLY this format on the last line:
-ANSWER: [Yes or No]"""
+ANSWER: [Yes, No, or Unknown]"""
 
 # ══════════════════════════════════════════════════════════════
 # Z3 Code Generation Prompt

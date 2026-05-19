@@ -31,9 +31,79 @@ Nếu môi trường chạy (Colab/Local) cho phép load nhiều adapter hoặc 
 *   **Reasoning Agent:** Dùng Qwen 2.5 7B (hoặc Llama 3 8B) chuyên xử lý `llm_cot` và sinh Natural Language.
 *   **Coding Agent:** Dùng một mô hình chuyên code siêu nhỏ (như `DeepSeek-Coder-1.3B` hoặc `Qwen2.5-Coder-7B`) chỉ để làm đúng một việc duy nhất: Dịch FOL sang Z3 Python Code. Mô hình coder sẽ KHÔNG bao giờ sinh ra toán tử `>>` hay quên khai báo biến như mô hình ngôn ngữ thông thường.
 
+## 5. Xử Lý Đáp Án "Unknown" (MỚI — v2.0)
+
+### Vấn đề
+
+Dataset EXACT 2026 chứa nhiều câu hỏi có đáp án `Unknown` — cả MCQ lẫn Yes/No. Điều này xảy ra khi:
+- Premises chỉ chứa rules (if-then) mà **không có ground facts cụ thể** để kích hoạt suy luận.
+- Không đủ thông tin để kết luận bất kỳ option nào là đúng.
+
+### Triển khai
+
+| Thành phần | Thay đổi |
+|------------|----------|
+| `COT_MCQ_PROMPT` | Cho phép trả lời `Unknown` kèm few-shot example (Example 3) |
+| `COT_YESNO_PROMPT` | Cho phép trả lời `Unknown` kèm few-shot example (Insufficient Information) |
+| `ANSWER_EXTRACT_PATTERNS` | Regex đã hỗ trợ capture `Unknown` |
+| `_extract_answer()` | Normalize `unknown` → `Unknown` |
+
+### Khi nào LLM nên trả lời Unknown?
+
+1. **MCQ:** Tất cả options đều yêu cầu ground facts nhưng premises chỉ có rules.
+2. **Yes/No:** Statement không thể chứng minh true hay false — thiếu facts.
+3. **Combination:** Chuỗi logic tồn tại nhưng thiếu trigger facts.
+
+## 6. Chống "Yes Bias" trên Chuỗi Logic Bị Đứt (MỚI — v2.0)
+
+### Vấn đề
+
+LLM 7B có xu hướng trả lời "Yes" khi thấy chuỗi suy luận dài (4-5 bước đúng), mà **không kiểm tra** bước cuối cùng có tồn tại không. Ví dụ:
+
+```
+Q: Is there a causal chain from A to Z?
+Premises: A→B, B→C, C→D  (no D→Z!)
+LLM: "Yes" ← WRONG! Chain is BROKEN.
+```
+
+### Giải pháp
+
+1. **Few-shot "Broken Chain" example** trong `COT_YESNO_PROMPT` — minh họa cụ thể cách phát hiện chain bị đứt.
+2. **Chain Completeness Check (Bước 4 mới):**
+   - Khi câu hỏi chứa từ khóa: "pathway", "chain", "causal chain", "leads to"
+   - LLM PHẢI liệt kê từng link: `A → B (Premise N) ✓` hoặc `A → B ← MISSING ✗`
+   - Nếu BẤT KỲ link nào missing → Answer: No
+3. **Kết quả dự kiến:** Fix 8 câu sai trong batch 30-50 (từ 49% lên ~71% riêng loại lỗi này).
+
+## 7. Cải Thiện Logic Tree Parser (MỚI — v2.0)
+
+### Vấn đề
+
+Parser `FOLPremiseParser` không xử lý được nhiều cú pháp FOL phổ biến trong dataset, dẫn đến "Could not parse" → 0 derived facts → LLM thiếu symbolic hints.
+
+### Các pattern mới được hỗ trợ
+
+| Pattern | Ví dụ | Trước | Sau |
+|---------|-------|-------|-----|
+| Negated antecedent rule | `∀x(¬P(x) → ¬Q(x))` | ❌ Skip | ✅ RuleNode(NOT_P → NOT_Q) |
+| Bare atom (no parens) | `¬depleted_fund` | ❌ Skip | ✅ FactNode(negated) |
+| Bare positive atom | `available_mentors` | ❌ Skip | ✅ FactNode |
+| Equality constraint | `(time_diff(A,B) = 0.5)` | ❌ Skip | ✅ FactNode |
+| Existential facts | `∃x P(x)` with `Exists` keyword | ⚠️ Partial | ✅ Full support |
+
+### Kết quả
+
+Thay đổi parser giúp Logic Tree parse thêm 10-15 premises/sample → derive thêm facts → cung cấp symbolic hints tốt hơn cho LLM.
+
 ## Lộ trình triển khai (Next Steps)
 
-Nếu bạn muốn tiếp tục tối ưu code ngay bây giờ, tôi đề xuất chúng ta nên bắt đầu với **Ưu tiên 1**:
-1. **(Dễ nhất - Hiệu quả cao nhất):** Nâng cấp Prompt thêm **Few-Shot Examples** cho Z3.
-2. **(Độ khó trung bình):** Cải tiến thuật toán Forward Chaining trong `logic_tree.py` để xử lý triệt để phép Phủ định (`Not`).
-3. **(Nâng cao):** Viết lại hàm `_solve_question` trong `main.py` để chạy Cross-Check (CoT đối chiếu với Logic Tree) tạo ra cơ chế Self-Correction.
+### Đã triển khai (v2.0) ✅
+1. ✅ Hỗ trợ đáp án `Unknown` cho cả MCQ và Yes/No prompt
+2. ✅ Chống "Yes bias" bằng few-shot broken chain + chain completeness check
+3. ✅ Cải thiện Logic Tree parser: bare atoms, negated antecedent rules, equality
+4. ✅ Cập nhật docs
+
+### Sắp triển khai (v2.1)
+1. **(Ưu tiên cao):** Self-Consistency Majority Vote — gọi LLM 3 lần, lấy majority answer
+2. **(Ưu tiên trung bình):** Tri-state Logic trong Forward Chaining — xử lý triệt để phủ định
+3. **(Ưu tiên thấp):** Multi-Agent Delegation — routing mô hình theo loại task

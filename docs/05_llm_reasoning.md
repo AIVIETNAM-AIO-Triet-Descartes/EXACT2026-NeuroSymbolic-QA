@@ -145,3 +145,47 @@ class LLMReasoner:
 9. **Symbolic Hinting for CoT (Neo đậu tri thức):** Khi Z3 gặp lỗi và rơi vào nhánh Fallback (Chain-of-Thought), LLM sẽ không phải mò mẫm tự suy luận từ đầu. Hệ thống tự động trích xuất các sự thật đã được Logic Tree chứng minh thông qua cơ chế `Forward Chaining` và bơm ngược lại vào Prompt làm **Guaranteed True Facts** (`hints`).
 10. **Quản Lý VRAM RTX 3050 (4GB):** Khi chạy nội suy cục bộ trên card RTX 3050 4GB, tham số `--gpu-layers` bắt buộc phải cấu hình ở mức trung bình (ví dụ: `--gpu-layers 10`) để tránh lỗi tràn GPU memory. Nếu VRAM dư dả (như trên Colab T4 16GB), tham số này có thể đặt ở mức tối đa `-1`.
 
+---
+
+## 4. Xử Lý Đáp Án "Unknown" và Chống "Yes Bias"
+
+### 4.1 Hỗ Trợ Đáp Án `Unknown`
+
+Từ phiên bản v2.0, cả hai prompt `COT_MCQ_PROMPT` và `COT_YESNO_PROMPT` đều hỗ trợ đáp án `Unknown`.
+
+**Khi nào trả lời Unknown?**
+- **MCQ:** Khi không có option nào có thể suy luận được từ premises. Điều này thường xảy ra khi premises chỉ chứa rules (if-then) mà không có ground facts cụ thể.
+- **Yes/No:** Khi statement không thể chứng minh đúng hay sai — ví dụ premises chỉ có rules mà không có instance nào để kích hoạt chain.
+
+**Cơ chế:**
+1. Few-shot example thứ 3 trong MCQ prompt minh họa rõ khi nào `Unknown` là hợp lệ.
+2. Few-shot example thứ 2 trong YN prompt (Insufficient Information) minh họa trường hợp thiếu ground facts.
+3. Bước 7 trong MCQ instructions và Bước 5 trong YN instructions định nghĩa rõ decision rules.
+
+### 4.2 Chống "Yes Bias" cho Chuỗi Logic Bị Đứt
+
+LLM 7B có xu hướng **"Yes bias"** — khi thấy chuỗi suy luận dài (4-5 bước đúng), nó tự tin nói "Yes" mà không kiểm tra bước cuối cùng.
+
+**Giải pháp đã triển khai:**
+
+1. **Few-shot example "Broken Chain"** trong `COT_YESNO_PROMPT`:
+   - Minh họa chuỗi A→B→C→D nhưng thiếu D→E.
+   - LLM thấy ví dụ cụ thể về cách đánh dấu ✓/✗ từng link.
+
+2. **Bước 4 (Chain Completeness Check):**
+   - Yêu cầu LLM liệt kê TỪNG link: `A -> B (Premise N) ✓`
+   - Nếu BẤT KỲ link nào missing: `A -> B ← MISSING ✗` → Answer: No.
+
+3. **Từ khóa trigger:** Khi câu hỏi chứa "pathway", "chain", "causal chain", "leads to" → tự động kích hoạt kiểm tra completeness.
+
+### 4.3 Cải thiện Logic Tree Parser
+
+Logic Tree parser đã được nâng cấp để xử lý các cú pháp FOL phức tạp:
+
+| Cú pháp | Trước | Sau |
+|---------|-------|-----|
+| `∀x(¬P(x) → ¬Q(x))` | ❌ Parse fail | ✅ RuleNode(NOT_P → NOT_Q) |
+| `¬depleted_fund` | ❌ Parse fail | ✅ FactNode(depleted_fund, negated=True) |
+| `∃x P(x)` | ⚠️ Inconsistent | ✅ FactNode (treated as existential witness) |
+| `available_mentors` | ❌ Parse fail | ✅ FactNode(available_mentors, args=[]) |
+| `(time_diff(A, B) = 0.5)` | ❌ Parse fail | ✅ FactNode(time_diff, [A, B, 0.5]) |

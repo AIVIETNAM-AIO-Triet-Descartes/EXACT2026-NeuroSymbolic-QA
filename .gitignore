@@ -48,3 +48,5 @@ results/
 # Environment
 .env
 .env.local
+
+/evaluate/*

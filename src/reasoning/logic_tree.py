@@ -184,13 +184,13 @@ class FOLPremiseParser:
         return no_quant and no_impl
 
     def _is_universal_fact(self, fol: str) -> bool:
-        """Check if FOL is a universally quantified simple fact (no impl)."""
-        has_quant = '∀' in fol or 'ForAll' in fol or '∃' in fol
+        """Check if FOL is a universally/existentially quantified simple fact (no impl)."""
+        has_quant = '∀' in fol or 'ForAll' in fol or '∃' in fol or 'Exists' in fol
         no_impl = '→' not in fol and '->' not in fol
         return has_quant and no_impl
 
     def _parse_atomic(self, fol: str, index: int) -> Optional[FactNode]:
-        """Parse an atomic fact like P(John) or ¬P(John)."""
+        """Parse an atomic fact like P(John) or ¬P(John) or bare_predicate."""
         fol = fol.strip()
         is_negated = fol.startswith('¬') or fol.startswith('~')
         if is_negated:
@@ -225,7 +225,7 @@ class FOLPremiseParser:
                 premise_index=index,
             )
 
-        # Handle: predicate_name = value (arithmetic)
+        # Handle: predicate_name(args) = value (arithmetic)
         eq_match = re.match(r'(\w+)\s*\(([^)]*)\)\s*=\s*(\d+)', fol.strip())
         if eq_match:
             predicate = eq_match.group(1)
@@ -238,22 +238,91 @@ class FOLPremiseParser:
                 premise_index=index,
             )
 
+        # Handle: bare predicate without parentheses (e.g., "depleted_fund", "available_mentors")
+        bare_match = re.match(r'^([a-zA-Z_]\w*)$', fol.strip())
+        if bare_match:
+            return FactNode(
+                predicate=bare_match.group(1),
+                arguments=[],
+                is_negated=is_negated,
+                premise_index=index,
+            )
+
+        # Handle: equality without function notation (e.g., "(time_diff(A, B) = 0.5)")
+        eq_match2 = re.match(r'\(?\s*(\w+)\s*\(([^)]*)\)\s*=\s*([\d.]+)\s*\)?', fol.strip())
+        if eq_match2:
+            predicate = eq_match2.group(1)
+            args = [a.strip() for a in eq_match2.group(2).split(',')]
+            args.append(eq_match2.group(3))
+            return FactNode(
+                predicate=predicate,
+                arguments=args,
+                is_negated=is_negated,
+                premise_index=index,
+            )
+
         return None
 
     def _parse_universal_fact(
         self, fol: str, index: int
     ) -> Optional[FactNode]:
-        """Parse ∀x (P(x)) or ∃x (P(x)) - quantified fact without impl."""
+        """Parse ∀x (P(x)) or ∃x (P(x)) - quantified fact without impl.
+        
+        Also handles patterns without outer parens like:
+            ∀x complete(x)
+            ∃x enrolled(x)
+            ∀x(¬engage(x))
+        """
         # Extract the body inside the quantifier
         body = self._extract_body(fol)
         if body:
             return self._parse_atomic(body, index)
+
+        # Fallback: handle ∀x pred(x) or ∃x pred(x) without outer parens
+        match = re.search(
+            r'(?:∀|∃|ForAll|Exists)\s*\w+\s+(¬|~)?(\w+)\s*\(([^)]*)\)',
+            fol
+        )
+        if match:
+            is_negated = match.group(1) is not None
+            predicate = match.group(2)
+            args_str = match.group(3).strip()
+            args = [a.strip() for a in args_str.split(',')] if args_str else []
+            return FactNode(
+                predicate=predicate,
+                arguments=args,
+                is_negated=is_negated,
+                premise_index=index,
+            )
+
+        # Fallback: handle bare ∀x pred (without parens at all)
+        match2 = re.search(
+            r'(?:∀|∃|ForAll|Exists)\s*\w+\s+(¬|~)?(\w+)\s*$',
+            fol.strip()
+        )
+        if match2:
+            is_negated = match2.group(1) is not None
+            predicate = match2.group(2)
+            return FactNode(
+                predicate=predicate,
+                arguments=[],
+                is_negated=is_negated,
+                premise_index=index,
+            )
+
         return None
 
     def _parse_rule(
         self, fol: str, index: int
     ) -> Optional[RuleNode]:
-        """Parse an implication rule: ... → ..."""
+        """Parse an implication rule: ... → ...
+        
+        Handles:
+        - Standard rules: P(x) → Q(x)
+        - Negated antecedent rules: ¬P(x) → ¬Q(x)
+        - Bare predicate antecedents: depleted_fund → ¬scholarship(s)
+        - Mixed rules: P(x) ∧ ¬Q(x) → R(x)
+        """
         # Determine if universal
         is_universal = '∀' in fol or 'ForAll' in fol
 
@@ -282,16 +351,44 @@ class FOLPremiseParser:
             if pred in antecedent_preds:
                 antecedent_preds.remove(pred)
 
+        # Also handle bare negated predicates without parens: ¬bare_pred
+        for pred in re.findall(r'[¬~](\w+)(?:\s|$|[∧&])', antecedent_str):
+            if pred not in negated_ants and not re.search(re.escape(pred) + r'\s*\(', antecedent_str):
+                negated_ants.append(pred)
+
+        # Handle bare (non-negated) antecedent predicates without parens
+        # e.g., "depleted_fund → ¬scholarship(s)" — "depleted_fund" has no parens
+        for bare in re.findall(r'(?:^|[∧&])\s*([a-zA-Z_]\w*)(?:\s|$|[∧&→])', antecedent_str):
+            if bare not in antecedent_preds and bare not in negated_ants and \
+               bare not in ('ForAll', 'Exists', 'Not', 'And', 'Or', 'Implies'):
+                antecedent_preds.append(bare)
+
         # Extract consequent predicate
         consequent_preds = self._extract_predicate_names(consequent_str)
         consequent = consequent_preds[0] if consequent_preds else ""
+
+        # If consequent has no pred with parens, try bare predicate
+        if not consequent:
+            bare_cons = re.findall(r'(?:^|[¬~])\s*([a-zA-Z_]\w*)(?:\s|$)', consequent_str.strip())
+            bare_cons = [b for b in bare_cons if b not in ('ForAll', 'Exists', 'Not', 'And', 'Or', 'Implies')]
+            if bare_cons:
+                consequent = bare_cons[0]
 
         # Check for negated consequent
         is_neg_consequent = bool(re.search(r'[¬~]\s*' + re.escape(consequent), consequent_str)) if consequent else False
         if is_neg_consequent:
             consequent = f"NOT_{consequent}"
 
-        if not consequent or not antecedent_preds:
+        # For rules with ONLY negated antecedents (e.g., ¬P(x) → ¬Q(x)),
+        # keep negated preds as antecedents so the rule isn't discarded
+        if not consequent:
+            return None
+        if not antecedent_preds and negated_ants:
+            # Use negated predicates as antecedents with NOT_ prefix
+            antecedent_preds = [f"NOT_{p}" for p in negated_ants]
+            negated_ants = []  # They are now explicitly tracked as NOT_ antecedents
+
+        if not antecedent_preds:
             return None
 
         return RuleNode(
