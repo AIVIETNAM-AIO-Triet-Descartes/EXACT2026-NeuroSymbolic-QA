@@ -182,10 +182,11 @@ STEP-BY-STEP REASONING:
 3. For EACH required condition, check if it is EXPLICITLY stated or logically derived from the premises.
    - WARNING: You CANNOT assume any missing conditions (e.g., if a rule requires 'field is X' but the field is not stated, the condition FAILS).
    - WARNING: You CANNOT assume common sense relations not explicitly stated in the premises.
-4. CRITICAL — Chain Completeness Check:
+4. CRITICAL — Chain Completeness Check & Universal Rules:
    - If the statement claims a "pathway", "chain", "causal chain", or "leads to" relationship, you MUST verify EVERY SINGLE LINK in the chain has an explicit premise.
    - List each link as: A -> B (Premise N) ✓ or A -> B ← MISSING ✗
    - If ANY link is missing, the chain is BROKEN and the answer is "No".
+   - IMPORTANT: Do not overly second-guess universal rules (∀x). If a premise states a rule for "All students" or "All subjects" (e.g., ∀x P(x)), treat it as a valid ground fact for any specific instance. You do not need to explicitly prove that a specific instance exists if the premise universally applies to all of them.
 5. Decision rules:
    - If ALL required conditions are provably met → "Yes".
    - If ANY condition is missing, unstated, or contradicted → "No".

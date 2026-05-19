@@ -174,7 +174,7 @@
       "Does Sophia qualify for the university scholarship, according to the premises?"
     ],
     "answers": [
-      "C",
+      "A",
       "Yes"
     ],
     "explanation": [
@@ -624,7 +624,7 @@
       "Does Alex meet all requirements for booking training sessions, according to the premises?"
     ],
     "answers": [
-      "C",
+      "A",
       "No"
     ],
     "explanation": [
@@ -666,7 +666,7 @@
       "Does Sarah meet all requirements to take advanced classes, according to the premises?"
     ],
     "answers": [
-      "D",
+      "B",
       "No"
     ],
     "explanation": [
@@ -1578,7 +1578,7 @@
       "Do the premises support that a student using structured plans, hands-on experiments, and visualization will have improved comprehension and retention?"
     ],
     "answers": [
-      "Unknown",
+      "A",
       "Yes"
     ],
     "explanation": [
@@ -2249,7 +2249,7 @@
     ],
     "answers": [
       "A",
-      "No"
+      "Yes"
     ],
     "explanation": [
       "Premise 1 states that if a student does not practice, they cannot solve problems (¬Practice → ¬Solve). The contrapositive of this is that if they can solve, then they must have practiced (Solve → Practice), supporting option A.",
@@ -2295,8 +2295,8 @@
       "According to the premises, is the following statement true?\nStatement: If a person is promoted, they will become a leader in their organization."
     ],
     "answers": [
-      "Unknown",
-      "No"
+      "A",
+      "Yes"
     ],
     "explanation": [
       "Premise 8 states that if a person has experience in their field, then they are hardworking. This directly supports statement A, which says anyone with experience must be hardworking. The other options contradict or are not supported by the premises.",
@@ -2345,8 +2345,8 @@
       "According to the premises, is the following statement true?\nStatement: There exists at least one student on the honor roll who is eligible for a scholarship."
     ],
     "answers": [
-      "Unknown",
-      "No"
+      "A",
+      "Yes"
     ],
     "explanation": [
       "Premise 4 states that at least one student is on the honor roll. Premise 10 tells us that anyone on the honor roll must have a high GPA, and Premise 5 says that having a high GPA makes one eligible for a scholarship. So, it logically follows that at least one student is eligible.",
@@ -2396,7 +2396,7 @@
     ],
     "answers": [
       "A",
-      "No"
+      "Yes"
     ],
     "explanation": [
       "Premise 4 states that attending lectures leads to understanding the material, and premise 5 states that understanding the material leads to performing well in exams, so attending lectures leads to performing well in exams, making option A correct. Option B is false because a scholarship does not imply high grades. Option C is false because the contrapositive is not guaranteed. Option D is false because more study time leads to high grades but not necessarily high achievement without further conditions.",
@@ -2452,7 +2452,7 @@
     ],
     "answers": [
       "B",
-      "No"
+      "Yes"
     ],
     "explanation": [
       "Premise 1 states attending lectures leads to understanding material, premise 2 states understanding leads to exam performance, and premise 3 states exam performance leads to a high GPA, supporting option B. Option A is false because other factors could improve job prospects. Option C is false because financial benefits don’t imply research participation. Option D is false because practical experience doesn’t link to academic awards.",
@@ -2505,7 +2505,7 @@
     ],
     "answers": [
       "B",
-      "No"
+      "Yes"
     ],
     "explanation": [
       "Premise 8 states industry connections increase the chance of securing an internship, and premise 2 states securing an internship leads to practical experience, supporting option B. Option A is false because job offers aren’t guaranteed by performance alone. Option C is false because a resume doesn’t directly affect earning potential. Option D is false because students can make decisions without mentors.",
@@ -2559,7 +2559,7 @@
     ],
     "answers": [
       "C",
-      "No"
+      "Yes"
     ],
     "explanation": [
       "Premise 9 states having a career mentor leads to career guidance, premise 10 states guidance leads to informed career choices, and premise 11 states informed choices lead to better career growth, supporting option C. Option A is false because hiring isn’t guaranteed. Option B is false because a resume doesn’t directly lead to financial stability. Option D is false because experience doesn’t negate the need for interview performance.",
@@ -2611,7 +2611,7 @@
       "According to the premises, is the following statement true?\nStatement: There exists a complete pathway from attending lectures regularly to receiving job opportunities."
     ],
     "answers": [
-      "Unknown",
+      "B",
       "No"
     ],
     "explanation": [
@@ -2661,7 +2661,7 @@
     ],
     "answers": [
       "D",
-      "Unknown"
+      "Yes"
     ],
     "explanation": [
       "Option D is correct because engaging in independent study increases the likelihood of publishing research (Premise 6), and publishing research leads to academic recognition (Premise 3). Thus, academic recognition becomes a likely outcome, though not guaranteed.",
@@ -2712,8 +2712,8 @@
       "According to the premises, is the following statement true?\nStatement: There exists a complete pathway from engaging in research to receiving academic recognition."
     ],
     "answers": [
-      "Unknown",
-      "No"
+      "A",
+      "Yes"
     ],
     "explanation": [
       "Engaging in research increases a student’s chances of winning competitions (Premise 6), and winning competitions leads to academic recognition (Premise 3), forming a two-step logical inference.",
@@ -4263,7 +4263,7 @@
       "Based on the above premises, is the statement true?\nStatement: If achieving good grades implies studying regularly, then not receiving extra credit implies that the student does not submit assignments on time."
     ],
     "answers": [
-      "Unknown",
+      "A",
       "No"
     ],
     "explanation": [
@@ -4334,7 +4334,7 @@
       "Based on the above premises, is the statement true?\nStatement: If a student submits assignments on time, then they receive extra credit."
     ],
     "answers": [
-      "Unknown",
+      "A",
       "No"
     ],
     "explanation": [
@@ -6735,7 +6735,7 @@
     ],
     "answers": [
       "Unknown",
-      "No"
+      "Yes"
     ],
     "explanation": [
       "Premise 2 says that not understanding content implies not gaining knowledge, and premise 6 says not gaining knowledge implies not understanding content. So understanding and knowledge are logically equivalent.",
@@ -7353,7 +7353,7 @@
       "Based on the premises, is the following statement true?\nStatement: In C++, 'new' is used to dynamically allocate memory and 'delete' is used to deallocate it, allowing for memory management through pointers."
     ],
     "answers": [
-      "Unknown",
+      "B",
       "No"
     ],
     "explanation": [
@@ -13793,7 +13793,7 @@
     ],
     "answers": [
       "D",
-      "No"
+      "Yes"
     ],
     "explanation": [
       "From premise 4 (All students complete the end-of-term research paper), we know ∀x (Student(x) → CompletesResearchPaper(x)). From premise 7, if ∀x (Student(x) ∧ InvestsTimeProjectLearning(x) → BroaderUnderstanding(x)), then ∀x (Student(x) → CompletesResearchPaper(x)). Since premise 4 states this is true, premise 7's antecedent must be true. From premise 8, if ∀x (Student(x) ∧ BroaderUnderstanding(x) → MentorsFirstYears(x)), then ∀x (Student(x) ∧ InvestsTimeProjectLearning(x) → BroaderUnderstanding(x)). Therefore, if a broader understanding implies mentoring (premise 3), then investing time in project-based learning implies a broader understanding (premise 1). Hence, option D is correct.",
@@ -14073,7 +14073,7 @@
     ],
     "answers": [
       "Unknown",
-      "No"
+      "Yes"
     ],
     "explanation": [
       "From premise 1 (There exists at least one teaching assistant in the computer science department), we know ∃x (TeachingAssistant(x)). From premise 7, if the existence of research project participants implies that non-submitters don't receive honors, then there exists a teaching assistant ((∃x (ResearchParticipant(x)) → ∀y (¬SubmitsAssignments(y) → ¬ReceivesHonors(y))) → ∃z (TeachingAssistant(z))). Since premise 1 states that there exists a teaching assistant, premise 7's consequent is true, so the antecedent must be true. From premise 8, if there exists a research participant, then if the existence of research participants implies non-submitters don't receive honors, there must be a teaching assistant (∃x (ResearchParticipant(x)) → ((∃y (ResearchParticipant(y)) → ∀z (¬SubmitsAssignments(z) → ¬ReceivesHonors(z))) → ∃w (TeachingAssistant(w)))). Since premise 7's antecedent is true, and premise 8's antecedent is true due to premise 2 (There exists at least one student who participates in research projects), premise 8's consequent must be true. Therefore, if there exists a research participant, then if the existence of research participants implies non-submitters don't receive honors, there must be a teaching assistant (option D).",
@@ -18434,7 +18434,7 @@
     ],
     "answers": [
       "Yes",
-      "D"
+      "A"
     ],
     "explanation": [
       "Premise 4 states all students meet Software Engineering requirements, and premise 1 states not passing Algorithms prevents meeting those requirements, so all students pass Algorithms.",
@@ -19052,7 +19052,7 @@
     ],
     "answers": [
       "A",
-      "No"
+      "Yes"
     ],
     "explanation": [
       "From premise 3 (Linh is a full-time student with health issues, taking 12 credits this semester), we know FullTimeStudent(Linh) ∧ SpecialCase(Linh) ∧ Credits(Linh) = 12. From premise 1, full-time students must take at least 14 credits per semester, but in special cases they can take a minimum of 11 credits for up to 2 semesters (∀s (FullTimeStudent(s) → (Credits(s) ≥ 14 ∨ (SpecialCase(s) ∧ Credits(s) ≥ 11)))). From premise 13, Linh has not exceeded the 2-semester limit for special cases (SemesterCountSpecialCase(Linh) ≤ 2). Since premise 3 states that Linh is a full-time student with a special case and taking 12 credits, and premise 13 states she has not exceeded the limit, premise 1's conditions are met. Therefore, Linh is meeting the credit requirements for full-time students (option B).",
