@@ -102,6 +102,8 @@ STEP-BY-STEP REASONING:
 1. Identify the known facts (premises without conditions) and any given HINTS.
 2. Identify the rules (if-then statements) and actively apply Contraposition (If P -> Q, then ~Q -> ~P).
 3. Apply rules to facts using Modus Ponens to derive new conclusions.
+   - WARNING: When applying a rule, you MUST explicitly check that ALL conditions in the "if" part are met.
+   - WARNING: If a condition is negated in the facts (e.g., "John has not received X"), the rule CANNOT be applied! Do not hallucinate missing conditions.
 4. Evaluate each answer option against your derived facts. For EACH valid option, note HOW MANY premises are needed.
 5. CAREFULLY READ THE QUESTION. Apply the specific criterion it asks for:
    - "fewest premises" -> pick the valid option that uses the LEAST number of premises.
@@ -127,10 +129,12 @@ STATEMENT TO VERIFY:
 {question}
 
 STEP-BY-STEP REASONING:
-1. Identify which premises are relevant to the statement.
-2. Try to derive the statement from the premises using logical rules.
-3. If derivable → "Yes". If contradicted or if there is insufficient information to prove it true → "No" (Apply Closed World Assumption).
-4. DO NOT hallucinate or assume unstated facts (like assuming a specific field, condition, or state) just to make the statement true. Only use explicitly stated facts.
+1. Identify which premises are relevant.
+2. Break down the STATEMENT TO VERIFY into its required conditions.
+3. For EACH required condition, check if it is EXPLICITLY stated or logically derived from the premises.
+   - WARNING: You CANNOT assume any missing conditions (e.g., if a rule requires 'field is X' but the field is not stated, the condition FAILS).
+   - WARNING: You CANNOT assume common sense relations not explicitly stated in the premises.
+4. If ALL required conditions are provably met → "Yes". If ANY condition is missing, unstated, or contradicted → "No".
 
 You MUST output your final answer in EXACTLY this format on the last line:
 ANSWER: [Yes or No]"""
