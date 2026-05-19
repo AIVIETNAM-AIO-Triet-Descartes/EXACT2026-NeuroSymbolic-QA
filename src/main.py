@@ -667,6 +667,16 @@ def parse_args():
         help="Maximum number of samples to process",
     )
     parser.add_argument(
+        "--start-sample",
+        type=int, default=0,
+        help="Start index for processing samples (0-indexed)",
+    )
+    parser.add_argument(
+        "--end-sample",
+        type=int, default=None,
+        help="End index for processing samples (exclusive)",
+    )
+    parser.add_argument(
         "--no-llm",
         action="store_true",
         help="Disable LLM (use only Z3 + Logic Tree)",
@@ -729,14 +739,24 @@ def main():
         log_level=args.log_level,
     )
 
+    # Determine processing range
+    start = args.start_sample
+    if args.end_sample is not None:
+        end = args.end_sample
+    elif args.max_samples is not None:
+        end = start + args.max_samples
+    else:
+        end = len(dataset)
+        
+    process_dataset = dataset[start:end]
+    logger.info(f"Processing samples from index {start} to {end} ({len(process_dataset)} samples).")
+
     # Run pipeline
     pipeline = NeuroSymbolicPipeline(config)
-    results = pipeline.run(dataset[:config.max_samples or len(dataset)])
+    results = pipeline.run(process_dataset)
 
     # Format and save output
-    output_data = format_output(
-        results, dataset[:config.max_samples or len(dataset)]
-    )
+    output_data = format_output(results, process_dataset)
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -748,9 +768,7 @@ def main():
 
     # Evaluate if requested
     if args.evaluate:
-        eval_results = evaluate_accuracy(
-            results, dataset[:config.max_samples or len(dataset)]
-        )
+        eval_results = evaluate_accuracy(results, process_dataset)
         logger.info("\n" + "=" * 60)
         logger.info("EVALUATION RESULTS")
         logger.info("=" * 60)
