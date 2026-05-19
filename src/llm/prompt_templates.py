@@ -129,10 +129,11 @@ STATEMENT TO VERIFY:
 STEP-BY-STEP REASONING:
 1. Identify which premises are relevant to the statement.
 2. Try to derive the statement from the premises using logical rules.
-3. If derivable → "Yes". If contradicted → "No". If insufficient information → "Unknown".
+3. If derivable → "Yes". If contradicted or if there is insufficient information to prove it true → "No" (Apply Closed World Assumption).
+4. DO NOT hallucinate or assume unstated facts (like assuming a specific field, condition, or state) just to make the statement true. Only use explicitly stated facts.
 
 You MUST output your final answer in EXACTLY this format on the last line:
-ANSWER: [Yes or No or Unknown]"""
+ANSWER: [Yes or No]"""
 
 # ══════════════════════════════════════════════════════════════
 # Z3 Code Generation Prompt
