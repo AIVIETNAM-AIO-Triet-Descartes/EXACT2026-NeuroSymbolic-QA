@@ -157,6 +157,8 @@ def classify_query(question: str, premises: list[str]) -> Literal["type1", "type
 | 8 | Response Builder | Tất cả kết quả | JSON theo API schema | Luôn đảm bảo có `answer` + `explanation` |
 
 > **⚠️ TODO — Vector DB source:** Ban tổ chức sẽ công bố source materials của Type 2 tại kick-off workshop (09/05). Sau khi nhận, populate FAISS index từ các tài liệu đó. Trong thời gian chờ, dùng công thức vật lý cơ bản (Ohm's law, KVL, KCL, công thức tụ điện...) làm seed data.
+> 
+> **📌 Memory note:** FAISS index này đóng vai trò **Semantic Memory** (công thức/định luật cố định) + **Episodic Memory** (bài mẫu + CoT). Ưu tiên populate Semantic Memory trước để demo chạy được, thêm Episodic Memory sau. Xem chi tiết tại Section 4.4.
 ---
 
 ## 3. State Schema — Dữ liệu chia sẻ giữa các Node
@@ -250,6 +252,22 @@ Explainer Agent nhận `SolverResult` và sinh `explanation` mà không cần if
 | **FAISS** (hoặc ChromaDB) | Vector database lưu trữ embedding của các định luật/công thức vật lý. Giúp LLM nhỏ (< 8B) truy xuất đúng công thức thay vì tự "bịa" | 4b Formula RAG |
 | **Sentence-Transformers** | Tạo embedding vector từ text (công thức, premises) để lưu vào FAISS | 4b Formula RAG |
 | **LangChain** | Cung cấp các abstraction cho RAG chain (retriever → prompt → LLM) | 4b, Fallback flows |
+
+#### Agent Memory Architecture cho Physics Knowledge Base
+
+FAISS Vector DB trong node ④b thực chất là sự kết hợp của **2 loại memory** phù hợp nhất với đặc thù kiến thức vật lý của cuộc thi:
+
+| Loại Memory | Vai trò trong pipeline | Implementation |
+|---|---|---|
+| **Semantic Memory** *(bắt buộc, ưu tiên cao nhất)* | Lưu kiến thức vật lý có cấu trúc cố định: công thức, định luật, mối quan hệ giữa các đại lượng (`V → depends on → I, R`). Đây là nền tảng để SymPy Solver tính đúng | FAISS index với `formula_sympy`, `variables`, `keywords` — theo format `PHYSICS_DATA.md` |
+| **Episodic Memory** *(nên có, sau demo)* | Lưu lại các bài toán đã giải thành công cùng CoT mẫu. Khi gặp bài tương tự, retrieve ra làm few-shot examples cho LLM — giúp explanation đúng format kỳ vọng của BTC | Thêm `example_question` + `example_cot` vào cùng FAISS document (đã có sẵn trong format `PHYSICS_DATA.md`) |
+
+**3 loại memory không cần áp dụng:**
+- **Working Memory** — đã có sẵn dưới dạng `PipelineState`, không cần thiết kế riêng
+- **Procedural Memory** — có giá trị về lâu dài (lưu workflow thành công làm template), nhưng không phải ưu tiên trong phạm vi cuộc thi
+- **Hierarchical Memory** — overkill, phù hợp agent cần nhớ hàng nghìn interaction, không phải knowledge base vật lý cố định
+
+**Kết quả:** Mỗi document trong FAISS vừa là Semantic Memory (công thức) vừa là Episodic Memory (ví dụ giải mẫu) — nhất quán với format đã định nghĩa trong `PHYSICS_DATA.md`.
 
 ### 4.5. Infrastructure & Monitoring
 
