@@ -313,6 +313,59 @@ Output ONLY the corrected Python code. No markdown, no explanations.
 """
 
 # ══════════════════════════════════════════════════════════════
+# Track 2 — Physics Prompts
+# ══════════════════════════════════════════════════════════════
+
+SYSTEM_PROMPT_PHYSICS = (
+    "You are a physics problem solver. "
+    "Extract variables precisely from problem text. "
+    "Use standard SI symbol notation (V, I, R, P, E, C, Q, F, f, L, B). "
+    "Return only valid JSON. No explanation outside JSON."
+)
+
+PHYSICS_PARSE_PROMPT = """Extract structured data from this physics problem.
+
+Problem: {question}
+
+Return ONLY a JSON object with this exact structure:
+{{
+    "given": {{"symbol": numeric_value}},
+    "find": "symbol_to_solve",
+    "domain": "circuits" or "electrostatics",
+    "formulas": ["formula_string"],
+    "units": {{"symbol": "unit_string"}}
+}}
+
+Rules:
+- Convert all values to base SI units (kΩ → multiply by 1000, mA → divide by 1000)
+- Standard symbols: V (voltage), I (current), R (resistance), P (power), E (energy), C (capacitance), Q (charge), F (force), f (frequency)
+- "find" must be a single symbol string
+- "formulas" are SymPy-compatible hints only (e.g. "V = I * R")
+- "domain" is "circuits" if problem involves resistors/current/voltage, else "electrostatics"
+
+JSON:"""
+
+PHYSICS_PARSE_SIMPLE_PROMPT = """From this physics problem extract only 3 fields.
+
+Problem: {question}
+
+Return ONLY JSON: {{"given": {{}}, "find": "", "domain": "circuits"}}
+
+JSON:"""
+
+PHYSICS_EXPLANATION_PROMPT = """You are a physics tutor. Write a clear explanation for a student.
+
+Question: {question}
+Answer: {answer} {unit}
+Solution steps:
+{steps}
+
+Write 2-3 sentences. Explain the physical meaning and which law/formula applies.
+End with: "Therefore, the answer is {answer} {unit}."
+
+Explanation:"""
+
+# ══════════════════════════════════════════════════════════════
 # Answer Extraction Patterns
 # ══════════════════════════════════════════════════════════════
 

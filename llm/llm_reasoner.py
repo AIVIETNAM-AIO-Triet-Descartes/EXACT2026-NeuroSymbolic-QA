@@ -16,14 +16,18 @@ import os
 from typing import Optional, Dict, List
 from loguru import logger
 
-from src.llm.prompt_templates import (
+from llm.prompt_templates import (
     SYSTEM_PROMPT_LOGIC,
     SYSTEM_PROMPT_Z3,
+    SYSTEM_PROMPT_PHYSICS,
     EXPLANATION_PROMPT,
     COT_MCQ_PROMPT,
     COT_YESNO_PROMPT,
     Z3_CODE_GENERATION_PROMPT,
     Z3_REFINEMENT_PROMPT,
+    PHYSICS_PARSE_PROMPT,
+    PHYSICS_PARSE_SIMPLE_PROMPT,
+    PHYSICS_EXPLANATION_PROMPT,
     ANSWER_EXTRACT_PATTERNS,
 )
 
@@ -339,8 +343,138 @@ class LLMReasoner:
         return self._clean_code(code)
 
     # ══════════════════════════════════════════════════════════
+    # Track 2 — Physics
+    # ══════════════════════════════════════════════════════════
+
+    def parse_physics_question(self, question: str) -> dict:
+        """
+        Extract structured physics data from NL question text.
+
+        Called by PhysicsParser node (step 3b). Returns parsed_physics dict
+        for downstream nodes (FormulaRAG, SympySolver).
+
+        Args:
+            question: Raw physics question string.
+
+        Returns:
+            Dict with keys: given, find, domain, formulas, units.
+            On total failure returns safe empty fallback dict.
+        """
+        import json
+
+        prompt = PHYSICS_PARSE_PROMPT.format(question=question)
+        raw = self._chat(
+            system_prompt=SYSTEM_PROMPT_PHYSICS,
+            user_prompt=prompt,
+            max_tokens=512,
+            temperature=0.0,
+        )
+
+        result = self._extract_json(raw)
+        if result:
+            result.setdefault("given", {})
+            result.setdefault("find", "")
+            result.setdefault("domain", "circuits")
+            result.setdefault("formulas", [])
+            result.setdefault("units", {})
+            return result
+
+        # Retry with simplified prompt
+        logger.warning("[PHYSICS_PARSE] JSON parse failed, retrying simplified prompt")
+        raw2 = self._chat(
+            system_prompt=SYSTEM_PROMPT_PHYSICS,
+            user_prompt=PHYSICS_PARSE_SIMPLE_PROMPT.format(question=question),
+            max_tokens=128,
+            temperature=0.0,
+        )
+        result2 = self._extract_json(raw2)
+        if result2:
+            result2.setdefault("given", {})
+            result2.setdefault("find", "")
+            result2.setdefault("domain", "circuits")
+            result2.setdefault("formulas", [])
+            result2.setdefault("units", {})
+            return result2
+
+        logger.error("[PHYSICS_PARSE] Both attempts failed, returning empty fallback")
+        return {"given": {}, "find": "", "domain": "general", "formulas": [], "units": {}}
+
+    def explain_physics(
+        self,
+        question: str,
+        answer: str,
+        unit: str,
+        steps: list,
+    ) -> str:
+        """
+        Generate NL explanation for a physics solution.
+
+        Called by ExplainerAgent node (step 7) for Track 2.
+        Different from generate_explanation() — focuses on physical meaning
+        and formula application, not logical proof chains.
+
+        Args:
+            question: Original physics question.
+            answer: Numerical answer string.
+            unit: Physical unit string (e.g. "Ω", "mJ").
+            steps: List of solution step strings from SympySolver.
+
+        Returns:
+            Explanation text. Never empty — has hardcoded fallback.
+        """
+        steps_text = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(steps))
+        prompt = PHYSICS_EXPLANATION_PROMPT.format(
+            question=question,
+            answer=answer,
+            unit=unit,
+            steps=steps_text,
+        )
+
+        explanation = self._chat(
+            system_prompt=SYSTEM_PROMPT_PHYSICS,
+            user_prompt=prompt,
+            max_tokens=256,
+            temperature=0.1,
+        )
+
+        if explanation:
+            return explanation
+
+        # Retry simplified
+        logger.warning("[PHYSICS_EXPLAIN] First attempt failed, retrying")
+        retry_prompt = (
+            f"Explain in 2 sentences why the answer to '{question}' is {answer} {unit}."
+        )
+        explanation2 = self._chat(
+            system_prompt=SYSTEM_PROMPT_PHYSICS,
+            user_prompt=retry_prompt,
+            max_tokens=128,
+            temperature=0.1,
+        )
+        return explanation2 if explanation2 else f"The answer is {answer} {unit}."
+
+    # ══════════════════════════════════════════════════════════
     # Private Helpers
     # ══════════════════════════════════════════════════════════
+
+    def _extract_json(self, response: str) -> Optional[dict]:
+        """Extract JSON dict from LLM response. Handles markdown fences."""
+        import json
+        if not response:
+            return None
+        # Strip ```json ... ``` or ``` ... ```
+        clean = re.sub(r'```(?:json)?\s*', '', response)
+        clean = re.sub(r'```', '', clean).strip()
+        # Find first { ... } block
+        start = clean.find('{')
+        end = clean.rfind('}')
+        if start == -1 or end == -1:
+            return None
+        try:
+            return json.loads(clean[start:end + 1])
+        except json.JSONDecodeError as e:
+            logger.debug(f"[JSON_EXTRACT] Failed: {e}")
+            return None
 
     def _extract_answer(self, response: str) -> Optional[str]:
         """
