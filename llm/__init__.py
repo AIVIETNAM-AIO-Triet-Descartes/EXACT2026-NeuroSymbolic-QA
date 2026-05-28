@@ -22,5 +22,6 @@ def get_shared_reasoner() -> LLMReasoner:
     if _reasoner_instance is None:
         _reasoner_instance = create_reasoner(
             model_dir=config["llm"]["model_path"],
+            model_name=config["llm"]["model_name"],
         )
     return _reasoner_instance

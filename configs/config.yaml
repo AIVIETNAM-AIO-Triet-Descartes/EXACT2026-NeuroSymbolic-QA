@@ -1,6 +1,6 @@
 llm:
-  model_name: "Qwen/Qwen2.5-7B-Instruct"
-  model_path: "./models/qwen2.5-7b"
+  model_name: "qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf"
+  model_path: "./models"
   device: "cuda"           # cuda | cpu | mps
   max_new_tokens: 1024
   temperature: 0.1
