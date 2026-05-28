@@ -56,8 +56,8 @@ def build_formula_index(
     with open(meta_path, "wb") as f:
         pickle.dump(docs, f)
 
-    print(f"Saved FAISS index → {index_path}")
-    print(f"Saved metadata   → {meta_path}")
+    print(f"Saved FAISS index -> {index_path}")
+    print(f"Saved metadata   -> {meta_path}")
     print(f"Index dimension  : {embeddings.shape[1]}")
     print(f"Total vectors    : {index.ntotal}")
 

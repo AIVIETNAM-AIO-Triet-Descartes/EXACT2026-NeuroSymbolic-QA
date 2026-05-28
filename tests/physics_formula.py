@@ -43,18 +43,20 @@ def _validate_inline(path: str = _DB_PATH) -> tuple[int, int]:
 def main() -> None:
     print(f"Validating formulas in {_DB_PATH}\n")
 
+    # Always run inline sympify validation — shows both OK and ERR
+    valid, invalid = _validate_inline()
+    print(f"\nSummary: {valid} valid, {invalid} invalid")
+
+    # Also verify load_formula_db() count matches (catches silent-skip bugs)
     try:
         from pipeline.type2.formula_rag import load_formula_db
-        docs = load_formula_db(path=_DB_PATH)
-        print(f"load_formula_db() returned {len(docs)} valid formulas:\n")
-        for doc in docs:
-            print(f"  [OK]  {doc['id']} ({doc['topic']}): {doc['formula_sympy']}")
-        print(f"\nSummary: {len(docs)} valid (invalid entries silently skipped by load_formula_db)")
-
+        loaded = load_formula_db(path=_DB_PATH)
+        if len(loaded) != valid:
+            print(f"\n[WARN] load_formula_db() returned {len(loaded)}, expected {valid} — mismatch!")
+        else:
+            print(f"[OK]  load_formula_db() count matches: {len(loaded)}")
     except ImportError:
-        print("pipeline.type2.formula_rag not available — running standalone validation\n")
-        valid, invalid = _validate_inline()
-        print(f"\nSummary: {valid} valid, {invalid} invalid")
+        pass
 
 
 if __name__ == "__main__":
