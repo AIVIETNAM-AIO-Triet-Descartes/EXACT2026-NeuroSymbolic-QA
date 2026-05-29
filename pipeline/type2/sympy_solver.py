@@ -258,6 +258,13 @@ def sympy_solver_node(state: dict) -> dict:
 
     sympy_result = solve_physics(parsed, q_type)
 
+    # Vector solver fallback: handles multi-charge Coulomb + force+angle problems
+    if sympy_result.get("source") == "llm_fallback":
+        from pipeline.type2.vector_solver import solve_vector_problem
+        vec_result = solve_vector_problem(state)
+        if vec_result:
+            sympy_result = vec_result
+
     confidence = state.get("confidence", 1.0)
     if sympy_result.get("source") == "llm_fallback":
         confidence = min(confidence, 0.5)

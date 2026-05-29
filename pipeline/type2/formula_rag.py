@@ -137,6 +137,55 @@ def retrieve_formula(
 
 
 # ══════════════════════════════════════════════════════════════
+# Symbol alias normalization
+# ══════════════════════════════════════════════════════════════
+
+# Known equivalent symbol pairs (bidirectional).
+# Covers notation differences between curricula (e.g. Vietnamese: U for voltage)
+# and common textbook variations.
+_SYMBOL_ALIASES: list[tuple[str, str]] = [
+    ("U", "V"),   # voltage: Vietnamese curriculum uses U, international uses V
+    ("W", "E"),   # energy: W (work/energy) vs E
+    ("t", "T"),   # time: lowercase vs uppercase
+]
+
+
+def _inject_symbol_aliases(parsed: dict, formula_doc: dict) -> dict:
+    """
+    Compare formula_doc["variables"] keys against parsed["given"] keys.
+    For each known alias pair, if one side is in the formula but the other
+    side is in given (and not already present), inject the missing alias so
+    the solver can substitute correctly.
+
+    Returns a new parsed dict with updated "given" (original is not mutated).
+    """
+    formula_vars: set[str] = set(formula_doc.get("variables", {}).keys())
+    given: dict = dict(parsed.get("given", {}))
+    injected: list[str] = []
+
+    for sym_a, sym_b in _SYMBOL_ALIASES:
+        a_in_formula = sym_a in formula_vars
+        b_in_formula = sym_b in formula_vars
+        a_in_given = sym_a in given
+        b_in_given = sym_b in given
+
+        # formula uses A but given has B → inject A = given[B]
+        if a_in_formula and b_in_given and sym_a not in given:
+            given[sym_a] = given[sym_b]
+            injected.append(f"{sym_a}={sym_b}")
+
+        # formula uses B but given has A → inject B = given[A]
+        if b_in_formula and a_in_given and sym_b not in given:
+            given[sym_b] = given[sym_a]
+            injected.append(f"{sym_b}={sym_a}")
+
+    if injected:
+        logger.info(f"[FORMULA_RAG] Alias injected for {formula_doc['id']}: {injected}")
+
+    return {**parsed, "given": given}
+
+
+# ══════════════════════════════════════════════════════════════
 # LangGraph node
 # ══════════════════════════════════════════════════════════════
 
@@ -169,6 +218,8 @@ def formula_rag_node(state: dict) -> dict:
         formula_rag_failed = True
 
     if formula_doc:
+        # Normalize symbol aliases before solver substitution
+        parsed = _inject_symbol_aliases(parsed, formula_doc)
         updated_parsed = {
             **parsed,
             "formulas": [formula_doc["formula_sympy"]],

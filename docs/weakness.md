@@ -45,17 +45,13 @@ SymPy can solve `F = k*q1*q2/r**2` for a single pair but cannot handle angle dec
 
 ---
 
-## 4. Voltage Symbol Inconsistency (U vs V)
+## 4. Voltage Symbol Inconsistency (U vs V) ✅ RESOLVED
 
-**Affected:** Formulas using `U` for voltage (formula_012: `Q = C * U`)
+**Affected:** ~~Formulas using `U` for voltage (formula_012)~~
 
-**Symptom:** Solver finds formula but substitution fails because question provides `V`, not `U`
-
-**Root cause:** Formula DB mixes `U` and `V` for voltage. Physics parser extracts whatever symbol the question uses.
-
-**Current workaround:** `demo_type2.py` injects both `U` and `V` when either is extracted. Not applied in full pipeline.
-
-**Fix needed:** Normalize voltage symbol in `formula_rag_node` — inject alias `U=given["V"]` (and vice versa) into `parsed_physics["given"]` before passing to solver.
+**Fix applied (2026-05-28):**
+1. **DB fix** — `formula_012` normalized: `U → V` in `formula_sympy`, `variables`, `example_cot`, `keywords`. `formula_015` normalized: `E_field → E` (consistent with `formula_020`). FAISS index rebuilt.
+2. **Runtime normalize** — `_inject_symbol_aliases()` added to `formula_rag.py`. After retrieval, compares `formula_doc["variables"]` against `parsed["given"]` and injects bidirectional aliases for known pairs: `U↔V` (voltage), `W↔E` (energy), `t↔T` (time). Handles Vietnamese curriculum notation without requiring DB changes.
 
 ---
 

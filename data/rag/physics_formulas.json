@@ -507,7 +507,7 @@
         "topic": "capacitor_energy",
         "domain": "electrostatics",
         "formula_natural": "Energy stored in a capacitor",
-        "formula_sympy": "E = 0.5 * C * U**2",
+        "formula_sympy": "E = 0.5 * C * V**2",
         "formula_latex": "E = \\frac{1}{2}CV^2",
         "variables": {
             "E": {
@@ -518,7 +518,7 @@
                 "description": "Capacitance",
                 "unit": "F"
             },
-            "U": {
+            "V": {
                 "description": "Voltage across the capacitor",
                 "unit": "V"
             }
@@ -530,8 +530,8 @@
             "mJ → 1e-3 J",
             "uJ → 1e-6 J"
         ],
-        "example_question": "Calculate the energy stored in capacitor C when C = 100 μF and U = 30 V.",
-        "example_cot": "Step 1: Identify C = 100 μF = 1e-4 F, U = 30 V.\nStep 2: Apply E = 0.5 * C * U**2.\nStep 3: E = 0.5 * 1e-4 * 30**2 = 0.5 * 1e-4 * 900 = 0.045 J.",
+        "example_question": "Calculate the energy stored in capacitor C when C = 100 μF and V = 30 V.",
+        "example_cot": "Step 1: Identify C = 100 μF = 1e-4 F, V = 30 V.\nStep 2: Apply E = 0.5 * C * V**2.\nStep 3: E = 0.5 * 1e-4 * 30**2 = 0.5 * 1e-4 * 900 = 0.045 J.",
         "example_answer": "0.045",
         "example_unit": "J",
         "keywords": [
@@ -543,10 +543,10 @@
             "electrostatic energy",
             "calculate stored energy",
             "find capacitor energy",
-            "0.5 * C * U**2",
+            "0.5 * C * V**2",
             "E",
             "C",
-            "U"
+            "V"
         ]
     },
     {
@@ -636,10 +636,10 @@
         "topic": "electric_field_uniform",
         "domain": "electrostatics",
         "formula_natural": "Uniform electric field between parallel plates",
-        "formula_sympy": "E_field = V / d",
+        "formula_sympy": "E = V / d",
         "formula_latex": "E = \\frac{V}{d}",
         "variables": {
-            "E_field": {
+            "E": {
                 "description": "Electric field strength",
                 "unit": "V/m"
             },
@@ -658,7 +658,7 @@
             "kV → 1e3 V"
         ],
         "example_question": "Two parallel plates are separated by a distance of 2 cm and have a potential difference of 100 V. Find the electric field strength.",
-        "example_cot": "Step 1: Identify V = 100 V, d = 2 cm = 0.02 m.\nStep 2: Apply E_field = V / d.\nStep 3: E_field = 100 / 0.02 = 5000 V/m.",
+        "example_cot": "Step 1: Identify V = 100 V, d = 2 cm = 0.02 m.\nStep 2: Apply E = V / d.\nStep 3: E = 100 / 0.02 = 5000 V/m.",
         "example_answer": "5000",
         "example_unit": "V/m",
         "keywords": [
@@ -669,7 +669,7 @@
             "calculate electric field",
             "find field strength",
             "E = V/d",
-            "E_field",
+            "E",
             "V",
             "d"
         ]
