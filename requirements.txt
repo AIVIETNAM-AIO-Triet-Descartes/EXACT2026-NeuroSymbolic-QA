@@ -7,21 +7,20 @@ pydantic>=2.0.0
 z3-solver>=4.13.0
 sympy>=1.12
 
-# LLM inference (GGUF via llama-cpp-python)
-# GPU install: pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
-llama-cpp-python>=0.2.56
+# LLM inference — gọi qua vLLM OpenAI-compatible server
+# Serve: vllm serve Qwen/Qwen2.5-7B-Instruct --port 8000  (Linux/WSL2)
+openai>=1.30.0
+
+# Transformers (dùng cho tokenizer, classifier, không inference trực tiếp)
 transformers>=4.40.0
 accelerate>=0.27.0
 torch>=2.2.0
 
-# Fine-tuning (Approach 2, optional during setup)
+# Fine-tuning (optional)
 peft>=0.10.0
 bitsandbytes>=0.43.0
 trl>=0.8.0
 datasets>=2.18.0
-
-# Fast inference server (Approach 2)
-# vllm>=0.4.0   # Uncomment only if on Linux with CUDA GPU
 
 # Retrieval / RAG
 sentence-transformers>=2.7.0

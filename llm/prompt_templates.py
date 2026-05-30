@@ -366,6 +366,59 @@ End with: "Therefore, the answer is {answer} {unit}."
 Explanation:"""
 
 # ══════════════════════════════════════════════════════════════
+# Track 2 — Physics Chain-of-Thought Solver Prompt
+# Dùng khi SymPy + vector_solver thất bại.
+# LLM nhận bài toán, giá trị đã biết, và sinh lời giải từng bước.
+# Cuối cùng phải xuất "ANSWER: <số> <đơn vị>" để dễ parse.
+# ══════════════════════════════════════════════════════════════
+
+PHYSICS_COT_PROMPT = """Solve this physics problem step by step. Show all calculations clearly.
+
+Problem: {question}
+
+Known values (SI units): {given_str}
+Quantity to find: {find_str}
+{formula_hint}
+
+INSTRUCTIONS:
+- Apply the relevant physics law or formula.
+- Substitute known values and calculate.
+- For numeric results: end your solution with exactly: ANSWER: <number> <unit>
+  Example: ANSWER: 0.045 J   or   ANSWER: 2.4e-3 N
+- For Yes/No results: end with: ANSWER: Yes  or  ANSWER: No
+- For qualitative/text results: end with: ANSWER: <short text>
+
+--- EXAMPLE 1 (numeric) ---
+Problem: Capacitor C=100μF charged to U=30V. Calculate stored energy.
+Known values (SI units): C=1e-4 F, U=30 V
+Quantity to find: W (energy)
+Step 1: Formula: W = (1/2) × C × U²
+Step 2: W = 0.5 × 1e-4 × (30)² = 0.5 × 1e-4 × 900
+Step 3: W = 0.045 J
+ANSWER: 0.045 J
+
+--- EXAMPLE 2 (Yes/No) ---
+Problem: RLC circuit R=50Ω, L=0.5H, C=20μF, f=40Hz. Does resonance occur?
+Known values (SI units): R=50 Ω, L=0.5 H, C=2e-5 F, f=40 Hz
+Quantity to find: resonance condition
+Step 1: Resonant frequency f₀ = 1 / (2π√(LC)) = 1 / (2π√(0.5 × 2e-5)) ≈ 50.3 Hz
+Step 2: Given f=40 Hz ≠ f₀=50.3 Hz → no resonance
+ANSWER: No
+
+--- EXAMPLE 3 (Coulomb force) ---
+Problem: Two charges q1=6×10⁻⁸C and q2=3×10⁻⁸C separated by r=3cm. Find force.
+Known values (SI units): q1=6e-8 C, q2=3e-8 C, r=0.03 m, k=9e9
+Quantity to find: F (Coulomb force)
+Step 1: Formula: F = k × |q1| × |q2| / r²
+Step 2: F = 9e9 × 6e-8 × 3e-8 / (0.03)²
+Step 3: F = 9e9 × 1.8e-15 / 9e-4 = 1.62e-5 / 9e-4 = 0.018 N
+ANSWER: 0.018 N
+---
+
+SOLUTION:"""
+
+
+# ══════════════════════════════════════════════════════════════
 # Answer Extraction Patterns
 # ══════════════════════════════════════════════════════════════
 

@@ -1,10 +1,19 @@
 """
-LLM Reasoner - Wrapper cho Qwen 2.5 7B Instruct via llama-cpp-python.
+LLM Reasoner - Wrapper gọi Qwen 2.5 7B Instruct qua vLLM server (OpenAI-compatible API).
+
+Thay vì load model trực tiếp (llama-cpp-python), module này gọi HTTP API đến
+vLLM server đang chạy trên localhost. Điều này cho phép:
+  - Committee verify model qua GET /v1/models (model_id = "Qwen/Qwen2.5-7B-Instruct")
+  - Model chỉ load một lần, nhiều process dùng chung
+  - Dễ switch model mà không thay code (chỉ đổi config.yaml)
 
 Cung cấp các chức năng:
     1. generate_explanation: Sinh giải thích NL khi đã biết đáp án (post-Z3)
     2. solve_with_cot: Giải bài toán bằng Chain-of-Thought (fallback)
     3. generate_z3_code: Sinh Z3 Python code từ FOL (LLM-assisted translation)
+    4. parse_physics_question: Extract biến số từ đề bài vật lý
+    5. explain_physics: Sinh giải thích NL cho đáp án vật lý
+    6. solve_physics_cot: Giải vật lý bằng CoT khi SymPy thất bại
 
 References:
     - Logic-LM Self-Refinement: Pan et al., ACL 2023
@@ -12,7 +21,6 @@ References:
 """
 
 import re
-import os
 from typing import Optional, Dict, List
 from loguru import logger
 
@@ -28,80 +36,97 @@ from llm.prompt_templates import (
     PHYSICS_PARSE_PROMPT,
     PHYSICS_PARSE_SIMPLE_PROMPT,
     PHYSICS_EXPLANATION_PROMPT,
+    PHYSICS_COT_PROMPT,
     ANSWER_EXTRACT_PATTERNS,
 )
 
 
 class LLMReasoner:
     """
-    LLM Reasoning Engine sử dụng Qwen 2.5 7B Instruct (GGUF).
+    LLM Reasoning Engine — gọi Qwen 2.5 7B Instruct qua vLLM OpenAI-compatible API.
 
     Architecture:
-        - Model loaded via llama-cpp-python for efficient GPU inference
-        - Low temperature (0.1) for deterministic logical output
-        - Structured prompts enforce consistent output format
+        - Không load model trực tiếp; gọi HTTP đến vLLM server đang chạy riêng
+        - vLLM serve Qwen/Qwen2.5-7B-Instruct --port 8000
+        - openai.OpenAI(base_url="http://localhost:8000/v1") làm transport layer
+        - Low temperature (0.1) cho output deterministic
 
     Attributes:
-        model_path: Đường dẫn đến file GGUF.
-        n_ctx: Context window size.
-        n_gpu_layers: Số layer offload lên GPU.
+        base_url: URL của vLLM server (mặc định "http://localhost:8000/v1").
+        model_name: Model ID khớp với --served-model-name trên vLLM server.
+        temperature: Nhiệt độ sampling mặc định.
     """
 
     def __init__(
         self,
-        model_path: str,
-        n_ctx: int = 4096,
-        n_gpu_layers: int = -1,
+        base_url: str = "http://localhost:8000/v1",
+        model_name: str = "Qwen/Qwen2.5-7B-Instruct",
+        api_key: str = "not-needed",
         temperature: float = 0.1,
-        verbose: bool = False,
     ):
         """
-        Khởi tạo LLM Reasoner.
+        Khởi tạo LLMReasoner với vLLM server endpoint.
 
         Args:
-            model_path: Đường dẫn file .gguf model.
-            n_ctx: Kích thước context window.
-            n_gpu_layers: Số layer GPU (-1 = tất cả).
-            temperature: Nhiệt độ sampling.
-            verbose: Hiển thị log từ llama.cpp.
+            base_url: URL base của vLLM OpenAI-compatible server.
+            model_name: Tên model (phải khớp với model đang serve).
+            api_key: API key (vLLM không yêu cầu, để "not-needed").
+            temperature: Nhiệt độ sampling mặc định cho _chat().
         """
-        self.model_path = model_path
-        self.n_ctx = n_ctx
-        self.n_gpu_layers = n_gpu_layers
+        self.base_url = base_url
+        self.model_name = model_name
+        self.api_key = api_key
         self.temperature = temperature
-        self.llm = None
 
-        # Lazy loading - only load model when first needed
-        self._model_loaded = False
-        self._verbose = verbose
+        # OpenAI client — lazy init lần đầu khi _chat() được gọi
+        self._client = None
 
-    def _ensure_model_loaded(self):
-        """Lazy load model on first use."""
-        if self._model_loaded:
-            return
+    def _get_client(self):
+        """
+        Trả về OpenAI client, tạo mới nếu chưa có.
+        Client kết nối đến vLLM server tại self.base_url.
+        """
+        if self._client is None:
+            try:
+                from openai import OpenAI
+            except ImportError:
+                raise ImportError(
+                    "openai package not installed. "
+                    "Run: pip install openai"
+                )
+            self._client = OpenAI(
+                base_url=self.base_url,
+                api_key=self.api_key,
+            )
+        return self._client
 
+    def check_server(self) -> bool:
+        """
+        Kiểm tra vLLM server có reachable không bằng cách query GET /v1/models.
+        Gọi từ demo_type2.py trước khi bắt đầu pipeline để fail-fast.
+
+        Returns:
+            True nếu server OK.
+        Raises:
+            ConnectionError nếu server không reachable hoặc model không đúng.
+        """
         try:
-            from llama_cpp import Llama
-
-            logger.info(f"Loading LLM model from {self.model_path}...")
-            self.llm = Llama(
-                model_path=self.model_path,
-                n_ctx=self.n_ctx,
-                n_gpu_layers=self.n_gpu_layers,
-                verbose=self._verbose,
-            )
-            self._model_loaded = True
-            logger.info("LLM model loaded successfully.")
-
-        except ImportError:
-            logger.error(
-                "llama-cpp-python not installed. "
-                "Install with: pip install llama-cpp-python"
-            )
-            raise
+            client = self._get_client()
+            models = client.models.list()
+            model_ids = [m.id for m in models.data]
+            logger.info(f"[LLM_SERVER] Connected. Models: {model_ids}")
+            if self.model_name not in model_ids:
+                logger.warning(
+                    f"[LLM_SERVER] model_name='{self.model_name}' "
+                    f"not in server models {model_ids}. "
+                    f"Check config.yaml llm.model_name."
+                )
+            return True
         except Exception as e:
-            logger.error(f"Failed to load LLM model: {e}")
-            raise
+            raise ConnectionError(
+                f"vLLM server not reachable at '{self.base_url}': {e}\n"
+                f"Start server with: vllm serve {self.model_name} --port 8000"
+            )
 
     def _chat(
         self,
@@ -111,35 +136,31 @@ class LLMReasoner:
         temperature: Optional[float] = None,
     ) -> str:
         """
-        Gửi chat completion request đến model.
+        Gửi chat completion request đến vLLM server qua OpenAI API.
 
         Args:
-            system_prompt: System message.
-            user_prompt: User message.
-            max_tokens: Giới hạn output tokens.
-            temperature: Override temperature.
+            system_prompt: System message định hướng hành vi LLM.
+            user_prompt: User message chứa bài toán / câu hỏi.
+            max_tokens: Giới hạn số token output.
+            temperature: Override nhiệt độ (None = dùng self.temperature).
 
         Returns:
-            Generated text response.
+            Generated text string, hoặc "" nếu request thất bại.
         """
-        self._ensure_model_loaded()
-
-        temp = temperature or self.temperature
-
         try:
-            output = self.llm.create_chat_completion(
+            client = self._get_client()
+            response = client.chat.completions.create(
+                model=self.model_name,
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
+                    {"role": "user",   "content": user_prompt},
                 ],
-                temperature=temp,
+                temperature=temperature if temperature is not None else self.temperature,
                 max_tokens=max_tokens,
-                stop=["\n\n\n"],  # Prevent excessive output
             )
-            return output['choices'][0]['message']['content'].strip()
-
+            return response.choices[0].message.content.strip()
         except Exception as e:
-            logger.error(f"LLM chat completion failed: {e}")
+            logger.error(f"[LLM_CHAT] vLLM API call failed: {e}")
             return ""
 
     # ══════════════════════════════════════════════════════════
@@ -453,6 +474,109 @@ class LLMReasoner:
         )
         return explanation2 if explanation2 else f"The answer is {answer} {unit}."
 
+    def solve_physics_cot(
+        self,
+        question: str,
+        given: dict,
+        find: str,
+        formulas: Optional[List[str]] = None,
+    ) -> dict:
+        """
+        Giải bài toán vật lý bằng Chain-of-Thought khi SymPy thất bại.
+
+        Gửi prompt CoT đến LLM, parse kết quả số/Yes-No/text từ phần
+        "ANSWER: ..." cuối response. Trả về dict tương thích sympy_result.
+
+        Args:
+            question: Đề bài gốc.
+            given: Dict {symbol: SI_value} đã extract được.
+            find: Ký hiệu cần tìm (ví dụ "F", "E_field", "W").
+            formulas: Gợi ý công thức từ FormulaRAG (có thể None).
+
+        Returns:
+            Dict với keys: answer (str), unit (str), steps (list), source (str).
+            source="llm_cot" khi parse thành công, "llm_fallback" khi thất bại.
+        """
+        # Định dạng given để hiển thị trong prompt
+        given_str = (
+            ", ".join(f"{k}={v:.4g}" for k, v in given.items())
+            if given else "(none extracted)"
+        )
+        find_str = find if find else "(unknown)"
+
+        # Thêm gợi ý công thức nếu FormulaRAG tìm được
+        formula_hint = ""
+        if formulas:
+            formula_hint = f"Relevant formula hint: {formulas[0]}"
+
+        prompt = PHYSICS_COT_PROMPT.format(
+            question=question,
+            given_str=given_str,
+            find_str=find_str,
+            formula_hint=formula_hint,
+        )
+
+        raw = self._chat(
+            system_prompt=SYSTEM_PROMPT_PHYSICS,
+            user_prompt=prompt,
+            max_tokens=600,
+            temperature=0.1,
+        )
+
+        if not raw:
+            logger.warning("[PHYSICS_COT] LLM trả về empty response")
+            return {"answer": "", "unit": "", "steps": [], "source": "llm_fallback"}
+
+        steps = [line.strip() for line in raw.split("\n") if line.strip()]
+
+        # Ưu tiên 1: parse số từ "ANSWER: <float> <unit>"
+        num_pat = re.compile(
+            r'ANSWER:\s*([+-]?[\d.]+(?:[eE][+-]?\d+)?'
+            r'(?:\s*[×x\*]\s*10\^?[+-]?\d+)?)\s*([^\n]*)',
+            re.IGNORECASE,
+        )
+        m = num_pat.search(raw)
+        if m:
+            raw_num = m.group(1).strip()
+            unit_str = m.group(2).strip().split()[0] if m.group(2).strip() else ""
+            # Chuẩn hóa ký hiệu nhân thành Python float: "4.5 × 10^-2" → 4.5e-2
+            norm = re.sub(r'\s*[×x\*]\s*10\^?([+-]?\d+)', r'e\1', raw_num)
+            try:
+                answer_val = float(norm)
+                return {
+                    "answer": f"{answer_val:.6g}",
+                    "unit": unit_str,
+                    "steps": steps,
+                    "source": "llm_cot",
+                }
+            except ValueError:
+                pass  # không parse được số → thử Yes/No
+
+        # Ưu tiên 2: parse Yes/No từ "ANSWER: Yes/No"
+        yesno_pat = re.compile(r'ANSWER:\s*(Yes|No)\b', re.IGNORECASE)
+        m2 = yesno_pat.search(raw)
+        if m2:
+            return {
+                "answer": m2.group(1).capitalize(),
+                "unit": "",
+                "steps": steps,
+                "source": "llm_cot",
+            }
+
+        # Ưu tiên 3: bất kỳ text sau "ANSWER:" (qualitative answer)
+        text_pat = re.compile(r'ANSWER:\s*(.+)', re.IGNORECASE)
+        m3 = text_pat.search(raw)
+        if m3:
+            return {
+                "answer": m3.group(1).strip()[:120],
+                "unit": "",
+                "steps": steps,
+                "source": "llm_cot",
+            }
+
+        logger.warning("[PHYSICS_COT] Không tìm thấy 'ANSWER:' trong LLM response")
+        return {"answer": "", "unit": "", "steps": steps, "source": "llm_fallback"}
+
     # ══════════════════════════════════════════════════════════
     # Private Helpers
     # ══════════════════════════════════════════════════════════
@@ -667,29 +791,28 @@ class LLMReasoner:
 # ══════════════════════════════════════════════════════════════
 
 def create_reasoner(
-    model_dir: str = ".",
-    model_name: str = "qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf",
+    base_url: str = "http://localhost:8000/v1",
+    model_name: str = "Qwen/Qwen2.5-7B-Instruct",
+    api_key: str = "not-needed",
+    temperature: float = 0.1,
     **kwargs,
 ) -> LLMReasoner:
     """
-    Factory function để tạo LLMReasoner với cấu hình mặc định.
+    Factory function tạo LLMReasoner kết nối đến vLLM server.
 
     Args:
-        model_dir: Thư mục chứa model file.
-        model_name: Tên file GGUF.
-        **kwargs: Override parameters.
+        base_url: URL của vLLM OpenAI-compatible server.
+        model_name: Model ID khớp với --served-model-name trên server.
+        api_key: API key (vLLM không yêu cầu).
+        temperature: Nhiệt độ sampling mặc định.
+        **kwargs: Bổ sung, bỏ qua (backward compat với caller cũ).
 
     Returns:
-        LLMReasoner instance.
+        LLMReasoner instance (chưa kết nối — lazy, connect khi _chat() gọi).
     """
-    model_path = os.path.join(model_dir, model_name)
-
-    defaults = {
-        'n_ctx': 4096,
-        'n_gpu_layers': -1,
-        'temperature': 0.1,
-        'verbose': False,
-    }
-    defaults.update(kwargs)
-
-    return LLMReasoner(model_path=model_path, **defaults)
+    return LLMReasoner(
+        base_url=base_url,
+        model_name=model_name,
+        api_key=api_key,
+        temperature=temperature,
+    )

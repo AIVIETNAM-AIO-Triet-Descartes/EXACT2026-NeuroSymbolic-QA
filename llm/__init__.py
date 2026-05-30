@@ -21,7 +21,9 @@ def get_shared_reasoner() -> LLMReasoner:
     global _reasoner_instance
     if _reasoner_instance is None:
         _reasoner_instance = create_reasoner(
-            model_dir=config["llm"]["model_path"],
+            base_url=config["llm"]["api_base"],
             model_name=config["llm"]["model_name"],
+            api_key=config["llm"].get("api_key", "not-needed"),
+            temperature=config["llm"].get("temperature", 0.1),
         )
     return _reasoner_instance
