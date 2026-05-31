@@ -1,0 +1,114 @@
+flowchart TD
+    %% ─── INPUT ───
+    REQ(["🌐 HTTP Request\n{ question, premises? }"])
+
+    %% ─── LAYER 1: API Gateway ───
+    GW["① API Gateway\nFastAPI + Uvicorn\nValidate & parse JSON"]
+
+    %% ─── LAYER 2: Router ───
+    ROUTER{"② Router Agent\nClassify query type"}
+    R_COND{"premises\npresent?"}
+    R_KW{"physics\nkeywords?"}
+
+    %% ─── TRACK 1 ───
+    subgraph TRACK1["🧠 TRACK 1 — Logic / Educational QA (Type 1)"]
+        direction TB
+        T1_PARSE["③a Text Parser Agent\nLLM ≤ 8B\nNL premises → FOL"]
+        T1_EVAL{"④a Logic Evaluator\nCheck FOL syntax\nRetry ≤ 3×"}
+        T1_RAG["④a Fallback\nRAG + LLM reasoning\nwith raw premises-NL"]
+        T1_Z3["⑤a Z3 Solver\nProve / disprove\neach answer option\n→ answer + proof_steps"]
+    end
+
+    %% ─── TRACK 2 ───
+    subgraph TRACK2["⚡ TRACK 2 — Physics Computation (Type 2)"]
+        direction TB
+
+        T2_CLS["③b PhysicsClassifier\nRule-based\ndomain: circuits / electrostatics\n         electromagnetism / measurement\nquestion_type: 10 PhysicsQuestionType"]
+
+        T2_PARSE["③b Physics Parser Node\nLLM ≤ 8B — extract given, find, domain\nClassifier overrides LLM gaps"]
+
+        T2_QTYPE{"question_type?"}
+
+        T2_RAG["④b Formula RAG\nLayer 1: exact domain + find-in-variables\nLayer 2: FAISS semantic search\n→ alias injection + formula_sympy"]
+
+        T2_SYMPY["⑤b SymPy Solver\nSINGLE_FORMULA / CIRCUIT /\nELECTROSTATIC → _solve_single\nMULTI_STEP → _solve_multi_step\n→ sympy_result"]
+
+        T2_VEC["⑤b Vector Solver fallback\nCoulomb multi-charge + 2D geometry\nvector_solver.py\n(called inside sympy_solver_node)"]
+
+        T2_VAL["⑥b type2_validation\nFiniteness check\nPhysical constraints\nR, C, L, f must be > 0"]
+
+        T2_COT["⑥c CoT Builder\nFormat steps → numbered list\nPure string formatting, no LLM"]
+
+        T2_LLM["LLM Fallback\nYES_NO / QUALITATIVE /\nELECTROMAGNETIC / ERROR_CALC /\nMULTI_ANSWER\nconfidence = 0.5"]
+    end
+
+    %% ─── SHARED ENDING ───
+    EXPLAIN["⑦ Explainer Agent\nLLM ≤ 8B\nGenerate NL explanation\n(ReAct pattern)"]
+    BUILDER["⑧ Response Builder\nAssemble JSON\nper API schema"]
+    RESP(["📤 HTTP Response\n{ answer✅, explanation✅,\nfol?, cot?, premises?, confidence? }"])
+
+    %% ─── FALLBACK NODES ───
+    FB_LLM["Fallback: Retry simplified prompt\nanswer = 'Unable to determine'\nconfidence = 0.3"]
+
+    %% ─── FLOW ───
+    REQ --> GW
+    GW -->|"Valid"| ROUTER
+    GW -->|"Invalid schema"| ERR422(["HTTP 422"])
+
+    ROUTER --> R_COND
+    R_COND -->|"Yes"| TRACK1
+    R_COND -->|"No"| R_KW
+    R_KW -->|"Match"| TRACK2
+    R_KW -->|"No match\n(default fallback)"| TRACK1
+
+    %% Track 1 internal
+    TRACK1 --> T1_PARSE
+    T1_PARSE --> T1_EVAL
+    T1_EVAL -->|"✅ Valid FOL"| T1_Z3
+    T1_EVAL -->|"🔁 Retry (fol_retries < 3)"| T1_PARSE
+    T1_EVAL -->|"❌ fol_retries ≥ 3"| T1_RAG
+    T1_Z3 --> EXPLAIN
+    T1_RAG --> EXPLAIN
+
+    %% Track 2 internal
+    TRACK2 --> T2_CLS
+    T2_CLS --> T2_PARSE
+    T2_PARSE --> T2_QTYPE
+
+    T2_QTYPE -->|"SINGLE_FORMULA\nCIRCUIT\nELECTROSTATIC\nMULTI_STEP"| T2_RAG
+    T2_QTYPE -->|"YES_NO\nQUALITATIVE\nELECTROMAGNETIC\nERROR_CALC\nMULTI_ANSWER"| T2_LLM
+
+    T2_RAG --> T2_SYMPY
+    T2_SYMPY -->|"✅ Solved"| T2_VAL
+    T2_SYMPY -->|"❌ source=llm_fallback"| T2_VEC
+    T2_VEC -->|"✅ Vector solved"| T2_VAL
+    T2_VEC -->|"❌ Still failed"| T2_LLM
+
+    T2_VAL -->|"✅ is_valid"| T2_COT
+    T2_VAL -->|"❌ fatal error"| T2_LLM
+
+    T2_COT --> EXPLAIN
+    T2_LLM --> EXPLAIN
+
+    %% Shared ending
+    EXPLAIN -->|"✅ OK"| BUILDER
+    EXPLAIN -->|"❌ Error"| FB_LLM
+    FB_LLM --> BUILDER
+    BUILDER --> RESP
+
+    %% ─── STYLES ───
+    classDef gateway fill:#4A90D9,stroke:#2C5F8A,color:#fff,rx:8
+    classDef router fill:#E8A838,stroke:#B07820,color:#fff
+    classDef track1 fill:#6DB33F,stroke:#4A8A28,color:#fff
+    classDef track2 fill:#9B59B6,stroke:#7D3C98,color:#fff
+    classDef shared fill:#E74C3C,stroke:#C0392B,color:#fff
+    classDef fallback fill:#95A5A6,stroke:#7F8C8D,color:#fff
+    classDef io fill:#2ECC71,stroke:#27AE60,color:#fff
+
+    class GW gateway
+    class ROUTER,R_COND,R_KW router
+    class T1_PARSE,T1_EVAL,T1_Z3,T1_RAG track1
+    class T2_CLS,T2_PARSE,T2_QTYPE,T2_RAG,T2_SYMPY,T2_VEC,T2_VAL,T2_COT track2
+    class T2_LLM,FB_LLM fallback
+    class EXPLAIN,BUILDER shared
+    class REQ,RESP,ERR422 io

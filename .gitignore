@@ -9,9 +9,3 @@ checkpoints/
 *.egg-info/
 .pytest_cache/
 .ruff_cache/
-docs/SKILLS.md
-docs/APPROACHES.md
-docs/SETUP.md
-docs/exact2026_pipeline.mermaid
-docs/track2_implementation_plan.md
-docs/branchDat_branchTriet.md
