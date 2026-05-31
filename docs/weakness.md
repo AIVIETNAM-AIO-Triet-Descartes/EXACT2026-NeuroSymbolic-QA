@@ -64,3 +64,19 @@ SymPy can solve `F = k*q1*q2/r**2` for a single pair but cannot handle angle dec
 **Root cause:** Chain propagation checks `str(unknown) == find`. If SymPy names the solved symbol differently (e.g., subscript vs plain), the check fails silently.
 
 **Fix needed:** Add fuzzy symbol matching in `_solve_multi_step` accumulated dict lookup.
+
+---
+
+## 6. Classifier `target_variable` = match theo thứ tự mapping, không theo ý đồ câu hỏi
+
+**Affected:** `PhysicsClassifier._detect_target_variable()` (`pipeline/type2/type2_classifier.py`)
+
+**Symptom:** Câu "Find the net **force** on q3" trả `find=Q` thay vì `F` — vì "charges" chứa "charge" (→`Q`) đứng trước "force" (→`F`) trong dict `mapping`. First-match-by-mapping-order, không phải first-match-theo-vị-trí-trong-câu hay theo động từ hỏi.
+
+**Root cause:** `_detect_target_variable` lặp `mapping` và trả var đầu tiên có keyword là substring của câu. Bất kỳ đại lượng nào *xuất hiện* trong đề (dù chỉ là dữ kiện cho trước) đều có thể thắng đại lượng *cần tìm*. Đây là hạn chế **tiền tồn** (có từ trước khi mở rộng enum/domain 2026-05-31), không phải regress.
+
+**Mức ảnh hưởng:** Thấp. Đây chỉ là **prior thô** — `physics_parser_node` chỉ dùng `classified.target_variable` khi LLM bỏ sót `find` (`parsed["find"]` rỗng). Đường chính lấy `find` từ:
+- `demo_type2.detect_find_from_verb()` — priority chain Angle > E-field > Force > verb-map (chính xác hơn, bám động từ hỏi)
+- `LLMReasoner.parse_physics_question()` — LLM trích `find`
+
+**Fix needed:** Gắn detection vào động từ hỏi — parse cụm sau "find/calculate/determine the **X**" để lấy đại lượng cần tìm, thay vì quét toàn câu. Hoặc port logic `detect_find_from_verb()` từ `demo_type2.py` vào classifier để thống nhất 1 nguồn.

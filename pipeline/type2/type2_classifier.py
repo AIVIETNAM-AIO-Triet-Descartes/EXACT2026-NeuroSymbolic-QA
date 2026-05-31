@@ -17,10 +17,20 @@ from typing import Optional
 
 
 class PhysicsQuestionType(Enum):
-    SINGLE_FORMULA = "single_formula"   # V = IR, E = 0.5*C*U^2
-    MULTI_STEP     = "multi_step"       # Cần nhiều công thức liên tiếp
-    CIRCUIT        = "circuit"          # Mạch nối tiếp/song song
-    ELECTROSTATIC  = "electrostatic"    # Tĩnh điện
+    # Mở rộng theo docs/track2_data_info.md §5.6 — phủ đủ 8 prefix dataset.
+    # sympy_solver chỉ dispatch SINGLE_FORMULA/CIRCUIT/ELECTROSTATIC/MULTI_STEP;
+    # các type còn lại rơi vào fallback chain (vector_solver / LLM CoT) — hợp lý
+    # vì chúng cần solver chuyên biệt, không giải bằng sympy.solve() đơn thuần.
+    SINGLE_FORMULA  = "single_formula"   # TD, NL đơn giản — 1 phương trình (V=IR, E=½CU²)
+    MULTI_STEP      = "multi_step"       # CH, DDT — nhiều công thức liên tiếp
+    CIRCUIT         = "circuit"          # CH — mạch RLC nối tiếp/song song
+    ELECTROSTATIC   = "electrostatic"    # LD/DT — Coulomb/điện trường (scalar)
+    VECTOR          = "vector"           # LD/DT — cộng vector 2D (góc, tam giác)  ← MỚI
+    YES_NO          = "yes_no"           # CHLT — cộng hưởng Yes/No                ← MỚI
+    QUALITATIVE     = "qualitative"      # NL/DDT — định tính (cần LLM)            ← MỚI
+    MULTI_ANSWER    = "multi_answer"     # THCB — nhiều đáp án (dấu ;)             ← MỚI
+    ERROR_CALC      = "error_calc"       # THCB — sai số đo lường                  ← MỚI
+    ELECTROMAGNETIC = "electromagnetic"  # DDT — cảm ứng điện từ / solenoid        ← MỚI
 
 
 @dataclass
@@ -34,8 +44,8 @@ class PhysicsQuestion:
     """
     original: str
     question_type: PhysicsQuestionType
-    domain: str                    # "circuits" | "electrostatics"
-    target_variable: Optional[str] # Biến cần tìm: "E", "R", "V", "F"...
+    domain: str                    # "circuits" | "electrostatics" | "electromagnetism" | "measurement"
+    target_variable: Optional[str] # Biến cần tìm: "E", "R", "V", "F", "Z", "EMF"...
     keywords: list[str]            # Tái dùng _extract_keywords() từ type1
 
 
@@ -66,15 +76,42 @@ class PhysicsClassifier(QuestionClassifier):
         )
 
     def _detect_domain(self, question: str) -> str:
-        """Phân loại domain: electrostatics nếu khớp keyword, còn lại circuits.
+        """Phân loại domain — 4 nhóm phủ 8 prefix dataset (docs/track2_data_info.md §2).
 
-        Dùng keyword matching thô — đủ dùng vì dataset chỉ có 2 domain.
+        Thứ tự kiểm tra = ưu tiên (cụ thể → tổng quát):
+          measurement     (THCB) — sai số đo lường, kiểm tra trước vì rất đặc thù
+          electromagnetism (DDT) — solenoid / từ thông / EMF / tự cảm
+          electrostatics  (LD/DT/TD/NL-tụ) — điện tích / tụ điện / điện trường
+          circuits        (CH + mặc định) — mạch RLC xoay chiều
+
+        Lưu ý: formula_rag Layer-1 match `doc["domain"]`. DB formula hiện chỉ có
+        circuits/electrostatics → câu measurement/electromagnetism rơi xuống FAISS
+        (không regress vì chưa có formula DDT/THCB). Khi P3 thêm formula, gán
+        domain tương ứng để Layer-1 ăn khớp.
         """
-        electrostatic_kw = {"capacitor", "charge", "electric field",
-                             "coulomb", "dielectric", "capacitance"}
         q_lower = question.lower()
-        if any(kw in q_lower for kw in electrostatic_kw):
+
+        # measurement error (THCB) — đặc thù nhất
+        if any(kw in q_lower for kw in (
+            "absolute error", "relative error", "least count",
+            "uncertainty", "measured value", "measurement error",
+        )):
+            return "measurement"
+
+        # electromagnetic induction (DDT)
+        if any(kw in q_lower for kw in (
+            "solenoid", "magnetic flux", "induced", "self-inductance",
+            "faraday", "emf", "electromotive force", "magnetic field",
+        )):
+            return "electromagnetism"
+
+        # electrostatics (LD/DT/TD/NL-tụ)
+        if any(kw in q_lower for kw in (
+            "capacitor", "capacitance", "charge", "coulomb",
+            "electric field", "dielectric", "point charge", "electric force",
+        )):
             return "electrostatics"
+
         return "circuits"
 
     def _detect_physics_type(self, question: str, domain: str) -> PhysicsQuestionType:
@@ -85,13 +122,54 @@ class PhysicsClassifier(QuestionClassifier):
         Mặc định SINGLE_FORMULA — SymPy giải một phương trình duy nhất.
         """
         q_lower = question.lower()
-        if domain == "circuits":
-            if any(kw in q_lower for kw in ("series", "parallel", "network", "branch")):
-                return PhysicsQuestionType.CIRCUIT
+
+        # 1. Yes/No cộng hưởng (CHLT) — ưu tiên cao nhất, cần routing riêng (không solve)
+        if any(kw in q_lower for kw in (
+            "does the circuit", "is the circuit", "does it", "will it",
+            "experience resonance", "is there resonance", "resonance occur",
+        )):
+            return PhysicsQuestionType.YES_NO
+
+        # 2. Sai số đo lường (THCB) — multi-answer nếu hỏi nhiều đại lượng
+        if domain == "measurement":
+            if any(kw in q_lower for kw in ("and the", "both", "respectively", ";")):
+                return PhysicsQuestionType.MULTI_ANSWER
+            return PhysicsQuestionType.ERROR_CALC
+
+        # 3. Định tính (NL/DDT khái niệm) — cần LLM reasoning, không dùng SymPy
+        if any(kw in q_lower for kw in (
+            "where is", "what happens", "which of", "shape of graph",
+            "directly proportional", "proportional to", "characteristic of",
+        )):
+            return PhysicsQuestionType.QUALITATIVE
+
+        # 4. Cảm ứng điện từ (DDT)
+        if domain == "electromagnetism":
+            return PhysicsQuestionType.ELECTROMAGNETIC
+
+        # 5. Vector tĩnh điện (LD/DT có hình học) — chỉ khi tín hiệu hình học mạnh.
+        #    Cặp 2 điện tích đơn vẫn để ELECTROSTATIC (scalar solve); vector_solver
+        #    vẫn là fallback của sympy_solver nên không sợ bỏ sót.
+        if domain == "electrostatics" and any(kw in q_lower for kw in (
+            "triangle", "vertices", "vertex", "equilateral",
+            "angle between", "perpendicular", "midpoint", "three charges",
+        )):
+            return PhysicsQuestionType.VECTOR
+
+        # 6. Mạch RLC topology (CH)
+        if domain == "circuits" and any(kw in q_lower for kw in (
+            "series", "parallel", "network", "branch",
+        )):
+            return PhysicsQuestionType.CIRCUIT
+
+        # 7. Tĩnh điện scalar
         if domain == "electrostatics":
             return PhysicsQuestionType.ELECTROSTATIC
+
+        # 8. Nhiều bước
         if any(kw in q_lower for kw in ("then", "after", "subsequently", "next")):
             return PhysicsQuestionType.MULTI_STEP
+
         return PhysicsQuestionType.SINGLE_FORMULA
 
     def _detect_target_variable(self, question: str) -> Optional[str]:
@@ -105,12 +183,30 @@ class PhysicsClassifier(QuestionClassifier):
         Chỉ trả về biến đầu tiên khớp — không xử lý multi-target ("find I1 and I2").
         Multi-target detection nằm trong type2_validation.py.
         """
+        # Thứ tự = ưu tiên match (first-match-wins). Cụm nhiều từ phải đặt TRƯỚC
+        # từ đơn chứa nó: "electromotive force" trước "force", "power factor" trước
+        # "power", "impedance" trước "resistance" (Z vs R).
         mapping = {
-            "energy": "E", "resistance": "R", "voltage": "V",
-            "current": "I", "power": "P", "charge": "Q",
-            "capacitance": "C", "electric field": "E_field",
-            "force": "F", "frequency": "f", "inductance": "L",
-            "magnetic field": "B", "flux": "Φ",
+            "impedance": "Z",
+            "energy": "E",
+            "resistance": "R",
+            "voltage": "V",
+            "current": "I",
+            "power factor": "cos_phi",
+            "power": "P",
+            "charge": "Q",
+            "capacitance": "C",
+            "electromotive force": "EMF",
+            "emf": "EMF",
+            "electric field": "E_field",
+            "magnetic flux": "Φ",
+            "magnetic field": "B",
+            "force": "F",
+            "frequency": "f",
+            "period": "T",
+            "self-inductance": "L",
+            "inductance": "L",
+            "flux": "Φ",
         }
         q_lower = question.lower()
         for keyword, var in mapping.items():
