@@ -27,13 +27,18 @@
 | THCB (sai số) | 80 | **0%** | 80 bài |
 | **Tổng** | **1,352** | **~34.7%** | **~883 bài** |
 
-> ⚠️ Với database hiện tại, pipeline chỉ giải được ~35% dataset. Cần bổ sung **28 công thức** mới chia thành 4 domain mới.
+> ⚠️ Với database hiện tại, pipeline chỉ giải được ~35% dataset. Cần bổ sung **32 công thức** mới (F-021…F-052). Sau khi đồng bộ tên domain với codebase (§5): chỉ **`ac_circuits`** là domain thật sự mới; `electromagnetism` và `measurement` codebase đã có (commit classifier 2026-05-31); `lc_oscillation` đã gộp vào `electromagnetism`.
 
 ---
 
 ## 2. Danh sách công thức cần bổ sung
 
 ### DOMAIN MỚI: `ac_circuits` — Mạch RLC xoay chiều (cho CH + CHLT)
+> ✅ **Review verdict:** HỢP LÝ giữ là domain mới. AC (trở kháng, dung/cảm kháng, cosφ)
+> khác bản chất DC `circuits` (R thuần, ohm/KVL/KCL) → tách giúp retrieval không lẫn.
+> ⚠️ **Cần đồng bộ codebase:** classifier hiện route CH/CHLT → `circuits`, CHƯA có
+> `ac_circuits`. Để Layer-1 retrieval khớp, phải thêm `ac_circuits` vào
+> `_detect_domain()` (route theo kw: reactance/impedance/AC/cosφ/resonance) — xem §7 TODO.
 
 #### F-021 | `inductive_reactance`
 ```
@@ -143,7 +148,9 @@ variables:      C (F), omega (rad/s), L (H)
 
 ---
 
-### DOMAIN MỚI: `electromagnetic_induction` — Điện từ cảm ứng (cho DDT)
+### DOMAIN `electromagnetism` — Điện từ: cảm ứng + năng lượng (cho DDT + NL)
+> ✅ Tên khớp codebase (`type2_classifier._detect_domain`). Domain này gộp luôn cả
+> nhóm LC oscillation bên dưới (xem §5 verdict). DDT (cảm ứng) + NL (năng lượng EM/LC).
 
 #### F-031 | `solenoid_magnetic_field`
 ```
@@ -234,7 +241,11 @@ variables:      w (J/m³), B (T), mu_0 = 4π×10⁻⁷
 
 ---
 
-### DOMAIN MỚI: `lc_oscillation` — Mạch dao động LC (cho NL + DDT)
+### ~~DOMAIN MỚI `lc_oscillation`~~ → GỘP VÀO `electromagnetism` — Mạch dao động LC (cho NL + DDT)
+> ⚠️ **Review verdict:** KHÔNG tạo domain riêng `lc_oscillation`. Lý do: (1) trùng
+> vật lý với `electromagnetism` (cuộn cảm + năng lượng từ), (2) F-040 trùng hệt F-028
+> (`f = 1/(2π√(LC))`). Các công thức dưới đây gán `domain = electromagnetism`. Cân nhắc
+> BỎ F-040 (dùng lại F-028) để tránh 1 công thức nằm 2 domain.
 
 #### F-039 | `lc_total_energy`
 ```
@@ -279,7 +290,8 @@ formula_latex:  i = \frac{I_{max}}{\sqrt{2}} \approx 0.707 I_{max}
 
 ---
 
-### DOMAIN MỚI: `measurement_errors` — Sai số đo lường (cho THCB)
+### DOMAIN `measurement` — Sai số đo lường (cho THCB)
+> ✅ Tên khớp codebase (`type2_classifier._detect_domain`).
 
 #### F-043 | `absolute_error_instrument`
 ```
@@ -393,7 +405,7 @@ variables:      W (J), Q (C), C (F)
 
 ---
 
-## 3. Tổng hợp — 28 công thức cần thêm
+## 3. Tổng hợp — 32 công thức cần thêm
 
 | ID | Topic | Domain | Impact (bài) | Ưu tiên |
 |----|-------|--------|-------------|---------|
@@ -407,24 +419,24 @@ variables:      W (J), Q (C), C (F)
 | F-028 | rlc_resonance_frequency | ac_circuits | CH+CHLT ~80 | 🔴 P1 |
 | F-029 | ac_resonance_condition | ac_circuits | CHLT 20 | 🔴 P1 |
 | F-030 | capacitance_from_resonance | ac_circuits | CH ~20 | 🟡 P2 |
-| F-031 | solenoid_magnetic_field | electromagnetic_induction | DDT ~38 | 🔴 P1 |
-| F-032 | solenoid_turn_density | electromagnetic_induction | DDT ~15 | 🟡 P2 |
-| F-033 | magnetic_flux | electromagnetic_induction | DDT ~20 | 🟡 P2 |
-| F-034 | induced_emf_self_induction | electromagnetic_induction | DDT ~40 | 🔴 P1 |
-| F-035 | induced_emf_faraday | electromagnetic_induction | DDT ~10 | 🟡 P2 |
-| F-036 | solenoid_inductance | electromagnetic_induction | DDT ~10 | 🟡 P2 |
-| F-037 | inductor_energy | electromagnetic_induction | DDT+NL ~130 | 🔴 P1 |
-| F-038 | magnetic_energy_density | electromagnetic_induction | DDT ~10 | 🟢 P3 |
-| F-039 | lc_total_energy | lc_oscillation | NL ~30 | 🟡 P2 |
-| F-040 | lc_oscillation_frequency | lc_oscillation | NL/DDT ~20 | 🟡 P2 |
-| F-041 | lc_energy_partition | lc_oscillation | NL ~26 (qualitative) | 🟡 P2 |
-| F-042 | lc_current_at_equal_energy | lc_oscillation | NL ~5 | 🟢 P3 |
-| F-043 | absolute_error_instrument | measurement_errors | THCB ~30 | 🔴 P1 |
-| F-044 | relative_error | measurement_errors | THCB ~35 | 🔴 P1 |
-| F-045 | error_propagation_product | measurement_errors | THCB ~20 | 🔴 P1 |
-| F-046 | error_propagation_sum | measurement_errors | THCB ~10 | 🟡 P2 |
-| F-047 | mean_absolute_error | measurement_errors | THCB ~15 | 🟡 P2 |
-| F-048 | absolute_error_from_true | measurement_errors | THCB ~10 | 🟡 P2 |
+| F-031 | solenoid_magnetic_field | electromagnetism | DDT ~38 | 🔴 P1 |
+| F-032 | solenoid_turn_density | electromagnetism | DDT ~15 | 🟡 P2 |
+| F-033 | magnetic_flux | electromagnetism | DDT ~20 | 🟡 P2 |
+| F-034 | induced_emf_self_induction | electromagnetism | DDT ~40 | 🔴 P1 |
+| F-035 | induced_emf_faraday | electromagnetism | DDT ~10 | 🟡 P2 |
+| F-036 | solenoid_inductance | electromagnetism | DDT ~10 | 🟡 P2 |
+| F-037 | inductor_energy | electromagnetism | DDT+NL ~130 | 🔴 P1 |
+| F-038 | magnetic_energy_density | electromagnetism | DDT ~10 | 🟢 P3 |
+| F-039 | lc_total_energy | electromagnetism | NL ~30 | 🟡 P2 |
+| F-040 | lc_oscillation_frequency | electromagnetism | NL/DDT ~20 | 🟡 P2 |
+| F-041 | lc_energy_partition | electromagnetism | NL ~26 (qualitative) | 🟡 P2 |
+| F-042 | lc_current_at_equal_energy | electromagnetism | NL ~5 | 🟢 P3 |
+| F-043 | absolute_error_instrument | measurement | THCB ~30 | 🔴 P1 |
+| F-044 | relative_error | measurement | THCB ~35 | 🔴 P1 |
+| F-045 | error_propagation_product | measurement | THCB ~20 | 🔴 P1 |
+| F-046 | error_propagation_sum | measurement | THCB ~10 | 🟡 P2 |
+| F-047 | mean_absolute_error | measurement | THCB ~15 | 🟡 P2 |
+| F-048 | absolute_error_from_true | measurement | THCB ~10 | 🟡 P2 |
 | F-049 | coulomb_force_vector_superposition | electrostatics | LD ~232 | 🔴 P1 |
 | F-050 | electric_field_superposition | electrostatics | DT ~25 | 🟡 P2 |
 | F-051 | zero_field_position | electrostatics | DT ~10 | 🟢 P3 |
@@ -450,18 +462,37 @@ variables:      W (J), Q (C), C (F)
 
 ---
 
-## 5. Domain mới cần thêm vào `formula_rag.py`
+## 5. Domain chuẩn (canonical) — đồng bộ với codebase
+
+> Tên domain trong file này đã chỉnh để **khớp `type2_classifier._detect_domain()`**.
+> `electromagnetism` và `measurement` **không còn là "mới"** — codebase đã có sau commit
+> classifier (2026-05-31). Chỉ `ac_circuits` là domain thật sự mới cần thêm vào classifier.
 
 ```python
-VALID_DOMAINS = [
-    "circuits",               # hiện có
-    "electrostatics",         # hiện có — mở rộng thêm F-049..F-052
-    "ac_circuits",            # MỚI — CH, CHLT
-    "electromagnetic_induction",  # MỚI — DDT
-    "lc_oscillation",         # MỚI — NL, DDT
-    "measurement_errors",     # MỚI — THCB
+# Canonical domain set (5) — formula_rag matchs doc["domain"] == parsed["domain"]
+CANONICAL_DOMAINS = [
+    "circuits",          # DC: R thuần, ohm/KVL/KCL, series/parallel   — codebase ✅
+    "ac_circuits",       # RLC AC: X_L/X_C/Z/cosφ/resonance (CH, CHLT)  — MỚI, cần thêm vào classifier
+    "electrostatics",    # Coulomb, E-field, tụ điện (LD, DT, TD)       — codebase ✅ (mở rộng F-049..F-052)
+    "electromagnetism",  # cảm ứng + năng lượng EM/LC (DDT, NL)         — codebase ✅ (gồm cả lc_oscillation)
+    "measurement",       # sai số đo lường (THCB)                       — codebase ✅
 ]
 ```
+
+### ⚠️ Cảnh báo nhất quán cho người thu thập data
+
+1. **LLM parser chỉ emit `circuits`/`electrostatics`.** `PHYSICS_PARSE_PROMPT`
+   (`llm/prompt_templates.py`) hiện chỉ dạy LLM 2 domain. `physics_parser_node` chỉ
+   dùng `classifier.domain` khi LLM trả `"general"`. ⇒ Với pipeline `--use-llm`,
+   `parsed["domain"]` thường KHÔNG bao giờ là `ac_circuits/electromagnetism/measurement`
+   → Layer-1 keyword match cho domain mới **gần như không kích hoạt**, retrieval rơi
+   xuống FAISS (Layer-2). Muốn domain mới hoạt động Layer-1: **cập nhật
+   `PHYSICS_PARSE_PROMPT`** liệt kê đủ 5 domain.
+2. **Layer-1 còn cần `find in doc["variables"]`.** Khi nhập formula, đảm bảo key
+   `variables` chứa đúng ký hiệu biến cần tìm (vd `Z`, `X_L`, `EMF`, `cos_phi`) khớp
+   với `target_variable` mà classifier sinh ra (đã thêm Z/EMF/T/cos_phi).
+3. **Rebuild FAISS** sau khi sửa JSON: `python scripts/build_faiss_index.py`. Chạy
+   `python tests/physics_formula.py` trước để bắt lỗi cú pháp `formula_sympy`.
 
 ## 6. Thứ tự implement (theo impact)
 
@@ -486,7 +517,31 @@ Batch 2 — P1 AC circuits (6 công thức, ~180 bài CH còn lại):
 
 Batch 3 — P2 (phần còn lại):
   F-033/035/036/038 DDT còn lại
-  F-039/040/041 LC oscillation
+  F-039/040/041 LC oscillation (domain=electromagnetism; cân nhắc bỏ F-040 trùng F-028)
   F-046/047/048 THCB còn lại
   F-050/051/052 electrostatics bổ sung
 ```
+
+---
+
+## 7. Review verdict (2026-05-31) — đồng bộ tên domain với codebase
+
+Tóm tắt review file gốc (Claude web) so với codebase:
+
+| Domain trong file gốc | Xử lý | Lý do |
+|---|---|---|
+| `circuits` | giữ | khớp codebase (DC) |
+| `electrostatics` | giữ | khớp codebase |
+| `electromagnetic_induction` | **rename → `electromagnetism`** | trùng domain codebase; tên codebase là umbrella rộng hơn (cảm ứng + năng lượng), hợp với cả DDT lẫn NL |
+| `measurement_errors` | **rename → `measurement`** | trùng domain codebase |
+| `lc_oscillation` | **fold → `electromagnetism`** | trùng vật lý (cuộn cảm/năng lượng từ); F-040 trùng hệt F-028 |
+| `ac_circuits` | **giữ là domain MỚI** | AC (Z/X_L/X_C/cosφ) khác bản chất DC; tách tốt cho retrieval. CH+CHLT = 310 bài |
+
+**Domain set chuẩn = 5:** `circuits`, `ac_circuits`, `electrostatics`, `electromagnetism`, `measurement`.
+
+### TODO đồng bộ codebase (để 32 formula này dùng được)
+- [ ] **Classifier:** thêm `ac_circuits` vào `_detect_domain()` — route CH/CHLT (kw: `reactance`, `impedance`, `ac`, `alternating`, `power factor`, `resonance`, `RLC`) sang `ac_circuits` thay vì `circuits`.
+- [ ] **LLM prompt:** cập nhật `PHYSICS_PARSE_PROMPT` (`llm/prompt_templates.py`) liệt kê đủ 5 domain — nếu không, pipeline `--use-llm` luôn emit `circuits`/`electrostatics` và Layer-1 cho domain mới không kích hoạt (chỉ FAISS cứu).
+- [ ] **Formula DB:** khi nhập, đặt `domain` đúng 1 trong 5 tên chuẩn; `variables` chứa ký hiệu cần tìm khớp `target_variable`.
+- [ ] **Cân nhắc bỏ F-040** (dùng lại F-028) để tránh 1 công thức nằm 2 domain.
+- [ ] Sau khi nhập: `python tests/physics_formula.py` → `python scripts/build_faiss_index.py`.
