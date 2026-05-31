@@ -1,11 +1,28 @@
 llm:
-  # vLLM server (OpenAI-compatible). Start server trước khi chạy pipeline:
-  #   vllm serve Qwen/Qwen2.5-7B-Instruct --port 8000 --host 0.0.0.0
-  api_base: "http://localhost:8000/v1"
-  api_key: "not-needed"                       # vLLM không yêu cầu auth mặc định
-  model_name: "Qwen/Qwen2.5-7B-Instruct"     # phải khớp với model đang serve
+  # Backend switch — đổi 1 dòng `active` để chuyển dev <-> prod.
+  # Cả llama.cpp server (dev, GGUF) và vLLM (prod, FP16) đều nói OpenAI-compatible
+  # /v1 API → code LLMReasoner không đổi, chỉ đổi endpoint + model_name ở đây.
+  active: dev                # dev | prod
+
+  # Shared cho mọi profile
+  api_key: "not-needed"      # cả llama.cpp lẫn vLLM không yêu cầu auth mặc định
   temperature: 0.1
   max_tokens: 1024
+
+  profiles:
+    # Dev: llama.cpp server phục vụ GGUF Q4_K_M (Windows native, 8GB VRAM).
+    #   cd D:\llama.cpp; .\llama-server.exe -m <gguf> -ngl -1 --port 8000 \
+    #     --alias Qwen/Qwen2.5-7B-Instruct
+    dev:
+      api_base: "http://localhost:8000/v1"
+      model_name: "Qwen/Qwen2.5-7B-Instruct"   # = --alias trên llama-server
+
+    # Prod: vLLM phục vụ FP16 safetensors (VPS Linux, GPU >=16GB).
+    #   vllm serve Qwen/Qwen2.5-7B-Instruct --port 8000 --host 0.0.0.0
+    #   model_name PHẢI khớp model_id thật (verify qua GET /v1/models cho committee).
+    prod:
+      api_base: "http://localhost:8000/v1"      # đổi thành http://<vps-ip>:8000/v1
+      model_name: "Qwen/Qwen2.5-7B-Instruct"
 
 pipeline:
   z3_timeout: 5            # seconds before Z3 fallback

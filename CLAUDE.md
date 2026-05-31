@@ -169,13 +169,21 @@ vllm serve Qwen/Qwen2.5-7B-Instruct --model ~/models/qwen2.5-7b --port 8000 --ho
 
 ## Config Reference (`configs/config.yaml`)
 
+The `llm` block is **profile-based** — `llm.active` selects a backend; `get_shared_reasoner()` (`llm/__init__.py`) merges `llm.profiles[active]` over the shared `llm` keys. Both backends (llama.cpp dev / vLLM prod) speak the same OpenAI `/v1` API, so switching is **config-only — no code change**. A flat `llm` block with no `profiles` still works (backward-compatible).
+
 ```yaml
 llm:
-  api_base: "http://localhost:8000/v1"     # vLLM OpenAI-compatible endpoint
-  api_key: "not-needed"                     # vLLM requires no auth by default
-  model_name: "Qwen/Qwen2.5-7B-Instruct"   # must match the served model
+  active: dev                 # dev (llama.cpp GGUF) | prod (vLLM FP16)
+  api_key: "not-needed"       # shared across profiles
   temperature: 0.1
   max_tokens: 1024
+  profiles:
+    dev:                      # llama.cpp server, Q4_K_M GGUF, Windows-native
+      api_base: "http://localhost:8000/v1"
+      model_name: "Qwen/Qwen2.5-7B-Instruct"   # = llama-server --alias
+    prod:                     # vLLM, FP16 safetensors, VPS Linux
+      api_base: "http://localhost:8000/v1"      # → http://<vps-ip>:8000/v1
+      model_name: "Qwen/Qwen2.5-7B-Instruct"   # must match real /v1/models id
 
 pipeline:
   z3_timeout: 5
