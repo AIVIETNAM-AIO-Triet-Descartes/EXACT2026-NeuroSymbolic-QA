@@ -310,6 +310,81 @@ def explainer_node_type2(state: PipelineState) -> PipelineState:
 
 ---
 
+### 3.7 ResonanceSolver — `pipeline/type2/resonance_solver.py` *(new file — CHLT)*
+
+**Responsibility:** Answer Yes/No resonance questions for the **CHLT** prefix (20 problems, 100% gap). These do **not** use FormulaRAG or `sympy.solve()` — pure value comparison.
+
+**Why a separate solver:** CHLT asks "does the circuit experience resonance?" → compute resonant frequency `f₀ = 1/(2π√(LC))` and compare to the driving frequency `f`. No equation to solve, no formula to retrieve.
+
+**Trigger:** `PhysicsQuestionType.YES_NO` (already in enum). Dispatched from `sympy_solver_node` (see Integration below).
+
+**Entry point** — same `sympy_result` contract as other solvers:
+```python
+def solve_resonance(parsed: dict, question: str = "") -> dict:
+    """
+    Input  : parsed["given"] must contain L (H), C (F), f (Hz).
+    Output : {"answer": "Yes"|"No", "unit": "", "steps": [...], "source": "resonance"}
+    Logic  : f0 = 1 / (2*pi*sqrt(L*C));  Yes if abs(f - f0)/f0 < TOL else No.
+             TOL ~ 0.01–0.02 (relative). Tune against CHLT examples in track2_data_info.md.
+    """
+```
+
+**Output example:**
+```python
+{
+    "answer": "No",
+    "unit": "",
+    "steps": [
+        "Given: L=0.5 H, C=20 µF, f=40 Hz",
+        "Resonant frequency: f0 = 1/(2π√(LC)) = 50.3 Hz",
+        "Compare: |40 − 50.3|/50.3 = 0.20 > 0.01 → not resonant",
+    ],
+    "source": "resonance",
+}
+```
+
+**Confidence:** deterministic → `1.0` (treat `"resonance"` like `"sympy"` in the confidence map).
+
+**Fallback:** missing L/C/f after parse → `{"answer": "", "unit": "", "steps": [], "source": "llm_fallback"}` (lets LLM CoT handle it). Never raise.
+
+**Parsing note:** CHLT `given` extraction can reuse the regex helpers in `scripts/demo_type2.py` (`_normalize_superscripts`, unit conversion) or a small local regex. Does **not** depend on the LLM parser.
+
+---
+
+### 3.8 ErrorSolver — `pipeline/type2/error_solver.py` *(new file — THCB)*
+
+**Responsibility:** Measurement-error problems for the **THCB** prefix (80 problems, 100% gap). Explicit formula computation — **no `sympy.solve()`**. Largest multi-answer group (23/80 use `;`).
+
+**Trigger:** `PhysicsQuestionType.ERROR_CALC` (single value) and `PhysicsQuestionType.MULTI_ANSWER` (≥2 values). Both already in enum.
+
+**Sub-cases** (detect from question keywords; formulas per `track2_formula_gaps.md` F-043…F-048):
+
+| Sub-case | Formula | Example IDs |
+|----------|---------|-------------|
+| absolute error (instrument) | `Δx = least_count / 2` (or given directly) | THCB001 |
+| relative error | `δ = Δx / x * 100` (%) | THCB002 |
+| error propagation — product/quotient | `δZ = δA + δB` (Z=A·B or A/B) | THCB003 |
+| error propagation — sum/diff | `ΔZ = ΔA + ΔB` (Z=A±B) | THCB009 |
+| mean + random error | `x̄ = Σxᵢ/n`, `Δx̄ = Σ|xᵢ−x̄|/n` | THCB007 |
+| absolute error from true value | `Δx = |x_measured − x_true|` | THCB087 |
+
+**Entry point:**
+```python
+def solve_error(parsed: dict, question: str = "") -> dict:
+    """
+    Output (single) : {"answer": "3.57", "unit": "%", "steps": [...], "source": "error_calc"}
+    Output (multi)  : {"answer": "0.6; 1.2", "unit": "cm; %", "steps": [...], "source": "error_calc"}
+    """
+```
+
+**Multi-answer format (critical):** when the question asks for ≥2 quantities ("calculate absolute error AND relative error"), join with `"; "` in BOTH `answer` and `unit`, in the same order. Matches dataset convention (`Answer: 0.6; 1.2 | Unit: cm; %`).
+
+**Confidence:** deterministic → `1.0`.
+
+**Fallback:** unrecognized sub-case or missing data → `source="llm_fallback"`. Never raise.
+
+---
+
 ## 4. SolverResult — Unified Interface
 
 Before handing off to Explainer, SympySolver must populate:
@@ -328,7 +403,23 @@ SolverResult(
 `source` → `confidence` baseline:
 - `"sympy"` + self_verify OK → `1.0`
 - `"sympy"` + self_verify failed → `0.4`
+- `"resonance"` (CHLT) / `"error_calc"` (THCB) → `1.0` (deterministic, treat like `"sympy"`)
 - `"llm_fallback"` → `0.5`
+
+**Integration — dispatch in `sympy_solver_node`** (the only edit to existing solver code; one branch, ~6 lines):
+```python
+# pipeline/type2/sympy_solver.py — inside sympy_solver_node, before solve_physics()
+if q_type == PhysicsQuestionType.YES_NO:
+    from pipeline.type2.resonance_solver import solve_resonance
+    sympy_result = solve_resonance(parsed, state.get("question", ""))
+elif q_type in (PhysicsQuestionType.ERROR_CALC, PhysicsQuestionType.MULTI_ANSWER):
+    from pipeline.type2.error_solver import solve_error
+    sympy_result = solve_error(parsed, state.get("question", ""))
+else:
+    sympy_result = solve_physics(parsed, q_type)   # existing path
+# existing vector_solver + llm_fallback handling continues unchanged
+```
+Self-verifier downgrades confidence only for numeric answers; Yes/No and multi-answer strings skip numeric validation (extend `validate_sympy_result` if needed, but do not block).
 
 ---
 
@@ -357,6 +448,19 @@ SolverResult(
 | T2-11: Code Agent node | LLM generates SymPy code, execute in `subprocess` sandbox with 10s timeout |
 | T2-12: Populate FAISS from competition source materials | Post kick-off workshop, replace seed data |
 | T2-13: QLoRA fine-tune PhysicsParser | Only if variable extraction accuracy < 70% on eval set |
+
+### Phase 3 — Dedicated solvers for non-RAG prefixes (CHLT + THCB) — independent work package
+
+These two prefixes do **not** use FormulaRAG/`solve()`, so they can be built in parallel with the formula-DB expansion (which covers CH/DDT/NL/LD/DT/TD). Clean boundary: two new files + one dispatch branch in `sympy_solver_node`.
+
+| Task | File | Note |
+|------|------|------|
+| T2-14: `solve_resonance()` — CHLT Yes/No | `pipeline/type2/resonance_solver.py` *(new)* | §3.7. `f₀=1/(2π√(LC))`, relative-tol compare. 20 problems. |
+| T2-15: `solve_error()` — THCB error calc + multi-answer | `pipeline/type2/error_solver.py` *(new)* | §3.8. Sub-cases F-043…F-048, `;`-joined multi-answer. 80 problems. |
+| T2-16: Dispatch branch (YES_NO / ERROR_CALC / MULTI_ANSWER) | `pipeline/type2/sympy_solver.py` | §4 Integration snippet — ~6 lines, before `solve_physics()`. |
+| T2-17: Tests — CHLT (Yes + No cases) + THCB (single + multi-answer) | `tests/test_type2.py` | ≥4 cases. Use CHLT001/002 + THCB002/087 from track2_data_info.md. |
+
+**Enum/domain already done** (commit 2026-05-31): `YES_NO`, `ERROR_CALC`, `MULTI_ANSWER` types and `measurement` domain exist in `type2_classifier.py` — the owner only consumes them, does not edit the classifier.
 
 ---
 
@@ -477,3 +581,6 @@ Every Type 2 request must log these fields:
 | `scripts/build_faiss_index.py` | new file | Member 2 |
 | `tests/physics_formula.py` | refactor to script with `main()` | Member 2 |
 | `tests/test_type2.py` | expand stubs | Member 2 |
+| `pipeline/type2/resonance_solver.py` | **new file (CHLT)** — T2-14 | Member 3 |
+| `pipeline/type2/error_solver.py` | **new file (THCB)** — T2-15 | Member 3 |
+| `pipeline/type2/sympy_solver.py` | **dispatch branch only** — T2-16 (coordinate with solver owner) | Member 3 |
