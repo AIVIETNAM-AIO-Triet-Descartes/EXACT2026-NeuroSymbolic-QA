@@ -80,3 +80,33 @@ SymPy can solve `F = k*q1*q2/r**2` for a single pair but cannot handle angle dec
 - `LLMReasoner.parse_physics_question()` — LLM trích `find`
 
 **Fix needed:** Gắn detection vào động từ hỏi — parse cụm sau "find/calculate/determine the **X**" để lấy đại lượng cần tìm, thay vì quét toàn câu. Hoặc port logic `detect_find_from_verb()` từ `demo_type2.py` vào classifier để thống nhất 1 nguồn.
+
+---
+
+## 7. YES_NO Bypass SymPy — Có thể giải symbolic nhưng rơi vào LLM fallback
+
+**Affected:** `PhysicsQuestionType.YES_NO` — hiện tại routing hoàn toàn sang LLM, không qua `sympy_solver.py`
+
+**Symptom:** `source=llm_fallback`, `confidence=0.5–0.6` dù câu hỏi có đủ dữ kiện để kiểm tra symbolic.
+
+**Example (physics_dev.csv index 9):**
+> *"For an RLC AC circuit with R = 45 Ω, L = 1 H, and C = 4 μF, does resonance occur in the circuit at a frequency of 79.6 Hz?"*  
+> Ground truth: `answer = Yes`
+
+**Root cause:** `_detect_physics_type()` trả `YES_NO` ngay khi gặp `"resonance occur"` → pipeline routing không dispatch sang SymPy. Tuy nhiên bài này hoàn toàn giải được symbolically:
+
+```
+ω₀ = 1 / √(LC) = 1 / √(1 × 4×10⁻⁶) = 500 rad/s
+ω  = 2πf = 2π × 79.6 ≈ 500 rad/s
+→ ω ≈ ω₀  →  Yes, resonance occurs
+```
+
+Phép kiểm tra chỉ cần 2 substitution + so sánh — không cần LLM reasoning.
+
+**Mức ảnh hưởng:** Trung bình. Mọi câu dạng YES/NO cộng hưởng (`CHLT` prefix) đều bị ép `confidence ≤ 0.6` dù kết quả hoàn toàn deterministic.
+
+**Fix needed:** Thêm nhánh symbolic trong routing cho `YES_NO`:
+1. Physics parser trích `R, L, C, f` từ câu hỏi.
+2. SymPy tính `ω₀ = 1/√(LC)` và `ω = 2πf`, so sánh (với tolerance `≤ 1%`).
+3. Nếu tính được → trả `answer="Yes"/"No"`, `confidence=1.0`, `source="sympy"`.
+4. Nếu thiếu dữ kiện → fallback LLM như hiện tại.

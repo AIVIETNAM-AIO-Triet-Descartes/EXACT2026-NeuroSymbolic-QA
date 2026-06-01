@@ -76,18 +76,24 @@ class PhysicsClassifier(QuestionClassifier):
         )
 
     def _detect_domain(self, question: str) -> str:
-        """Phân loại domain — 4 nhóm phủ 8 prefix dataset (docs/track2_data_info.md §2).
+        """Phân loại domain — 5 nhóm phủ 8 prefix dataset (docs/track2_data_info.md §2,
+        canonical set tại docs/track2_formula_gaps.md §5).
 
         Thứ tự kiểm tra = ưu tiên (cụ thể → tổng quát):
-          measurement     (THCB) — sai số đo lường, kiểm tra trước vì rất đặc thù
+          measurement      (THCB) — sai số đo lường, đặc thù nhất
+          ac_circuits      (CH/CHLT) — RLC xoay chiều: trở/dung/cảm kháng, cosφ, cộng hưởng
           electromagnetism (DDT) — solenoid / từ thông / EMF / tự cảm
-          electrostatics  (LD/DT/TD/NL-tụ) — điện tích / tụ điện / điện trường
-          circuits        (CH + mặc định) — mạch RLC xoay chiều
+          electrostatics   (LD/DT/TD/NL-tụ) — điện tích / tụ điện / điện trường
+          circuits         (DC + mặc định) — R thuần, ohm/KVL/KCL
 
-        Lưu ý: formula_rag Layer-1 match `doc["domain"]`. DB formula hiện chỉ có
-        circuits/electrostatics → câu measurement/electromagnetism rơi xuống FAISS
-        (không regress vì chưa có formula DDT/THCB). Khi P3 thêm formula, gán
-        domain tương ứng để Layer-1 ăn khớp.
+        Lý do ac_circuits đặt TRƯỚC electrostatics: bài CH thường nhắc "capacitor"/
+        "charge" (vốn trigger electrostatics) nhưng tín hiệu AC mạnh (impedance/
+        reactance/RLC) phải thắng. KHÔNG dùng keyword "ac" trần — nó là substring của
+        "capacitor"/"reactance"/"surface" → match bừa.
+
+        Lưu ý: formula_rag Layer-1 match `doc["domain"]`. DB formula đến khi Member2/3
+        bổ sung mới có domain ac_circuits/electromagnetism/measurement; trước đó câu các
+        nhóm này rơi xuống FAISS Layer-2 (không regress).
         """
         q_lower = question.lower()
 
@@ -97,6 +103,13 @@ class PhysicsClassifier(QuestionClassifier):
             "uncertainty", "measured value", "measurement error",
         )):
             return "measurement"
+
+        # AC RLC (CH/CHLT) — tín hiệu AC mạnh, đặt trước electrostatics
+        if any(kw in q_lower for kw in (
+            "impedance", "reactance", "rlc", "alternating",
+            "power factor", "resonance", "resonant", "a.c.",
+        )):
+            return "ac_circuits"
 
         # electromagnetic induction (DDT)
         if any(kw in q_lower for kw in (
@@ -146,6 +159,11 @@ class PhysicsClassifier(QuestionClassifier):
         # 4. Cảm ứng điện từ (DDT)
         if domain == "electromagnetism":
             return PhysicsQuestionType.ELECTROMAGNETIC
+
+        # 4b. Mạch RLC xoay chiều (CH) — thường nhiều bước (X_L/X_C → Z → I/P).
+        #     MULTI_STEP cho phép sympy_solver chain công thức; fallback single nếu chỉ 1.
+        if domain == "ac_circuits":
+            return PhysicsQuestionType.MULTI_STEP
 
         # 5. Vector tĩnh điện (LD/DT có hình học) — chỉ khi tín hiệu hình học mạnh.
         #    Cặp 2 điện tích đơn vẫn để ELECTROSTATIC (scalar solve); vector_solver

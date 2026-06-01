@@ -319,7 +319,8 @@ Output ONLY the corrected Python code. No markdown, no explanations.
 SYSTEM_PROMPT_PHYSICS = (
     "You are a physics problem solver. "
     "Extract variables precisely from problem text. "
-    "Use standard SI symbol notation (V, I, R, P, E, C, Q, F, f, L, B). "
+    "Use standard SI symbol notation (V, I, R, P, E, C, Q, F, f, L, B, Z, X_L, X_C, "
+    "EMF, cos_phi, Phi, n). "
     "Return only valid JSON. No explanation outside JSON."
 )
 
@@ -331,17 +332,22 @@ Return ONLY a JSON object with this exact structure:
 {{
     "given": {{"symbol": numeric_value}},
     "find": "symbol_to_solve",
-    "domain": "circuits" or "electrostatics",
+    "domain": "one of: circuits | ac_circuits | electrostatics | electromagnetism | measurement",
     "formulas": ["formula_string"],
     "units": {{"symbol": "unit_string"}}
 }}
 
 Rules:
 - Convert all values to base SI units (kΩ → multiply by 1000, mA → divide by 1000)
-- Standard symbols: V (voltage), I (current), R (resistance), P (power), E (energy), C (capacitance), Q (charge), F (force), f (frequency)
+- Standard symbols: V (voltage), I (current), R (resistance), P (power), E (energy), C (capacitance), Q (charge), F (force), f (frequency), L (inductance), Z (impedance), X_L (inductive reactance), X_C (capacitive reactance), EMF (electromotive force), cos_phi (power factor), B (magnetic field), Phi (magnetic flux)
 - "find" must be a single symbol string
 - "formulas" are SymPy-compatible hints only (e.g. "V = I * R")
-- "domain" is "circuits" if problem involves resistors/current/voltage, else "electrostatics"
+- Pick "domain" by the dominant topic:
+  - "circuits": DC resistor networks — Ohm's law, series/parallel R, KVL/KCL (no AC)
+  - "ac_circuits": AC RLC — impedance Z, reactance X_L/X_C, power factor cosφ, resonance
+  - "electrostatics": point charges, Coulomb force, electric field, capacitor charge/energy
+  - "electromagnetism": solenoid magnetic field, magnetic flux, induced EMF, self-inductance
+  - "measurement": measurement error analysis — absolute/relative error, error propagation
 
 JSON:"""
 
@@ -349,7 +355,7 @@ PHYSICS_PARSE_SIMPLE_PROMPT = """From this physics problem extract only 3 fields
 
 Problem: {question}
 
-Return ONLY JSON: {{"given": {{}}, "find": "", "domain": "circuits"}}
+Return ONLY JSON: {{"given": {{}}, "find": "", "domain": "circuits | ac_circuits | electrostatics | electromagnetism | measurement"}}
 
 JSON:"""
 
