@@ -198,7 +198,8 @@ def solve_physics(
     Dispatch by PhysicsQuestionType and try formulas until one succeeds.
 
     SINGLE_FORMULA / ELECTROSTATIC → _solve_single for each formula
-    MULTI_STEP                      → _solve_multi_step, fallback to _solve_single
+    MULTI_STEP / ELECTROMAGNETIC    → _solve_multi_step, fallback to _solve_single
+                                      (DDT: EMF/W_L/Phi chains — weakness #8a alias)
     CIRCUIT                         → _solve_single per formula (KVL/KCL as given)
 
     Returns sympy_result dict. Never raises.
@@ -224,7 +225,7 @@ def solve_physics(
                 logger.info(f"[SYMPY_SOLVER] Solved via {q_type.value}: {formula_str}")
                 break
 
-    elif q_type == PhysicsQuestionType.MULTI_STEP:
+    elif q_type in (PhysicsQuestionType.MULTI_STEP, PhysicsQuestionType.ELECTROMAGNETIC):
         result = _run_with_timeout(_solve_multi_step, (formulas, given, find), timeout)
         if not result:
             # Fallback: single-formula attempt
@@ -256,7 +257,20 @@ def sympy_solver_node(state: dict) -> dict:
     except ValueError:
         q_type = PhysicsQuestionType.SINGLE_FORMULA
 
-    sympy_result = solve_physics(parsed, q_type)
+    # Dedicated-solver dispatch (T2-16) — before the generic sympy path.
+    # YES_NO guard: domain + given-key check chặn câu qualitative bị classifier
+    # nhầm vào YES_NO (weakness #7 over-routing) — thiếu L/C/f thì đi đường thường.
+    given = parsed.get("given", {}) or {}
+    if (q_type == PhysicsQuestionType.YES_NO
+            and parsed.get("domain") == "ac_circuits"
+            and all(k in given for k in ("L", "C", "f"))):
+        from pipeline.type2.resonance_solver import solve_resonance
+        sympy_result = solve_resonance(parsed, state.get("question", ""))
+    elif q_type in (PhysicsQuestionType.ERROR_CALC, PhysicsQuestionType.MULTI_ANSWER):
+        from pipeline.type2.error_solver import solve_error
+        sympy_result = solve_error(parsed, state.get("question", ""))
+    else:
+        sympy_result = solve_physics(parsed, q_type)
 
     # Vector solver fallback: handles multi-charge Coulomb + force+angle problems
     if sympy_result.get("source") == "llm_fallback":

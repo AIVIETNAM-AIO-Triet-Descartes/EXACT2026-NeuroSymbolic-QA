@@ -88,7 +88,7 @@ SymPy can solve `F = k*q1*q2/r**2` for a single pair but cannot handle angle dec
 
 ---
 
-## 7. YES_NO Bypass SymPy — Có thể giải symbolic nhưng rơi vào LLM fallback
+## 7. YES_NO Bypass SymPy — Có thể giải symbolic nhưng rơi vào LLM fallback ✅ ĐÃ HOÀN THÀNH (2026-06-02 — `resonance_solver.py` + dispatch guard domain/given trong `sympy_solver_node`; E2E CHLT Yes/No conf=1.0)
 
 **Affected:** `PhysicsQuestionType.YES_NO` — hiện tại routing hoàn toàn sang LLM, không qua `sympy_solver.py`
 
@@ -110,11 +110,30 @@ Phép kiểm tra chỉ cần 2 substitution + so sánh — không cần LLM reas
 
 **Mức ảnh hưởng:** Trung bình. Mọi câu dạng YES/NO cộng hưởng (`CHLT` prefix) đều bị ép `confidence ≤ 0.6` dù kết quả hoàn toàn deterministic.
 
-**Fix needed:** Thêm nhánh symbolic trong routing cho `YES_NO`:
+**Fix needed:** Thêm nhánh symbolic trong routing cho `YES_NO`, nhưng **phải kết hợp 2 điều kiện** để tránh over-routing:
 1. Physics parser trích `R, L, C, f` từ câu hỏi.
 2. SymPy tính `ω₀ = 1/√(LC)` và `ω = 2πf`, so sánh (với tolerance `≤ 1%`).
 3. Nếu tính được → trả `answer="Yes"/"No"`, `confidence=1.0`, `source="sympy"`.
 4. Nếu thiếu dữ kiện → fallback LLM như hiện tại.
+
+**⚠️ Rủi ro over-routing (phát hiện 2026-06-02):** Nếu dispatch đơn giản là `q_type == YES_NO → resonance_solver`, sẽ sai với câu như:
+
+> *"In an RLC circuit, Z_L = 70 Ω and Z_C = 50 Ω. What is the circuit's characteristic?"*  
+> ground truth: `"the circuit exhibits an inductive characteristic"` — **không phải Yes/No**
+
+Câu này bị classifier nhầm vào `YES_NO` (do dùng pattern "does/is the circuit"), nhưng thực chất là câu qualitative. `resonance_solver` sẽ trả `answer=""` (thiếu L, C, f) thay vì trả đúng đặc tính mạch.
+
+**Dispatch đúng phải thỏa đồng thời 3 điều kiện:**
+```python
+if (q_type == YES_NO
+        and domain == "ac_circuits"
+        and all(k in given for k in ("L", "C", "f"))):
+    result = solve_resonance(parsed, question)
+else:
+    result = llm_fallback  # qualitative YES_NO → LLM
+```
+
+Kiểm tra `given` có đủ `L, C, f` là **safety gate** quan trọng nhất — resonance_solver đã tự có fallback khi thiếu key, nhưng check sớm tại dispatch tránh gọi solver vô ích và log rõ nguyên nhân.
 
 ---
 
@@ -140,7 +159,7 @@ elif q_type == MULTI_STEP:                              → _solve_multi_step()
 
 ---
 
-### 8a. `ELECTROMAGNETIC` — Thiếu entry trong dispatch, dùng được `MULTI_STEP`
+### 8a. `ELECTROMAGNETIC` — Thiếu entry trong dispatch, dùng được `MULTI_STEP` ✅ ĐÃ HOÀN THÀNH (2026-06-02 — alias vào nhánh MULTI_STEP trong `solve_physics()`, test W_L=½LI² pass)
 
 **Affected prefix:** `DDT`
 
@@ -164,7 +183,7 @@ DDT phức tạp (Faraday với dB/dt biến thiên) vẫn cần LLM — nhưng 
 
 ---
 
-### 8b. `ERROR_CALC` — Công thức cố định, giải được hoàn toàn symbolic
+### 8b. `ERROR_CALC` — Công thức cố định, giải được hoàn toàn symbolic ✅ ĐÃ HOÀN THÀNH (2026-06-02 — `error_solver.py`: ±, true-vs-measured, least count, mean; error propagation còn fallback LLM)
 
 **Affected prefix:** `THCB`
 
@@ -192,7 +211,7 @@ Phụ thuộc: `physics_parser_node` phải parse được `delta` và `X` — h
 
 ---
 
-### 8c. `MULTI_ANSWER` — Cần extend solver trả list kết quả
+### 8c. `MULTI_ANSWER` — Cần extend solver trả list kết quả ✅ ĐÃ HOÀN THÀNH (2026-06-02 — nhánh multi trong `error_solver.solve_error()`, nối `;` cả answer lẫn unit; E2E "0.6; 1.2" | "cm; %")
 
 **Affected prefix:** `THCB` (câu hỏi nhiều đại lượng, answer dạng `"val1; val2"`)
 
@@ -239,7 +258,7 @@ Cần `_detect_multiple_targets()` để parse câu hỏi nhiều `find`. (Nếu
 | # | Type | Prefix | Giải pháp | Confidence sau fix | Độ khó | Ưu tiên |
 |:-:|:-----|:------:|:----------|:-----------------:|:------:|:-------:|
 | 8a | `ELECTROMAGNETIC` | DDT | Alias vào `MULTI_STEP` (1 dòng) | **1.0** | ⭐ | 🔴 Cao |
-| 7  | `YES_NO` | CHLT | file riêng `resonance_solver.py` → `solve_resonance()` | **1.0** | ⭐ | 🔴 Cao |
+| 7  | `YES_NO` | CHLT | `resonance_solver.py` — dispatch chỉ khi `domain=ac_circuits` + `given` có đủ `L,C,f` | **1.0** | ⭐ | 🔴 Cao |
 | 8b | `ERROR_CALC` | THCB | file riêng `error_solver.py` → `solve_error()` + parser | **1.0** | ⭐⭐ | 🟠 Trung bình |
 | 8c | `MULTI_ANSWER` | THCB | trong `error_solver.py` (nhánh multi của `solve_error()`) | **1.0** | ⭐⭐⭐ | 🟡 Thấp |
 | 8d | `QUALITATIVE` | NL/DDT | Sub-case proportional → SymPy | **0.8** | ⭐⭐⭐ | 🟡 Thấp |

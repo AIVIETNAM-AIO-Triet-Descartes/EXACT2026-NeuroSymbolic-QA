@@ -222,3 +222,141 @@ class TestPhysicsClassifier:
 		q = "Two resistors connected in parallel. Find total resistance."
 		result = self.clf.classify_physics(q)
 		assert result.question_type == PhysicsQuestionType.CIRCUIT
+
+# ══════════════════════════════════════════════════════════════
+# T2-17: ResonanceSolver (CHLT) + ErrorSolver (THCB)
+# ══════════════════════════════════════════════════════════════
+
+from pipeline.type2.resonance_solver import solve_resonance
+from pipeline.type2.error_solver import solve_error
+from pipeline.type2.sympy_solver import sympy_solver_node
+
+
+class TestResonanceSolver:
+	def test_chlt_no_case(self):
+		# CHLT001: L=0.5H C=20uF f=40Hz → f0 ≈ 50.3 Hz ≠ 40 → No
+		parsed = {"given": {"R": 50.0, "L": 0.5, "C": 20e-6, "f": 40.0}}
+		result = solve_resonance(parsed)
+		assert result["answer"] == "No"
+		assert result["source"] == "resonance"
+		assert result["steps"]
+
+	def test_chlt_yes_case(self):
+		# CHLT002: L=0.4H C=50uF f=35.6Hz → f0 ≈ 35.59 Hz ≈ f → Yes
+		parsed = {"given": {"R": 10.0, "L": 0.4, "C": 50e-6, "f": 35.6}}
+		result = solve_resonance(parsed)
+		assert result["answer"] == "Yes"
+		assert result["source"] == "resonance"
+
+	def test_missing_data_falls_back(self):
+		result = solve_resonance({"given": {"L": 0.5, "C": 20e-6}})  # no f
+		assert result["source"] == "llm_fallback"
+		assert result["answer"] == ""
+
+	def test_phrasal_frequency_fallback(self):
+		# weakness #7 example: L=1H C=4uF, f phrasal "at a frequency of 79.6 Hz"
+		parsed = {"given": {"R": 45.0, "L": 1.0, "C": 4e-6}}
+		q = "For an RLC AC circuit, does resonance occur at a frequency of 79.6 Hz?"
+		result = solve_resonance(parsed, q)
+		assert result["answer"] == "Yes"
+
+	def test_dispatch_via_sympy_solver_node(self):
+		state = {
+			"question": "R=50 ohm, L=0.5 H, C=20 uF, f=40 Hz. Does the circuit experience resonance?",
+			"parsed_physics": {
+				"given": {"R": 50.0, "L": 0.5, "C": 20e-6, "f": 40.0},
+				"find": "", "domain": "ac_circuits", "formulas": [],
+				"question_type": "yes_no",
+			},
+			"confidence": 1.0,
+		}
+		out = sympy_solver_node(state)
+		assert out["answer"] == "No"
+		assert out["solver_result"]["source"] == "resonance"
+		assert out["confidence"] == 1.0  # deterministic — not downgraded
+
+	def test_yes_no_guard_missing_given_uses_fallback_path(self):
+		# Qualitative misroute: YES_NO without L/C/f must NOT call resonance solver
+		state = {
+			"question": "What is the circuit's characteristic?",
+			"parsed_physics": {
+				"given": {}, "find": "", "domain": "ac_circuits",
+				"formulas": [], "question_type": "yes_no",
+			},
+			"confidence": 1.0,
+		}
+		out = sympy_solver_node(state)
+		assert out["solver_result"]["source"] == "llm_fallback"
+
+
+class TestErrorSolver:
+	def test_relative_error_from_least_count(self):
+		# THCB002: least count 0.2 V, reads 5.6 V → 0.2/5.6×100 = 3.57 %
+		q = "A voltmeter has a least count of 0.2 V and reads 5.6 V. Find the relative error."
+		result = solve_error({"given": {}}, q)
+		assert result["source"] == "error_calc"
+		assert math.isclose(float(result["answer"]), 3.5714, rel_tol=0.01)
+		assert result["unit"] == "%"
+
+	def test_absolute_error_from_least_count(self):
+		# THCB001: least count 0.1 A → absolute error 0.1 A (= least_count, not /2)
+		q = "An ammeter has range 2 A and least count of 0.1 A. What is the absolute error?"
+		result = solve_error({"given": {}}, q)
+		assert result["source"] == "error_calc"
+		assert math.isclose(float(result["answer"]), 0.1, rel_tol=1e-6)
+
+	def test_multi_answer_true_vs_measured(self):
+		# THCB087: true 50.0 cm, measured 49.4 cm → "0.6; 1.2" | "cm; %"
+		q = ("The true value is 50.0 cm and the measured value is 49.4 cm. "
+		     "Calculate the absolute error and the relative error.")
+		result = solve_error({"given": {}}, q)
+		assert result["source"] == "error_calc"
+		parts = [p.strip() for p in result["answer"].split(";")]
+		assert len(parts) == 2
+		assert math.isclose(float(parts[0]), 0.6, rel_tol=1e-6)
+		assert math.isclose(float(parts[1]), 1.2, rel_tol=0.01)
+		units = [u.strip() for u in result["unit"].split(";")]
+		assert units == ["cm", "%"]
+
+	def test_plusminus_relative_uncertainty(self):
+		# physics_dev[41]: 12.0 ± 0.2 Ω → 0.2/12.0×100 = 1.67 %
+		q = "The resistance measurement result is 12.0 ± 0.2 Ω. Calculate the percentage relative uncertainty."
+		result = solve_error({"given": {}}, q)
+		assert result["source"] == "error_calc"
+		assert math.isclose(float(result["answer"]), 1.6667, rel_tol=0.01)
+
+	def test_unrecognized_falls_back(self):
+		result = solve_error({"given": {}}, "Compute the error propagation of R = U/I.")
+		assert result["source"] == "llm_fallback"
+
+	def test_dispatch_via_sympy_solver_node(self):
+		state = {
+			"question": "A voltmeter has a least count of 0.2 V and reads 5.6 V. Find the relative error.",
+			"parsed_physics": {
+				"given": {}, "find": "", "domain": "measurement",
+				"formulas": [], "question_type": "error_calc",
+			},
+			"confidence": 1.0,
+		}
+		out = sympy_solver_node(state)
+		assert out["solver_result"]["source"] == "error_calc"
+		assert math.isclose(float(out["answer"]), 3.5714, rel_tol=0.01)
+		assert out["confidence"] == 1.0
+
+
+class TestElectromagneticDispatch:
+	def test_8a_alias_solves_inductor_energy(self):
+		# weakness #8a: ELECTROMAGNETIC routed via MULTI_STEP path (DDT formulas)
+		parsed = {
+			"given": {"L": 0.5, "I": 2.0},
+			"find": "W_L",
+			"formulas": ["W_L = 0.5 * L * I**2"],
+		}
+		result = solve_physics(parsed, PhysicsQuestionType.ELECTROMAGNETIC)
+		assert result["source"] == "sympy"
+		assert math.isclose(float(result["answer"]), 1.0, rel_tol=1e-6)
+
+	def test_8a_no_formula_still_falls_back(self):
+		parsed = {"given": {"L": 0.5}, "find": "W_L", "formulas": []}
+		result = solve_physics(parsed, PhysicsQuestionType.ELECTROMAGNETIC)
+		assert result["source"] == "llm_fallback"

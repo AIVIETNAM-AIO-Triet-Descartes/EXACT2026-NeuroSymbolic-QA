@@ -174,7 +174,7 @@ Layer 2 — FAISS semantic search (only if Layer 1 returns 0 or 2+ candidates):
 
 ---
 
-### 3.3 SympySolver — `pipeline/type2/sympy_solver.py` — ✅ ĐÃ HOÀN THÀNH (4-type dispatch + vector fallback; YES_NO/ERROR_CALC/MULTI_ANSWER dispatch là §3.7/3.8/T2-16, chưa)
+### 3.3 SympySolver — `pipeline/type2/sympy_solver.py` — ✅ ĐÃ HOÀN THÀNH (full dispatch 2026-06-02: 4-type + ELECTROMAGNETIC→MULTI_STEP alias + YES_NO→resonance_solver + ERROR_CALC/MULTI_ANSWER→error_solver + vector fallback)
 
 **Responsibility:** Solve physics equation symbolically. Zero arithmetic hallucination.
 
@@ -310,7 +310,7 @@ def explainer_node_type2(state: PipelineState) -> PipelineState:
 
 ---
 
-### 3.7 ResonanceSolver — `pipeline/type2/resonance_solver.py` *(new file — CHLT)*
+### 3.7 ResonanceSolver — `pipeline/type2/resonance_solver.py` *(new file — CHLT)* — ✅ ĐÃ HOÀN THÀNH (2026-06-02)
 
 **Responsibility:** Answer Yes/No resonance questions for the **CHLT** prefix (20 problems, 100% gap). These do **not** use FormulaRAG or `sympy.solve()` — pure value comparison.
 
@@ -318,11 +318,17 @@ def explainer_node_type2(state: PipelineState) -> PipelineState:
 
 **Trigger:** `PhysicsQuestionType.YES_NO` (already in enum). Dispatched from `sympy_solver_node` (see Integration below).
 
+**⚠️ Note về R trong đề CHLT:** Dữ liệu thực tế cho thấy **tất cả** câu YES/NO resonance đều có R trong đề (ví dụ: `R = 45 Ω`, `R = 60 Ω`). Tuy nhiên:
+- **R không dùng để kiểm tra cộng hưởng** — `f₀ = 1/(2π√(LC))` chỉ phụ thuộc L và C. Ở cộng hưởng, `X_L = X_C` → trở kháng thuần trở `Z = R`, nhưng câu hỏi Yes/No chỉ hỏi "có cộng hưởng không".
+- **Parser phải extract R** (regex sẽ tự bắt được) — nhưng `solve_resonance()` **bỏ qua R** cho phép kiểm tra Yes/No.
+- Nếu câu hỏi hỏi thêm về power (`P = U²/R`) hay impedance (`Z = R` tại cộng hưởng), đó là loại câu khác (SINGLE_FORMULA), không phải YES_NO.
+
 **Entry point** — same `sympy_result` contract as other solvers:
 ```python
 def solve_resonance(parsed: dict, question: str = "") -> dict:
     """
     Input  : parsed["given"] must contain L (H), C (F), f (Hz).
+             R may also be present — intentionally ignored for Yes/No check.
     Output : {"answer": "Yes"|"No", "unit": "", "steps": [...], "source": "resonance"}
     Logic  : f0 = 1 / (2*pi*sqrt(L*C));  Yes if abs(f - f0)/f0 < TOL else No.
              TOL ~ 0.01–0.02 (relative). Tune against CHLT examples in track2_data_info.md.
@@ -335,9 +341,10 @@ def solve_resonance(parsed: dict, question: str = "") -> dict:
     "answer": "No",
     "unit": "",
     "steps": [
-        "Given: L=0.5 H, C=20 µF, f=40 Hz",
-        "Resonant frequency: f0 = 1/(2π√(LC)) = 50.3 Hz",
-        "Compare: |40 − 50.3|/50.3 = 0.20 > 0.01 → not resonant",
+        "Given: R=60 Ω, L=0.8 H, C=5 µF, f=50 Hz",
+        "Resonant frequency: f0 = 1/(2π√(LC)) = 1/(2π√(0.8×5e-6)) ≈ 79.6 Hz",
+        "Compare: |50 − 79.6|/79.6 = 0.37 > 0.01 → not resonant",
+        "Note: R is given but not used for resonance check (Z=R only at resonance)",
     ],
     "source": "resonance",
 }
@@ -351,7 +358,7 @@ def solve_resonance(parsed: dict, question: str = "") -> dict:
 
 ---
 
-### 3.8 ErrorSolver — `pipeline/type2/error_solver.py` *(new file — THCB)*
+### 3.8 ErrorSolver — `pipeline/type2/error_solver.py` *(new file — THCB)* — ✅ ĐÃ HOÀN THÀNH (2026-06-02; error propagation F-045/046 còn fallback LLM)
 
 **Responsibility:** Measurement-error problems for the **THCB** prefix (80 problems, 100% gap). Explicit formula computation — **no `sympy.solve()`**. Largest multi-answer group (23/80 use `;`).
 
@@ -409,7 +416,15 @@ SolverResult(
 **Integration — dispatch in `sympy_solver_node`** (the only edit to existing solver code; one branch, ~6 lines):
 ```python
 # pipeline/type2/sympy_solver.py — inside sympy_solver_node, before solve_physics()
-if q_type == PhysicsQuestionType.YES_NO:
+#
+# ⚠️ Guard: YES_NO phải kết hợp domain + given-key check trước khi gọi resonance_solver.
+# Lý do: classifier có thể nhầm câu qualitative ("What is the circuit's characteristic?")
+# vào YES_NO. Nếu dispatch thẳng, resonance_solver trả answer="" vì thiếu L/C/f.
+# Safety gate tại đây rõ hơn là chỉ dựa vào fallback bên trong solver.
+given = parsed.get("given", {})
+if (q_type == PhysicsQuestionType.YES_NO
+        and parsed.get("domain") == "ac_circuits"
+        and all(k in given for k in ("L", "C", "f"))):
     from pipeline.type2.resonance_solver import solve_resonance
     sympy_result = solve_resonance(parsed, state.get("question", ""))
 elif q_type in (PhysicsQuestionType.ERROR_CALC, PhysicsQuestionType.MULTI_ANSWER):
@@ -449,7 +464,7 @@ Self-verifier downgrades confidence only for numeric answers; Yes/No and multi-a
 | T2-12: Populate FAISS from competition source materials | Post kick-off workshop, replace seed data |
 | T2-13: QLoRA fine-tune PhysicsParser | Only if variable extraction accuracy < 70% on eval set |
 
-### Phase 3 — Dedicated solvers for non-RAG prefixes (CHLT + THCB) — independent work package
+### Phase 3 — Dedicated solvers for non-RAG prefixes (CHLT + THCB) — independent work package ✅ ĐÃ HOÀN THÀNH (T2-14…T2-17, 2026-06-02; E2E verified conf=1.0)
 
 These two prefixes do **not** use FormulaRAG/`solve()`, so they can be built in parallel with the formula-DB expansion (which covers CH/DDT/NL/LD/DT/TD). Clean boundary: two new files + one dispatch branch in `sympy_solver_node`.
 

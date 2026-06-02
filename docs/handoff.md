@@ -143,7 +143,7 @@ vllm serve Qwen/Qwen2.5-7B-Instruct \
 curl http://localhost:8000/v1/models
 ```
 
-### P2 — Test pipeline với LLM
+### P2 — Test pipeline với LLM ✅ ĐÃ HOÀN THÀNH (2026-05-30 — qua llama.cpp server Q4_K_M thay vLLM, demo --use-llm 77.8%, xem docs/run_demo_llm_local.md)
 
 ```powershell
 # Trong Windows venv (vLLM server đang chạy trong WSL2)
@@ -166,7 +166,7 @@ Formulas còn thiếu (ảnh hưởng ~60% dataset):
 
 File: `data/rag/physics_formulas.json`, rebuild FAISS index sau khi thêm.
 
-### P4 — CHLT Yes/No solver (20 bài, 100% gap)
+### P4 — CHLT Yes/No solver (20 bài, 100% gap) ✅ ĐÃ HOÀN THÀNH (2026-06-02 — `pipeline/type2/resonance_solver.py` + dispatch guard trong `sympy_solver_node`, E2E conf=1.0)
 
 ```python
 # pipeline/type2/resonance_solver.py
@@ -181,7 +181,7 @@ Cần route CHLT prefix vào solver này.
 Strategy F trong `vector_solver.py` đã xử lý được E-field geometry.  
 DT* rows chưa được route vào `solve_vector_problem()`. Cần thêm DT vào dispatch condition.
 
-### P6 — Commit tất cả changes
+### P6 — Commit tất cả changes ✅ ĐÃ HOÀN THÀNH (các commit 5075bd9…bff1373; thay đổi 2026-06-02 — solvers/classifier/regex — đang chờ đợt commit mới)
 
 Chưa commit gì từ session này. Tất cả thay đổi đang ở working tree.
 

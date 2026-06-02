@@ -68,14 +68,24 @@ def _run_type2_pipeline(request: QueryRequest) -> QueryResponse:
     try:
         sympy_result = state.get("sympy_result", {})
         parsed = state.get("parsed_physics", {})
-        val = validate_sympy_result(
-            value=sympy_result.get("answer") or None,
-            target_variable=parsed.get("find"),
-        )
-        if not val.is_valid:
+        # Yes/No (resonance) và multi-answer (error_calc) là chuỗi non-numeric —
+        # validate_sympy_result sẽ fail float() oan. Bỏ qua numeric validation
+        # cho 2 source deterministic này (impl_plan §4).
+        if sympy_result.get("source") in ("resonance", "error_calc"):
+            logger.info(
+                f"[SELF_VERIFIER] Skipped numeric validation for "
+                f"source={sympy_result.get('source')}"
+            )
+            val = None
+        else:
+            val = validate_sympy_result(
+                value=sympy_result.get("answer") or None,
+                target_variable=parsed.get("find"),
+            )
+        if val is not None and not val.is_valid:
             state = {**state, "confidence": 0.4}
             logger.warning(f"[SELF_VERIFIER] Validation failed: {val.errors}")
-        for w in val.warnings:
+        for w in (val.warnings if val is not None else []):
             logger.info(f"[SELF_VERIFIER] Warning: {w}")
 
         # Update confidence in solver_result too
