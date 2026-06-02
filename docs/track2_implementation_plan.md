@@ -67,7 +67,7 @@ solver_result: Optional[SolverResult]
 
 ## 3. Component Specifications
 
-### 3.1 PhysicsParser — `pipeline/type2/physics_parser.py`
+### 3.1 PhysicsParser — `pipeline/type2/physics_parser.py` — ✅ ĐÃ HOÀN THÀNH (2026-06-02; + regex pre-pass)
 
 **Responsibility:** Extract structured data from raw physics question text via LLM.
 
@@ -108,7 +108,7 @@ def physics_parser_node(state: PipelineState) -> PipelineState:
 
 ---
 
-### 3.2 FormulaRAG — `pipeline/type2/formula_rag.py` *(new file)*
+### 3.2 FormulaRAG — `pipeline/type2/formula_rag.py` *(new file)* — ✅ ĐÃ HOÀN THÀNH
 
 **Responsibility:** Retrieve the correct `formula_sympy` string from knowledge base. Two responsibilities: (1) build/load index; (2) query at inference time.
 
@@ -174,7 +174,7 @@ Layer 2 — FAISS semantic search (only if Layer 1 returns 0 or 2+ candidates):
 
 ---
 
-### 3.3 SympySolver — `pipeline/type2/sympy_solver.py`
+### 3.3 SympySolver — `pipeline/type2/sympy_solver.py` — ✅ ĐÃ HOÀN THÀNH (4-type dispatch + vector fallback; YES_NO/ERROR_CALC/MULTI_ANSWER dispatch là §3.7/3.8/T2-16, chưa)
 
 **Responsibility:** Solve physics equation symbolically. Zero arithmetic hallucination.
 
@@ -229,7 +229,7 @@ def solve_physics(parsed: dict, q_type: PhysicsQuestionType, timeout: int = 10) 
 
 ---
 
-### 3.4 SelfVerifier — wraps `pipeline/type2/type2_validation.py`
+### 3.4 SelfVerifier — wraps `pipeline/type2/type2_validation.py` — ✅ ĐÃ HOÀN THÀNH (inline trong `api/main.py`)
 
 **Do NOT create `self_verifier.py`.** Logic already exists:
 - `validate_sympy_result(value, target_variable)` → `ValidationResult`
@@ -263,7 +263,7 @@ def self_verifier_node(state: PipelineState) -> PipelineState:
 
 ---
 
-### 3.5 CotBuilder — `pipeline/type2/cot_builder.py`
+### 3.5 CotBuilder — `pipeline/type2/cot_builder.py` — ✅ ĐÃ HOÀN THÀNH
 
 **Responsibility:** Format `sympy_result["steps"]` into `cot: list[str]` for API response.
 
@@ -287,7 +287,7 @@ def self_verifier_node(state: PipelineState) -> PipelineState:
 
 ---
 
-### 3.6 ExplainerAgent — `pipeline/type2/explainer.py`
+### 3.6 ExplainerAgent — `pipeline/type2/explainer.py` — ✅ ĐÃ HOÀN THÀNH
 
 **Shared with Track 1** — receives `SolverResult` struct only. No track-specific logic here.
 
@@ -425,7 +425,7 @@ Self-verifier downgrades confidence only for numeric answers; Yes/No and multi-a
 
 ## 5. Implementation Tasks
 
-### Phase 1 — Core pipeline (ship before eval)
+### Phase 1 — Core pipeline (ship before eval) ✅ ĐÃ HOÀN THÀNH TOÀN BỘ (T2-00…T2-09, 2026-06-02)
 
 | Task | File | Note |
 |------|------|------|

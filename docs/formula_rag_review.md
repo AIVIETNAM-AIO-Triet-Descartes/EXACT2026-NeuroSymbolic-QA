@@ -134,7 +134,7 @@ Những điểm dưới đây Claude Web không thể verify vì không thấy t
 
 ```
 Ngay bây giờ (quan trọng nhất):
-  □ Verify domain string contract giữa parser và database
+  ☑ Verify domain string contract giữa parser và database ✅ done 2026-06-02 (canonical 5 domain; parser+prompt emit snake_case khớp; DB string đợi Member2 nhập formula)
   □ Sau khi thêm 32 công thức → rebuild FAISS index → chạy load_formula_db() check rejects
 
 Sau khi pipeline chạy đúng cơ bản:

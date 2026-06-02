@@ -85,10 +85,18 @@ class LLMReasoner:
         """
         Trả về OpenAI client, tạo mới nếu chưa có.
         Client kết nối đến vLLM server tại self.base_url.
+
+        Fix A (2026-06-02): Đặt max_retries=0 và timeout rõ ràng để tránh
+        block ~26s/câu khi vLLM server DOWN (openai default = 2 retries × ~13s).
+          - connect_timeout=3s : fail-fast nếu port không mở
+          - read_timeout=60s   : cho phép generation dài (large model)
+          - max_retries=0      : không retry — physics_parser sẽ catch Exception
+                                 và chạy regex-only thay thế
         """
         if self._client is None:
             try:
                 from openai import OpenAI
+                import httpx
             except ImportError:
                 raise ImportError(
                     "openai package not installed. "
@@ -97,6 +105,11 @@ class LLMReasoner:
             self._client = OpenAI(
                 base_url=self.base_url,
                 api_key=self.api_key,
+                max_retries=0,
+                timeout=httpx.Timeout(
+                    timeout=60.0,    # tổng timeout (generation)
+                    connect=3.0,     # connection timeout: fail-fast khi server DOWN
+                ),
             )
         return self._client
 

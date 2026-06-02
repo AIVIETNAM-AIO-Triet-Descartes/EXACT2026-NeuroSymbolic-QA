@@ -1,6 +1,6 @@
 # Track 2 — Known Weaknesses
 
-## 1. Coulomb Vector Problems (LD* rows)
+## 1. Coulomb Vector Problems (LD* rows) ✅ ĐÃ HOÀN THÀNH (2026-06-02 — `vector_solver.py` strategies A–F, wired as `sympy_solver_node` fallback; còn ~20% hình học phức tạp vẫn LLM)
 
 **Affected:** All LD* rows (multi-charge electrostatics)
 
@@ -33,15 +33,20 @@ SymPy can solve `F = k*q1*q2/r**2` for a single pair but cannot handle angle dec
 
 ---
 
-## 3. Variable Extraction Reliability (LLM-dependent)
+## 3. Variable Extraction Reliability (LLM-dependent) ✅ RESOLVED (2026-06-02)
 
-**Affected:** Full pipeline (physics_parser node)
+**Affected:** ~~Full pipeline (physics_parser node)~~
 
-**Symptom:** `given={}` or `find=""` → confidence drops to 0.3 → solver cannot proceed
+**Was:** `physics_parser_node` delegated 100% to `LLMReasoner.parse_physics_question()`. Malformed JSON or a down vLLM server → `given={}` / `find=""` → confidence 0.3 → solver dead.
 
-**Root cause:** `physics_parser_node` delegates to `LLMReasoner.parse_physics_question()`. If LLM returns malformed JSON or misses variables, downstream nodes have no data to work with. Regex fallback in `demo_type2.py` shows this is fixable without LLM but covers limited patterns.
+**Fix applied — regex pre-pass before LLM (the option from this entry):**
+1. **New shared module** `pipeline/type2/regex_extract.py` — `extract_given()` + `detect_find_from_verb()`, the proven patterns lifted from `scripts/demo_type2.py` (SI conversion, scientific/bare-power notation, chained & negated-chain assignments, geometry distances).
+2. **`physics_parser_node` rewritten** as two-stage: (1) deterministic regex pre-pass — runs even with the LLM server **down**; (2) LLM augment — best-effort, wrapped in try/except. Merge precedence: regex `given`/`find` win (deterministic), LLM fills gaps. Verified on TD/LD/CH samples with server OFF — `given`/`find` fully populated, `llm=0`, confidence 1.0 (previously would be `{}`/0.3).
+3. **Confidence** no longer penalised for empty `find`/`given` on types that don't need them (`yes_no`, `error_calc`, `multi_answer`, `qualitative`).
 
-**Fix needed:** Improve `PHYSICS_PARSE_PROMPT` with more few-shot examples, or add a regex pre-pass before LLM call to extract obvious `sym = value unit` assignments.
+**Residual (tracked, out of this fix's scope):**
+- THCB phrasal values ("least count 0.2 V", "reads 5.6 V") have no `sym = value` form → regex misses them. Belongs to `error_solver.py` (Member 3, T2-15) which parses THCB directly.
+- `scripts/demo_type2.py` still holds a duplicate copy of the regex patterns. Tech debt: refactor demo to import from `regex_extract.py` (single source). Left untouched here to avoid disturbing the verified demo.
 
 ---
 
@@ -67,7 +72,7 @@ SymPy can solve `F = k*q1*q2/r**2` for a single pair but cannot handle angle dec
 
 ---
 
-## 6. Classifier `target_variable` = match theo thứ tự mapping, không theo ý đồ câu hỏi
+## 6. Classifier `target_variable` = match theo thứ tự mapping, không theo ý đồ câu hỏi ✅ ĐÃ XỬ LÝ (2026-06-02 — `detect_find_from_verb()` trong `regex_extract.py` là nguồn `find` ưu tiên trong `physics_parser`; method classifier giữ nguyên nhưng tụt xuống fallback cuối)
 
 **Affected:** `PhysicsClassifier._detect_target_variable()` (`pipeline/type2/type2_classifier.py`)
 
@@ -110,3 +115,133 @@ Phép kiểm tra chỉ cần 2 substitution + so sánh — không cần LLM reas
 2. SymPy tính `ω₀ = 1/√(LC)` và `ω = 2πf`, so sánh (với tolerance `≤ 1%`).
 3. Nếu tính được → trả `answer="Yes"/"No"`, `confidence=1.0`, `source="sympy"`.
 4. Nếu thiếu dữ kiện → fallback LLM như hiện tại.
+
+---
+
+## 8. Dispatch Switch Thiếu 4 Question Type — Toàn bộ rơi về LLM Fallback
+
+**Root cause chung:** `sympy_solver.solve_physics()` chỉ có 2 nhánh dispatch:
+
+```python
+if q_type in (SINGLE_FORMULA, CIRCUIT, ELECTROSTATIC): → _solve_single()
+elif q_type == MULTI_STEP:                              → _solve_multi_step()
+# ← KHÔNG có case nào cho ELECTROMAGNETIC, ERROR_CALC, MULTI_ANSWER, QUALITATIVE
+```
+
+→ 4 type này luôn rơi xuống `if not result → llm_fallback`, `confidence = 0.5`, dù nhiều câu hoàn toàn có thể giải symbolic.
+
+> **Kiến trúc routing đã chốt (2026-06-02 — xem `track2_implementation_plan.md` §3.7/§3.8/§4):**
+> - `ELECTROMAGNETIC` (DDT) → alias vào `MULTI_STEP` ngay trong `sympy_solver.py` (§8a).
+> - `YES_NO` (CHLT) → **file riêng** `pipeline/type2/resonance_solver.py` — `solve_resonance()`.
+> - `ERROR_CALC` + `MULTI_ANSWER` (THCB) → **file riêng** `pipeline/type2/error_solver.py` — `solve_error()`.
+> - `QUALITATIVE` (NL/DDT) → LLM (§8d).
+>
+> `sympy_solver_node` chỉ thêm 1 nhánh dispatch gọi các solver này; logic CHLT/THCB **KHÔNG** nằm trong `sympy_solver.py`.
+
+---
+
+### 8a. `ELECTROMAGNETIC` — Thiếu entry trong dispatch, dùng được `MULTI_STEP`
+
+**Affected prefix:** `DDT`
+
+**Vấn đề:** Phần lớn bài DDT chỉ cần 1–2 công thức tuyến tính mà `_solve_multi_step` hoàn toàn xử lý được:
+```
+EMF = -L × (ΔI / Δt)    # solenoid cảm ứng
+E   = ½ × L × I²        # năng lượng từ trường
+Φ   = B × A × N         # từ thông
+```
+
+**Fix needed:** Thêm `ELECTROMAGNETIC` vào nhánh `MULTI_STEP` trong dispatch — **1 dòng thay đổi**:
+
+```python
+elif q_type in (PhysicsQuestionType.MULTI_STEP, PhysicsQuestionType.ELECTROMAGNETIC):
+```
+
+**Mức ảnh hưởng:** Cao. Toàn bộ DDT rows tính EMF, năng lượng solenoid → `confidence 0.5 → 1.0`.
+DDT phức tạp (Faraday với dB/dt biến thiên) vẫn cần LLM — nhưng sẽ ít hơn đáng kể.
+
+**Độ khó:** ⭐ Rất thấp — 1 dòng, không risk regression.
+
+---
+
+### 8b. `ERROR_CALC` — Công thức cố định, giải được hoàn toàn symbolic
+
+**Affected prefix:** `THCB`
+
+**Vấn đề:** Sai số đo lường có công thức deterministic:
+```
+Sai số tuyệt đối:   ΔX = least_count
+Sai số tương đối:   δX = ΔX / X_đo × 100%
+```
+
+Ví dụ thực tế (`physics_dev[41]`):
+> *"The resistance measurement result is: 12.0 ± 0.2 Ω. Calculate the percentage relative uncertainty."*
+> → `δR = 0.2 / 12.0 × 100% = 1.67%` — không cần LLM.
+
+**Fix needed:** Implement trong **file riêng** `pipeline/type2/error_solver.py` — hàm `solve_error(parsed, question)` (Member 3, T2-15; xem impl_plan §3.8). **KHÔNG** nhét vào `sympy_solver.py`:
+1. Trích `delta` (sai số tuyệt đối) và `X` (giá trị đo được) từ `given`.
+2. Phân biệt "relative/percentage" vs "absolute" từ câu hỏi.
+3. Tính và trả kết quả với `source="error_calc"`.
+
+`sympy_solver_node` chỉ dispatch `ERROR_CALC → error_solver.solve_error()`.
+Phụ thuộc: `physics_parser_node` phải parse được `delta` và `X` — hiện regex chưa bắt dạng phrasal "least count 0.2 V"/"reads 5.6 V" (xem weakness #3 residual) → `error_solver` cần parser THCB riêng.
+
+**Mức ảnh hưởng:** Trung bình — `confidence 0.5 → 1.0` cho toàn bộ THCB single-target.
+
+**Độ khó:** ⭐⭐ Trung bình.
+
+---
+
+### 8c. `MULTI_ANSWER` — Cần extend solver trả list kết quả
+
+**Affected prefix:** `THCB` (câu hỏi nhiều đại lượng, answer dạng `"val1; val2"`)
+
+**Vấn đề:** Câu `"Calculate the absolute error and the relative error"` cần 2 giá trị. `_solve_single` chỉ giải 1 `find` tại một thời điểm — trả `answer=""` với cả câu.
+
+**Fix needed:** Xử lý **ngay trong `error_solver.py:solve_error()`** (cùng file với ERROR_CALC), **KHÔNG** ở `sympy_solver.py`. Lý do: `MULTI_ANSWER` hiện chỉ được classifier sinh cho domain `measurement` (THCB) → cùng chủ THCB với ERROR_CALC. `solve_error()` tự rẽ nhánh single vs multi và nối `"; "` cả `answer` lẫn `unit` (đúng convention dataset):
+
+```python
+targets = _detect_multiple_targets(question)  # ["delta_X", "delta_X_pct"]
+results = [_compute_error(given, t, question) for t in targets]
+combined_answer = "; ".join(r["answer"] for r in results if r)
+combined_unit   = "; ".join(r["unit"]   for r in results if r)
+```
+
+Cần `_detect_multiple_targets()` để parse câu hỏi nhiều `find`. (Nếu sau này có prefix ngoài THCB cần multi-answer, lúc đó mới tách solver riêng — hiện `MULTI_ANSWER ≡ THCB`.)
+
+**Mức ảnh hưởng:** Trung bình — ngăn trả chuỗi rỗng `""` cho THCB multi-target.
+
+**Độ khó:** ⭐⭐⭐ Cao — `physics_parser` phải trích nhiều `find` cùng lúc.
+
+---
+
+### 8d. `QUALITATIVE` — LLM bắt buộc, nhưng có thể tăng confidence một phần
+
+**Affected prefix:** `NL`, `DDT` (câu định tính)
+
+**Vấn đề:** Câu dạng `"What happens to X when Y increases?"` không có numerical answer — LLM là con đường duy nhất. Tuy nhiên, một sub-case có thể giải bằng SymPy:
+
+> *"The electric field energy in a capacitor is directly proportional to which quantity?"*  
+> → `E = ½CV²` → phân tích bậc → `E ∝ V²` → answer = "U²"
+
+**Fix needed:** Tách `QUALITATIVE` thành 2 sub-case:
+- `QUALITATIVE_PROPORTIONAL` — phát hiện khi câu có `"directly proportional"` / `"proportional to"` → SymPy phân tích exponent trong công thức → `confidence = 0.8`
+- `QUALITATIVE_OPEN` — câu mở, giữ LLM → `confidence = 0.5` (như hiện tại)
+
+**Mức ảnh hưởng:** Thấp — chỉ cải thiện được sub-case proportional, câu mở vẫn cần LLM.
+
+**Độ khó:** ⭐⭐⭐ Cao — cần SymPy phân tích đa thức để xác định bậc biến.
+
+---
+
+### Bảng tổng hợp ưu tiên (Weakness #7 + #8)
+
+| # | Type | Prefix | Giải pháp | Confidence sau fix | Độ khó | Ưu tiên |
+|:-:|:-----|:------:|:----------|:-----------------:|:------:|:-------:|
+| 8a | `ELECTROMAGNETIC` | DDT | Alias vào `MULTI_STEP` (1 dòng) | **1.0** | ⭐ | 🔴 Cao |
+| 7  | `YES_NO` | CHLT | file riêng `resonance_solver.py` → `solve_resonance()` | **1.0** | ⭐ | 🔴 Cao |
+| 8b | `ERROR_CALC` | THCB | file riêng `error_solver.py` → `solve_error()` + parser | **1.0** | ⭐⭐ | 🟠 Trung bình |
+| 8c | `MULTI_ANSWER` | THCB | trong `error_solver.py` (nhánh multi của `solve_error()`) | **1.0** | ⭐⭐⭐ | 🟡 Thấp |
+| 8d | `QUALITATIVE` | NL/DDT | Sub-case proportional → SymPy | **0.8** | ⭐⭐⭐ | 🟡 Thấp |
+
+> **Quick win đề xuất**: Fix 8a trước (1 dòng, zero risk), sau đó 7 (YES_NO, đo accuracy CHLT ngay được).

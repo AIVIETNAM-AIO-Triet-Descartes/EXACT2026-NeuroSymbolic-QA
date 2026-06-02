@@ -324,9 +324,7 @@ SYSTEM_PROMPT_PHYSICS = (
     "Return only valid JSON. No explanation outside JSON."
 )
 
-PHYSICS_PARSE_PROMPT = """Extract structured data from this physics problem.
-
-Problem: {question}
+PHYSICS_PARSE_PROMPT = """Extract structured data from a physics problem as JSON.
 
 Return ONLY a JSON object with this exact structure:
 {{
@@ -338,7 +336,7 @@ Return ONLY a JSON object with this exact structure:
 }}
 
 Rules:
-- Convert all values to base SI units (kΩ → multiply by 1000, mA → divide by 1000)
+- Convert all values to base SI units (kΩ → multiply by 1000, mA → divide by 1000, μF → ×1e-6)
 - Standard symbols: V (voltage), I (current), R (resistance), P (power), E (energy), C (capacitance), Q (charge), F (force), f (frequency), L (inductance), Z (impedance), X_L (inductive reactance), X_C (capacitive reactance), EMF (electromotive force), cos_phi (power factor), B (magnetic field), Phi (magnetic flux)
 - "find" must be a single symbol string
 - "formulas" are SymPy-compatible hints only (e.g. "V = I * R")
@@ -349,6 +347,25 @@ Rules:
   - "electromagnetism": solenoid magnetic field, magnetic flux, induced EMF, self-inductance
   - "measurement": measurement error analysis — absolute/relative error, error propagation
 
+Examples:
+
+Problem: Calculate the energy stored in capacitor C when C = 100 μF and U = 30 V.
+{{"given": {{"C": 0.0001, "U": 30}}, "find": "E", "domain": "electrostatics", "formulas": ["E = 0.5 * C * U**2"], "units": {{"C": "F", "U": "V"}}}}
+
+Problem: An RLC series circuit has R = 100 Ω, L = 0.5 H, C = 50 μF at f = 50 Hz. Find the impedance Z.
+{{"given": {{"R": 100, "L": 0.5, "C": 5e-05, "f": 50}}, "find": "Z", "domain": "ac_circuits", "formulas": ["Z = sqrt(R**2 + (X_L - X_C)**2)"], "units": {{"R": "Ω", "L": "H", "C": "F", "f": "Hz"}}}}
+
+Problem: A solenoid with N = 1000 turns over length l = 0.5 m carries current I = 2 A. Calculate the magnetic field B inside.
+{{"given": {{"N": 1000, "l": 0.5, "I": 2}}, "find": "B", "domain": "electromagnetism", "formulas": ["B = mu_0 * (N / l) * I"], "units": {{"l": "m", "I": "A"}}}}
+
+Problem: A voltmeter with least count 0.2 V reads 5.6 V. Find the relative error.
+{{"given": {{"least_count": 0.2, "x": 5.6}}, "find": "delta_rel", "domain": "measurement", "formulas": ["delta_rel = (least_count / 2) / x * 100"], "units": {{"x": "V"}}}}
+
+Problem: Two point charges q1 = 6 × 10^-8 C and q2 = -6 × 10^-8 C are placed 8 cm apart. Find the force between them.
+{{"given": {{"q1": 6e-08, "q2": -6e-08, "r": 0.08}}, "find": "F", "domain": "electrostatics", "formulas": ["F = k * q1 * q2 / r**2"], "units": {{"q1": "C", "q2": "C", "r": "m"}}}}
+
+Now extract for this problem:
+Problem: {question}
 JSON:"""
 
 PHYSICS_PARSE_SIMPLE_PROMPT = """From this physics problem extract only 3 fields.

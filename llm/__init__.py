@@ -58,3 +58,64 @@ def get_shared_reasoner() -> LLMReasoner:
             temperature=llm_cfg.get("temperature", 0.1),
         )
     return _reasoner_instance
+
+
+# ── vLLM server health-check singleton (Fix B, 2026-06-02) ───────────────────
+# Shared across all pipeline nodes that call LLM (physics_parser, explainer,
+# cot_solver, etc.). Probe once per process, cache result for the batch.
+#
+# None  = not yet probed
+# True  = server responded OK on last probe
+# False = server was DOWN (LLM calls will be skipped by callers)
+
+_LLM_SERVER_OK: bool | None = None
+
+
+def llm_server_available() -> bool:
+    """
+    Probe vLLM server reachability once per process, cache the result.
+
+    Uses a lightweight GET /v1/models request with a 3 s connect timeout
+    (matches the connect timeout in LLMReasoner._get_client / Fix A).
+
+    Returns True if server is up, False otherwise. Subsequent calls in the
+    same process return the cached value immediately without network I/O.
+
+    The cache is intentionally *not* reset on failure — if the server is down
+    at the start of a batch we assume it stays down for the whole batch.
+    Call reset_llm_server_cache() (tests only) to force a re-probe.
+
+    Import pattern for pipeline nodes:
+        from llm import llm_server_available
+        if llm_server_available():
+            reasoner = get_shared_reasoner()
+            ...
+    """
+    global _LLM_SERVER_OK
+    if _LLM_SERVER_OK is not None:
+        return _LLM_SERVER_OK
+
+    try:
+        import httpx
+        llm_cfg = _resolve_llm_cfg(config)
+        base_url = llm_cfg.get("api_base", "http://localhost:8000/v1")
+        models_url = base_url.rstrip("/").removesuffix("/v1") + "/v1/models"
+        with httpx.Client(timeout=httpx.Timeout(3.0, connect=3.0)) as client:
+            resp = client.get(models_url)
+        _LLM_SERVER_OK = resp.status_code == 200
+    except Exception as e:
+        logger.warning(
+            f"[LLM_HEALTH] vLLM probe failed ({e}); "
+            f"LLM calls disabled for this batch"
+        )
+        _LLM_SERVER_OK = False
+
+    status = "UP" if _LLM_SERVER_OK else "DOWN"
+    logger.info(f"[LLM_HEALTH] vLLM server: {status} (cached for process lifetime)")
+    return _LLM_SERVER_OK
+
+
+def reset_llm_server_cache() -> None:
+    """Force re-probe on next llm_server_available() call. Intended for tests only."""
+    global _LLM_SERVER_OK
+    _LLM_SERVER_OK = None

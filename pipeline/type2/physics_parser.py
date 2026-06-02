@@ -2,57 +2,111 @@
 pipeline/type2/physics_parser.py
 
 LangGraph node [3b]: Extract structured physics data from raw question text.
-Thin wrapper — LLM logic lives in llm/llm_reasoner.py.
+
+Two-stage extraction (addresses weakness #3 — LLM-only extraction was fragile):
+  1. Deterministic regex pre-pass (pipeline/type2/regex_extract.py) — no LLM.
+     Extracts obvious `symbol = value unit` assignments with SI conversion.
+  2. LLM augment (best-effort) — fills gaps regex can't catch ("charged to 3V",
+     implicit values, formula hints). Tolerates a down vLLM server.
+
+Merge precedence: regex `given`/`find` win (deterministic), LLM fills the rest.
+
+Fix B (2026-06-02): health-check via llm.llm_server_available() — singleton
+  cached at llm/__init__.py level so all pipeline nodes share one probe result.
 """
 
 from loguru import logger
 
 from pipeline.state import PipelineState
 from pipeline.type2.type2_classifier import PhysicsClassifier
+from pipeline.type2.regex_extract import extract_given, detect_find_from_verb
+from llm import llm_server_available
 
+
+# ── Main node ─────────────────────────────────────────────────────────────────
 
 def physics_parser_node(state: PipelineState) -> PipelineState:
     """
     Node 3b: Parse physics question into structured dict.
 
-    Calls PhysicsClassifier first for domain/target priors, then delegates
-    variable extraction to LLMReasoner.parse_physics_question(). Classifier
-    overrides LLM output when LLM misses domain or target variable.
+    Stage 1 regex pre-pass is deterministic and runs even if the LLM server is
+    down. Stage 2 LLM augment is best-effort. Classifier supplies domain/type
+    priors. Never raises — always returns a parsed_physics dict.
     """
-    from llm import get_shared_reasoner
+    question = state.get("question", "")
+    confidence = state.get("confidence", 1.0)
 
+    # Classifier priors (domain / question_type / weak target prior)
     try:
-        classified = PhysicsClassifier().classify_physics(state["question"])
-        reasoner = get_shared_reasoner()
-        parsed = reasoner.parse_physics_question(state["question"])
+        classified = PhysicsClassifier().classify_physics(question)
+    except Exception as e:
+        logger.warning(f"[PHYSICS_PARSER] classifier failed: {e}")
+        classified = None
 
-        # Classifier overrides: fill gaps left by LLM
-        if not parsed.get("find") and classified.target_variable:
-            parsed["find"] = classified.target_variable
-        if parsed.get("domain") == "general":
-            parsed["domain"] = classified.domain
+    # ── Stage 1: deterministic regex pre-pass (no LLM) ────────────────────────
+    regex_given: dict = {}
+    regex_find = None
+    try:
+        regex_given = extract_given(question)
+        regex_find = detect_find_from_verb(question)
+    except Exception as e:
+        logger.warning(f"[PHYSICS_PARSER] regex prepass failed: {e}")
 
-        # Attach question_type for sympy_solver dispatch
-        parsed["question_type"] = classified.question_type.value
+    # ── Stage 2: LLM augment (best-effort — skip when server is DOWN) ─────────
+    llm_parsed: dict = {}
+    if llm_server_available():
+        try:
+            from llm import get_shared_reasoner
+            llm_parsed = get_shared_reasoner().parse_physics_question(question) or {}
+        except Exception as e:
+            logger.warning(f"[PHYSICS_PARSER] LLM augment skipped ({e}); regex-only")
+    else:
+        logger.debug("[PHYSICS_PARSER] LLM augment skipped (server DOWN, cached)")
 
-        confidence = state.get("confidence", 1.0)
+    # ── Merge ─────────────────────────────────────────────────────────────────
+    parsed: dict = {
+        "given": {}, "find": "", "domain": "general",
+        "formulas": [], "units": {},
+    }
+    for k in parsed:
+        if llm_parsed.get(k):
+            parsed[k] = llm_parsed[k]
+
+    # given: LLM values first, regex overrides on conflict (deterministic wins)
+    merged_given = dict(parsed.get("given") or {})
+    merged_given.update(regex_given)
+    parsed["given"] = merged_given
+
+    # find priority: regex verb-context > LLM > classifier prior
+    if regex_find:
+        parsed["find"] = regex_find
+    if not parsed.get("find") and classified and classified.target_variable:
+        parsed["find"] = classified.target_variable
+
+    # domain: keep LLM domain unless missing/"general", then classifier prior
+    if (not parsed.get("domain") or parsed["domain"] == "general") and classified:
+        parsed["domain"] = classified.domain
+
+    # question_type for sympy_solver dispatch
+    parsed["question_type"] = (
+        classified.question_type.value if classified else "single_formula"
+    )
+
+    # Yes/No, error-calc, multi-answer and qualitative do NOT need a scalar `find`
+    # or a regex-extracted `given` (handled by resonance_solver / error_solver /
+    # LLM) — don't penalize their confidence for empty find/given here.
+    _find_optional = {"yes_no", "error_calc", "multi_answer", "qualitative"}
+    if parsed["question_type"] not in _find_optional:
         if not parsed.get("find"):
             confidence = 0.3
             logger.warning("[PHYSICS_PARSER] target variable not detected, confidence=0.3")
+        elif not parsed.get("given"):
+            confidence = min(confidence, 0.5)
+            logger.warning("[PHYSICS_PARSER] no given values extracted, confidence<=0.5")
 
-        logger.info(
-            f"[PHYSICS_PARSER] domain={parsed['domain']} "
-            f"find={parsed.get('find')} type={parsed['question_type']}"
-        )
-        return {**state, "parsed_physics": parsed, "confidence": confidence}
-
-    except Exception as e:
-        logger.error(f"[PHYSICS_PARSER] Failed: {e}")
-        return {
-            **state,
-            "parsed_physics": {
-                "given": {}, "find": "", "domain": "general",
-                "formulas": [], "units": {}, "question_type": "single_formula",
-            },
-            "confidence": 0.3,
-        }
+    logger.info(
+        f"[PHYSICS_PARSER] domain={parsed['domain']} find={parsed.get('find')} "
+        f"type={parsed['question_type']} given_keys={list(parsed['given'])} "
+        f"(regex={len(regex_given)}, llm={len(llm_parsed.get('given', {}) if llm_parsed else {})})"
+    )
+    return {**state, "parsed_physics": parsed, "confidence": confidence}

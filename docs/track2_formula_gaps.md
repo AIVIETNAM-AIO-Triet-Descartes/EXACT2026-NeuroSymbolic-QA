@@ -36,9 +36,9 @@
 ### DOMAIN MỚI: `ac_circuits` — Mạch RLC xoay chiều (cho CH + CHLT)
 > ✅ **Review verdict:** HỢP LÝ giữ là domain mới. AC (trở kháng, dung/cảm kháng, cosφ)
 > khác bản chất DC `circuits` (R thuần, ohm/KVL/KCL) → tách giúp retrieval không lẫn.
-> ⚠️ **Cần đồng bộ codebase:** classifier hiện route CH/CHLT → `circuits`, CHƯA có
-> `ac_circuits`. Để Layer-1 retrieval khớp, phải thêm `ac_circuits` vào
-> `_detect_domain()` (route theo kw: reactance/impedance/AC/cosφ/resonance) — xem §7 TODO.
+> ✅ **Đã đồng bộ codebase (2026-06-02):** `_detect_domain()` đã route CH/CHLT →
+> `ac_circuits` (kw: impedance/reactance/rlc/alternating/power factor/resonance). CHLT
+> thêm type `YES_NO`. Layer-1 retrieval sẽ khớp khi formula DB nhập `domain="ac_circuits"`.
 
 #### F-021 | `inductive_reactance`
 ```
@@ -481,13 +481,11 @@ CANONICAL_DOMAINS = [
 
 ### ⚠️ Cảnh báo nhất quán cho người thu thập data
 
-1. **LLM parser chỉ emit `circuits`/`electrostatics`.** `PHYSICS_PARSE_PROMPT`
-   (`llm/prompt_templates.py`) hiện chỉ dạy LLM 2 domain. `physics_parser_node` chỉ
-   dùng `classifier.domain` khi LLM trả `"general"`. ⇒ Với pipeline `--use-llm`,
-   `parsed["domain"]` thường KHÔNG bao giờ là `ac_circuits/electromagnetism/measurement`
-   → Layer-1 keyword match cho domain mới **gần như không kích hoạt**, retrieval rơi
-   xuống FAISS (Layer-2). Muốn domain mới hoạt động Layer-1: **cập nhật
-   `PHYSICS_PARSE_PROMPT`** liệt kê đủ 5 domain.
+1. ✅ **LLM parser đã emit đủ 5 domain (2026-06-02).** `PHYSICS_PARSE_PROMPT`
+   (`llm/prompt_templates.py`) đã liệt kê `circuits | ac_circuits | electrostatics |
+   electromagnetism | measurement` + 5 few-shot examples. Ngoài ra `physics_parser_node`
+   đã có regex pre-pass deterministic + classifier prior (5 domain) → `parsed["domain"]`
+   nay phủ đủ domain mới. Layer-1 keyword match kích hoạt khi formula DB dùng cùng tên domain.
 2. **Layer-1 còn cần `find in doc["variables"]`.** Khi nhập formula, đảm bảo key
    `variables` chứa đúng ký hiệu biến cần tìm (vd `Z`, `X_L`, `EMF`, `cos_phi`) khớp
    với `target_variable` mà classifier sinh ra (đã thêm Z/EMF/T/cos_phi).
@@ -540,8 +538,8 @@ Tóm tắt review file gốc (Claude web) so với codebase:
 **Domain set chuẩn = 5:** `circuits`, `ac_circuits`, `electrostatics`, `electromagnetism`, `measurement`.
 
 ### TODO đồng bộ codebase (để 32 formula này dùng được)
-- [ ] **Classifier:** thêm `ac_circuits` vào `_detect_domain()` — route CH/CHLT (kw: `reactance`, `impedance`, `ac`, `alternating`, `power factor`, `resonance`, `RLC`) sang `ac_circuits` thay vì `circuits`.
-- [ ] **LLM prompt:** cập nhật `PHYSICS_PARSE_PROMPT` (`llm/prompt_templates.py`) liệt kê đủ 5 domain — nếu không, pipeline `--use-llm` luôn emit `circuits`/`electrostatics` và Layer-1 cho domain mới không kích hoạt (chỉ FAISS cứu).
+- [x] **Classifier:** thêm `ac_circuits` vào `_detect_domain()` — route CH/CHLT (kw: `reactance`, `impedance`, `ac`, `alternating`, `power factor`, `resonance`, `RLC`) sang `ac_circuits` thay vì `circuits`. ✅ done 2026-06-02
+- [x] **LLM prompt:** cập nhật `PHYSICS_PARSE_PROMPT` (`llm/prompt_templates.py`) liệt kê đủ 5 domain — nếu không, pipeline `--use-llm` luôn emit `circuits`/`electrostatics` và Layer-1 cho domain mới không kích hoạt (chỉ FAISS cứu). ✅ done 2026-06-02 (kèm 5 few-shot examples)
 - [ ] **Formula DB:** khi nhập, đặt `domain` đúng 1 trong 5 tên chuẩn; `variables` chứa ký hiệu cần tìm khớp `target_variable`.
 - [ ] **Cân nhắc bỏ F-040** (dùng lại F-028) để tránh 1 công thức nằm 2 domain.
 - [ ] Sau khi nhập: `python tests/physics_formula.py` → `python scripts/build_faiss_index.py`.
