@@ -46,7 +46,7 @@ SymPy can solve `F = k*q1*q2/r**2` for a single pair but cannot handle angle dec
 
 **Residual (tracked, out of this fix's scope):**
 - THCB phrasal values ("least count 0.2 V", "reads 5.6 V") have no `sym = value` form → regex misses them. Belongs to `error_solver.py` (Member 3, T2-15) which parses THCB directly.
-- `scripts/demo_type2.py` still holds a duplicate copy of the regex patterns. Tech debt: refactor demo to import from `regex_extract.py` (single source). Left untouched here to avoid disturbing the verified demo.
+- ~~`scripts/demo_type2.py` still holds a duplicate copy of the regex patterns.~~ ✅ RESOLVED (2026-06-03 — demo imports `extract_given`/`detect_find_from_verb` from `regex_extract.py`; 244 duplicate lines removed, single source).
 
 ---
 

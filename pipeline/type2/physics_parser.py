@@ -72,10 +72,18 @@ def physics_parser_node(state: PipelineState) -> PipelineState:
         if llm_parsed.get(k):
             parsed[k] = llm_parsed[k]
 
-    # given: LLM values first, regex overrides on conflict (deterministic wins)
+    # given: LLM values first, regex overrides on conflict (deterministic wins).
+    # Coerce to float + drop non-numeric — LLM can emit symbolic strings (e.g. "q")
+    # that would crash numeric solvers (sympy/vector) downstream.
     merged_given = dict(parsed.get("given") or {})
     merged_given.update(regex_given)
-    parsed["given"] = merged_given
+    clean_given = {}
+    for k, v in merged_given.items():
+        try:
+            clean_given[k] = float(v)
+        except (TypeError, ValueError):
+            logger.debug(f"[PHYSICS_PARSER] drop non-numeric given {k}={v!r}")
+    parsed["given"] = clean_given
 
     # find priority: regex verb-context > LLM > classifier prior
     if regex_find:

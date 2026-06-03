@@ -176,7 +176,7 @@ return "Yes" if abs(f - f0) / f0 < 0.01 else "No"
 
 Cần route CHLT prefix vào solver này.
 
-### P5 — DT prefix routing
+### P5 — DT prefix routing ✅ ĐÃ HOÀN THÀNH (verified 2026-06-03 — route ngầm qua `find=="E_field"` gate trong `solve_vector_problem` (Strategy F); DT001→0 ✓ khớp ground truth. Accuracy toàn subset DT đo sau bằng eval harness)
 
 Strategy F trong `vector_solver.py` đã xử lý được E-field geometry.  
 DT* rows chưa được route vào `solve_vector_problem()`. Cần thêm DT vào dispatch condition.

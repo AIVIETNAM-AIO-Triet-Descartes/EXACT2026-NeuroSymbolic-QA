@@ -9,31 +9,53 @@ No LangChain — calls faiss and sentence-transformers directly.
 import json
 import pickle
 import logging
+import re
 from typing import Optional
 
-from sympy import sympify
+from sympy import sympify, Symbol
 
 logger = logging.getLogger(__name__)
+
+# SymPy builtins that must stay as functions/constants, NOT be re-declared as
+# symbols. Mirror of sympy_solver._MATH_FNS — keeps validation consistent with
+# how the solver actually parses formulas.
+_MATH_FNS = frozenset({
+    "sqrt", "sin", "cos", "tan", "exp", "log", "abs", "pi",
+    "Sum", "Rational", "Integer", "Float",
+})
 
 # ══════════════════════════════════════════════════════════════
 # Formula DB loader
 # ══════════════════════════════════════════════════════════════
+
+def _sympify_locals(expr: str) -> dict:
+    """Declare every identifier in `expr` as a plain Symbol so physics symbols
+    (N, I, E, S, O, …) aren't mistaken for SymPy builtins (N=evalf, I=imaginary
+    unit, E=Euler). Same approach as sympy_solver._make_sym_dict."""
+    tokens = set(re.findall(r'\b[A-Za-z_]\w*\b', expr))
+    return {t: Symbol(t) for t in tokens if t not in _MATH_FNS}
+
 
 def load_formula_db(path: str = "data/rag/physics_formulas.json") -> list[dict]:
     """
     Load formula knowledge base, validate each entry with sympify.
     Returns only entries whose formula_sympy parses cleanly.
     Called at startup — production version of tests/physics_formula.py logic.
+
+    Validation declares all identifiers as Symbols (locals) — matches the solver,
+    so physics symbols like N (turns) or I (current) are not rejected as the
+    SymPy builtins N()/I (see docs/formula_rag_review.md Vấn đề 3).
     """
     with open(path, encoding="utf-8") as f:
         docs = json.load(f)
     valid = []
     for doc in docs:
         try:
-            sympify(doc["formula_sympy"].split("=")[-1].strip())
+            rhs = doc["formula_sympy"].split("=")[-1].strip()
+            sympify(rhs, locals=_sympify_locals(rhs))
             valid.append(doc)
-        except Exception:
-            logger.warning(f"[FORMULA_DB] Invalid formula_sympy in {doc['id']}, skipping")
+        except Exception as e:
+            logger.warning(f"[FORMULA_DB] Invalid formula_sympy in {doc['id']}: {e}, skipping")
     logger.info(f"[FORMULA_DB] Loaded {len(valid)}/{len(docs)} valid formulas")
     return valid
 
@@ -57,6 +79,21 @@ def _load_faiss_index(index_dir: str = "data/formula_index") -> tuple:
         with open(f"{index_dir}/metadata.pkl", "rb") as f:
             docs = pickle.load(f)
         model = SentenceTransformer("all-MiniLM-L6-v2")
+
+        # Drift guard: JSON edited but index not rebuilt → new formulas invisible
+        # to FAISS Layer-2 (formula_rag_review §4). Warn loudly; don't crash.
+        try:
+            json_docs = load_formula_db()
+            if len(json_docs) != index.ntotal:
+                logger.warning(
+                    f"[FORMULA_RAG] MISMATCH: physics_formulas.json has "
+                    f"{len(json_docs)} valid formulas but FAISS index has "
+                    f"{index.ntotal} vectors. Run scripts/build_faiss_index.py "
+                    f"to rebuild — new formulas are NOT searchable until then."
+                )
+        except Exception:
+            pass  # mismatch check is best-effort
+
         logger.info(f"[FORMULA_RAG] FAISS index loaded ({len(docs)} entries)")
         return index, docs, model
     except Exception as e:
@@ -186,6 +223,70 @@ def _inject_symbol_aliases(parsed: dict, formula_doc: dict) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════
+# Dependency-chain builder (multi-formula problems, e.g. RLC: X_L→X_C→Z)
+# ══════════════════════════════════════════════════════════════
+
+# Universal bridges not always present as DB entries (angular frequency from f).
+_BRIDGE_FORMULAS = {"omega": "omega = 2 * pi * f"}
+
+
+def _rhs_symbols(formula_sympy: str) -> list[str]:
+    """Identifiers on the RHS of 'LHS = RHS', minus SymPy builtins."""
+    if "=" not in formula_sympy:
+        return []
+    rhs = formula_sympy.split("=", 1)[1]
+    return [t for t in set(re.findall(r'[A-Za-z_]\w*', rhs)) if t not in _MATH_FNS]
+
+
+def build_formula_chain(
+    target_sympy: str,
+    all_docs: list[dict],
+    given_keys: set,
+    max_depth: int = 8,
+) -> list[str]:
+    """
+    Resolve the dependency chain for `target_sympy` over the formula DB.
+
+    A formula's RHS symbol that is NOT in `given` is an intermediate unknown; if
+    some DB formula has that symbol as its LHS, pull it in (recursively) so the
+    solver can compute it first. Returns formulas in dependency-first order
+    (leaves → target last), ready for `_solve_multi_step` to chain.
+
+    Example (RLC impedance): given {R,L,C,f}, target "Z = sqrt(R**2+(X_L-X_C)**2)"
+      → ["omega = 2*pi*f", "X_L = omega*L", "X_C = 1/(omega*C)", "Z = sqrt(...)"]
+    """
+    by_lhs: dict[str, str] = {}
+    for d in all_docs:
+        fs = d.get("formula_sympy", "")
+        if "=" in fs:
+            lhs = fs.split("=", 1)[0].strip()
+            if lhs and lhs not in by_lhs:
+                by_lhs[lhs] = fs
+    for sym, fs in _BRIDGE_FORMULAS.items():
+        by_lhs.setdefault(sym, fs)
+
+    chain: list[str] = []
+    visiting: set[str] = set()
+
+    def resolve(fs: str, depth: int) -> None:
+        if fs in chain or fs in visiting or depth > max_depth:
+            return
+        visiting.add(fs)
+        for sym in _rhs_symbols(fs):
+            if sym in given_keys:
+                continue
+            dep = by_lhs.get(sym)
+            if dep and dep != fs:
+                resolve(dep, depth + 1)
+        visiting.discard(fs)
+        if fs not in chain:
+            chain.append(fs)
+
+    resolve(target_sympy, 0)
+    return chain
+
+
+# ══════════════════════════════════════════════════════════════
 # LangGraph node
 # ══════════════════════════════════════════════════════════════
 
@@ -220,12 +321,19 @@ def formula_rag_node(state: dict) -> dict:
     if formula_doc:
         # Normalize symbol aliases before solver substitution
         parsed = _inject_symbol_aliases(parsed, formula_doc)
+        given_keys = set((parsed.get("given") or {}).keys())
+        # Resolve dependency chain so multi-formula problems (RLC X_L→X_C→Z,
+        # solenoid n→B, …) get all intermediate formulas, not just the target.
+        chain = build_formula_chain(formula_doc["formula_sympy"], docs, given_keys)
         updated_parsed = {
             **parsed,
-            "formulas": [formula_doc["formula_sympy"]],
+            "formulas": chain or [formula_doc["formula_sympy"]],
             "_formula_doc": formula_doc,
         }
-        logger.info(f"[FORMULA_RAG] Using formula: {formula_doc['formula_sympy']}")
+        logger.info(
+            f"[FORMULA_RAG] target={formula_doc['formula_sympy']} "
+            f"chain={chain if len(chain) > 1 else '(single)'}"
+        )
     else:
         formula_rag_failed = True
         updated_parsed = parsed  # keep LLM-proposed formulas from physics_parser

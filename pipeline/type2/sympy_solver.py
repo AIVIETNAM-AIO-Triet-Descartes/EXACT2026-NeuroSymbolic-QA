@@ -212,6 +212,14 @@ def solve_physics(
         logger.warning(f"[SYMPY_SOLVER] Missing find='{find}' or formulas={formulas}")
         return {"answer": "", "unit": "", "steps": [], "source": "llm_fallback"}
 
+    # Dependency chain injected by formula_rag (len > 1) → chain-solve first,
+    # regardless of q_type (RLC, solenoid…). _solve_multi_step walks deps→target.
+    if len(formulas) > 1:
+        chain_res = _run_with_timeout(_solve_multi_step, (formulas, given, find), timeout)
+        if chain_res:
+            logger.info(f"[SYMPY_SOLVER] Solved via chain ({len(formulas)} formulas) for {find}")
+            return chain_res
+
     result = None
 
     if q_type in (

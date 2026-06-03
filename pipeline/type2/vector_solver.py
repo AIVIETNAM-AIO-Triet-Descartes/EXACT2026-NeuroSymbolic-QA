@@ -185,14 +185,24 @@ def _detect_target_charge(question: str, charge_syms: list[str]) -> Optional[str
     return charge_syms[-1] if charge_syms else None
 
 
+def _num(val) -> Optional[float]:
+    """Coerce to float; None on failure (given may carry non-numeric LLM strings)."""
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return None
+
+
 def _extract_charge_dict(given: dict) -> dict[str, float]:
-    """Extract {sym: val} for all charge symbols in given dict."""
+    """Extract {sym: val} for all charge symbols in given dict. Skips non-numeric."""
     charges = {}
     for sym, val in given.items():
-        if re.match(r'q[A-Za-z0-9_]*$', sym, re.IGNORECASE) and sym not in ('q',):
-            charges[sym] = float(val)
-        elif sym.lower() == 'q':
-            charges[sym] = float(val)
+        is_charge = (re.match(r'q[A-Za-z0-9_]*$', sym, re.IGNORECASE) and sym != 'q') \
+            or sym.lower() == 'q'
+        if is_charge:
+            fv = _num(val)
+            if fv is not None:
+                charges[sym] = fv
     return charges
 
 
@@ -203,12 +213,12 @@ def _extract_distances(given: dict, question: str) -> dict[str, float]:
     dists = {}
     # From given dict — keys like AB, CA, CB, MA, MB, r, a, d, l
     for sym, val in given.items():
-        if re.match(r'[A-Z]{2}$', sym):          # AB, CA, CB
-            dists[sym] = float(val)
-        elif re.match(r'r\d*$', sym):              # r, r12
-            dists[sym] = float(val)
-        elif sym in ('a', 'b', 'c', 'd', 'l'):    # side lengths
-            dists[sym] = float(val)
+        is_dist = bool(re.match(r'[A-Z]{2}$', sym)) or bool(re.match(r'r\d*$', sym)) \
+            or sym in ('a', 'b', 'c', 'd', 'l')
+        if is_dist:
+            fv = _num(val)
+            if fv is not None:
+                dists[sym] = fv
 
     # Also scan question for "XY = N cm/m" not caught by given extractor
     for m in re.finditer(

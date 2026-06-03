@@ -10,14 +10,27 @@ inline validation when pipeline is not yet set up.
 
 import json
 import os
+import re
 import sys
 
-from sympy import sympify
+from sympy import sympify, Symbol
 
 # Allow imports from project root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 _DB_PATH = "data/rag/physics_formulas.json"
+
+# Keep SymPy builtins as-is; declare all other identifiers as Symbols so physics
+# symbols (N, I, E, S) aren't mistaken for builtins. Mirrors load_formula_db.
+_MATH_FNS = frozenset({
+    "sqrt", "sin", "cos", "tan", "exp", "log", "abs", "pi",
+    "Sum", "Rational", "Integer", "Float",
+})
+
+
+def _sympify_locals(expr: str) -> dict:
+    tokens = set(re.findall(r'\b[A-Za-z_]\w*\b', expr))
+    return {t: Symbol(t) for t in tokens if t not in _MATH_FNS}
 
 
 def _validate_inline(path: str = _DB_PATH) -> tuple[int, int]:
@@ -30,7 +43,8 @@ def _validate_inline(path: str = _DB_PATH) -> tuple[int, int]:
     for doc in data:
         try:
             formula = doc["formula_sympy"]
-            sympify(formula.split("=")[-1].strip())
+            rhs = formula.split("=")[-1].strip()
+            sympify(rhs, locals=_sympify_locals(rhs))
             print(f"  [OK]  {doc['id']} ({doc['topic']}): {formula}")
             valid += 1
         except Exception as e:

@@ -44,7 +44,7 @@ class PhysicsQuestion:
     """
     original: str
     question_type: PhysicsQuestionType
-    domain: str                    # "circuits" | "electrostatics" | "electromagnetism" | "measurement"
+    domain: str                    # "circuits" | "electrostatics" | "electromagnetism" | "measurement" | "ac_circuits"
     target_variable: Optional[str] # Biến cần tìm: "E", "R", "V", "F", "Z", "EMF"...
     keywords: list[str]            # Tái dùng _extract_keywords() từ type1
 
