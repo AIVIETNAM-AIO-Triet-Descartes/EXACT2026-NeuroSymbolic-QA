@@ -22,7 +22,17 @@
    - Chạy kiểm thử thành công qua pytest với toàn bộ 18 test cases đều xanh (PASSED).
 7. Hoàn thiện script `scripts/evaluate.py` đóng vai trò là CLI tool để đọc dữ liệu CSV (từ Ground Truth), đọc dự đoán JSON (từ pipeline predictions), gọi hàm evaluation và kết xuất báo cáo Markdown/JSON chi tiết tại thư mục `reports/`.
 8. Cập nhật script `scripts/demo_type2.py` để hỗ trợ lưu trữ danh sách kết quả dự đoán của Track 2 ra file JSON thông qua tham số `--output`.
-9. Tiến hành chạy thử nghiệm toàn trình thành công: Giải 50 câu đầu của Track 2 bằng `demo_type2.py` xuất ra JSON, sau đó gọi `evaluate.py` sinh báo cáo với kết quả khớp chuẩn xác đạt 89.66%.
+9. Tiến hành chạy thử nghiệm toàn trình thành công: Giải 50 câu đầu của Track 2 bằng `demo_type2.py` xuất ra JSON, sau đó gọi `evaluate.py` sinh báo cáo:
+    * **So sánh hai kết quả:**
+      * Bảng log trực tiếp từ `demo_type2.py` ghi nhận độ chính xác **`85.7%` (24/28)** (do dùng parser thô sơ và sai số cứng 2%).
+      * Báo cáo đánh giá từ `evaluate.py` (chạy qua bộ thư viện chuẩn của ta) đạt độ chính xác thực tế **`89.66%` (26/29)**.
+    * **Các trường hợp được cải tiến nhờ parser và dung sai mới:**
+      * **`LD005` (expected: `9\sqrt{3} × 10^-27`, got: `1.55711e-26`):** Tránh được nhãn `SKIP` của demo cũ, parse thành công biểu thức LaTeX phức tạp và so khớp đúng thành **`CORRECT`** (sai số chỉ `0.17%`).
+      * **`LD001` (expected: `0.05`, got: `0.0489056`):** Được chấp nhận là **`CORRECT`** dưới sai số `rel_tol = 5%` (thay vì bị phạt `WRONG` ở ngưỡng 2% cũ).
+    * **Phân tích các lỗi thực tế:**
+      * Có 3 câu bị đánh giá là thực sự **`WRONG`** (`LD004` lệch 20%, `LD042` lệch 5057%, `LD048` lệch 25%) đều do solver áp sai công thức vật lý hoặc tính sai số.
+      * Có 20 câu rơi vào **`FALLBACK`** (chuỗi trống) do solver không tìm được hệ công thức (chạy chế độ không LLM).
+      * `LD041` chứa biến ký hiệu (`\sqrt{2} × F₀`) và `LD047` chứa chuỗi định hướng (`Hướng về phía q₂`) được chuyển đổi sang so khớp định tính (qualitative) và gắn nhãn `needs_review` hợp lệ.
 10. Tiến hành cào quét toàn bộ 1,352 bản ghi của tập Ground Truth để phát hiện các lỗi định dạng số đặc biệt, bổ sung xử lý trong `answer_compare.py`:
     - **Lỗi dấu gạch chéo `/` thay vì `\` trước các hàm LaTeX (như `/frac`, `/sqrt`, `/pi`)**: Chuẩn hóa tất cả các hàm LaTeX thông dụng viết sai dấu gạch chéo về đúng cú pháp LaTeX chuẩn (vẫn giữ nguyên phép chia `/` thông thường).
     - **Dấu chấm ngăn cách phép nhân kèm khoảng trắng `.`**: Đổi thành `*`.
