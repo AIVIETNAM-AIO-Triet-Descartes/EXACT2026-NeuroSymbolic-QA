@@ -19,6 +19,7 @@ Run:
 
 import argparse
 import csv
+import json
 import logging
 import math
 import os
@@ -197,7 +198,7 @@ def _llm_explain(question: str, answer: str, unit: str, steps: list) -> str:
 # Demo runner
 # ══════════════════════════════════════════════════════════════
 
-def run_demo(limit: int = 20, use_llm: bool = False) -> None:
+def run_demo(limit: int = 20, use_llm: bool = False, output_path: Optional[str] = None) -> None:
     clf = PhysicsClassifier()
 
     rows: list[dict] = []
@@ -209,6 +210,7 @@ def run_demo(limit: int = 20, use_llm: bool = False) -> None:
 
     correct = wrong = fallback = skipped = 0
     detail_rows: list[tuple] = []
+    predictions: list[dict] = []
 
     for row in rows:
         qid = row["id"]
@@ -339,6 +341,11 @@ def run_demo(limit: int = 20, use_llm: bool = False) -> None:
             formula_used,
             explanation,   # cột cuối: chỉ có khi --use-llm
         ))
+        predictions.append({
+            "id": qid,
+            "answer": got_str,
+            "source": source
+        })
 
     # -- Print main table ------------------------------------------
     W = 100
@@ -374,6 +381,12 @@ def run_demo(limit: int = 20, use_llm: bool = False) -> None:
                     print(f"  {r[8].encode('ascii', errors='replace').decode('ascii')}")
             print()
 
+    if output_path:
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(predictions, f, indent=4, ensure_ascii=False)
+        print(f"Predictions saved to {output_path}")
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.WARNING)  # ẩn INFO spam từ pipeline nodes
@@ -382,5 +395,7 @@ if __name__ == "__main__":
                         help="Số bài toán cần chạy (mặc định 20)")
     parser.add_argument("--use-llm", action="store_true",
                         help="Bật LLM: augment extraction + CoT fallback + explanation")
+    parser.add_argument("--output", type=str, default=None,
+                        help="Đường dẫn lưu predictions JSON file (ví dụ: output/predictions.json)")
     args = parser.parse_args()
-    run_demo(args.limit, use_llm=args.use_llm)
+    run_demo(args.limit, use_llm=args.use_llm, output_path=args.output)
