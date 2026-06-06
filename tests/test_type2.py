@@ -329,6 +329,43 @@ class TestErrorSolver:
 		result = solve_error({"given": {}}, "Compute the error propagation of R = U/I.")
 		assert result["source"] == "llm_fallback"
 
+	def test_propagation_quotient_absolute(self):
+		# THCB003: R=U/I, U=6.0±0.1 V, I=0.3±0.01 A → δR=δU+δI=0.05, ΔR=0.05×20=1.0 Ω
+		q = ("Resistance R is calculated using the formula R = U/I, where "
+		     "U = 6.0 ± 0.1 V and I = 0.3 ± 0.01 A. What is the absolute error of R?")
+		result = solve_error({"given": {}}, q)
+		assert result["source"] == "error_calc"
+		assert math.isclose(float(result["answer"]), 1.0, rel_tol=0.02)
+		assert result["unit"] == "Ω"
+
+	def test_propagation_product_relative(self):
+		# THCB005: P=V·I product → δP=δV+δI = 0.2/9.5 + 0.02/0.95 = 4.21 %
+		q = ("In an experiment, the measured voltage was 9.5 ± 0.2 V, and the measured "
+		     "current was 0.95 ± 0.02 A. What is the relative error in the power?")
+		result = solve_error({"given": {}}, q)
+		assert result["source"] == "error_calc"
+		assert math.isclose(float(result["answer"]), 4.21, rel_tol=0.02)
+		assert result["unit"] == "%"
+
+	def test_propagation_product_absolute(self):
+		# THCB008: P=V·I, no explicit formula (keyword "power") → ΔP=δP×P=0.186 W
+		q = ("When measuring voltage with a voltmeter, the result is 6.3 ± 0.1 V. If this "
+		     "is used to calculate power with a current of 0.6 ± 0.02 A, what is the "
+		     "absolute error of the power?")
+		result = solve_error({"given": {}}, q)
+		assert result["source"] == "error_calc"
+		assert math.isclose(float(result["answer"]), 0.186, rel_tol=0.03)
+		assert result["unit"] == "W"
+
+	def test_propagation_sum_absolute(self):
+		# THCB009: series R_total=R1+R2 → ΔR=ΔR1+ΔR2 = 0.5+1 = 1.5 Ω
+		q = ("In a series circuit, resistance R1 = 10 ± 0.5 Ω, R2 = 20 ± 1 Ω. "
+		     "What is the absolute error of the total resistance?")
+		result = solve_error({"given": {}}, q)
+		assert result["source"] == "error_calc"
+		assert math.isclose(float(result["answer"]), 1.5, rel_tol=0.01)
+		assert result["unit"] == "Ω"
+
 	def test_dispatch_via_sympy_solver_node(self):
 		state = {
 			"question": "A voltmeter has a least count of 0.2 V and reads 5.6 V. Find the relative error.",

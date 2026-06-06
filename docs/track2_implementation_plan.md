@@ -358,7 +358,7 @@ def solve_resonance(parsed: dict, question: str = "") -> dict:
 
 ---
 
-### 3.8 ErrorSolver — `pipeline/type2/error_solver.py` *(new file — THCB)* — ✅ ĐÃ HOÀN THÀNH (2026-06-02; error propagation F-045/046 còn fallback LLM)
+### 3.8 ErrorSolver — `pipeline/type2/error_solver.py` *(new file — THCB)* — ✅ ĐÃ HOÀN THÀNH (2026-06-06; error propagation F-045/046 implement: product/quotient δZ=ΣδAᵢ, sum/diff ΔZ=ΣΔAᵢ — THCB003/005/008/009 ✓)
 
 **Responsibility:** Measurement-error problems for the **THCB** prefix (80 problems, 100% gap). Explicit formula computation — **no `sympy.solve()`**. Largest multi-answer group (23/80 use `;`).
 

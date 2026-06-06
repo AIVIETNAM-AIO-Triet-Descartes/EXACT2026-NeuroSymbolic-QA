@@ -19,10 +19,9 @@ Ground-truth calibration (track2_data_info.md / dataset):
   THCB002  lc 0.2 V, reads 5.6 V → 3.57 %             ⇒ δ = lc/reading×100
   THCB087  true 50.0, measured 49.4 → "0.6; 1.2"      ⇒ δ uses TRUE value as denominator
 
-Sub-cases implemented: plus-minus notation, true-vs-measured, instrument least
+Sub-cases implemented: error propagation (product/quotient δZ=ΣδAᵢ, sum/diff
+ΔZ=ΣΔAᵢ — F-045/F-046), plus-minus notation, true-vs-measured, instrument least
 count (+reading), mean + mean-absolute random error of repeated measurements.
-Error propagation (F-045/F-046 — δZ=δA+δB) is NOT implemented yet → falls back
-to LLM (source="llm_fallback"); Member 3 extension point.
 """
 
 import re
@@ -51,16 +50,128 @@ _READS_PAT = re.compile(
     r'(?:reads?|reading|shows?|displays?|indicates?)\s*(?:of|is|=|:)?\s*'
     + _NUM + r'\s*' + _UNIT, re.IGNORECASE
 )
-# "true value = 50.0 cm"
+# "true value = 50.0 cm" / "true value of a resistor is 50.0 Ohm"
 _TRUE_PAT = re.compile(
-    r'true\s+value\s*(?:of|is|=|:)?\s*' + _NUM + r'\s*' + _UNIT, re.IGNORECASE
+    r'true\s+value(?:\s+of\s+[^=:\d]*?)?\s*(?:is|=|:)?\s*' + _NUM + r'\s*' + _UNIT,
+    re.IGNORECASE,
 )
-# "measured = 49.4 cm" / "measured value is 49.4"
+# "measured = 49.4 cm" / "measured value is 49.4" / "measured value of the circuit is 49.4"
 _MEASURED_PAT = re.compile(
-    r'measured(?:\s+value)?\s*(?:of|is|=|:)?\s*' + _NUM + r'\s*' + _UNIT, re.IGNORECASE
+    r'measured(?:\s+value)?(?:\s+of\s+[^=:\d]*?)?\s*(?:is|=|:)?\s*' + _NUM + r'\s*' + _UNIT,
+    re.IGNORECASE,
 )
 # Repeated measurements list: "2.04, 2.06, 2.05 s" (≥3 values)
 _LIST_PAT = re.compile(r'((?:[\d.]+\s*[,;]\s*){2,}[\d.]+)\s*' + _UNIT)
+
+# ── Error-propagation patterns (F-045/F-046) ──────────────────────────────────
+# Any "value ± error unit" pair (symbol optional): "6.0 ± 0.1 V", "10 ± 0.5 Ω".
+_PM_ONLY_PAT = re.compile(_NUM + r'\s*(?:±|\+/-|\+-)\s*' + _NUM + r'\s*' + _UNIT)
+# Symbol-tagged form: "U = 6.0 ± 0.1 V" (lets us map symbols onto a formula).
+_QTY_PM_PAT = re.compile(
+    r'\b([A-Za-z_]\w*)\s*=\s*' + _NUM + r'\s*(?:±|\+/-|\+-)\s*' + _NUM + r'\s*' + _UNIT
+)
+# Inline formula "R = U/I", "P = V ⋅ I" — RHS is symbol op symbol (op repeats).
+_FORMULA_PAT = re.compile(
+    r'\b[A-Za-z_]\w*\s*=\s*'
+    r'([A-Za-z_]\w*(?:\s*[*/+\-·×⋅]\s*[A-Za-z_]\w*)+)'
+)
+_MUL_CHARS = "*/·×⋅"
+_ADD_CHARS = "+-"
+
+
+def _derive_unit(units: list[str], is_quotient: bool) -> str:
+    """Unit of a product/quotient of measured quantities. Covers the realistic
+    THCB combos (V·A→W, V/A→Ω); returns '' when unknown (numeric still scored)."""
+    uset = {u for u in units if u}
+    if uset == {"V", "A"}:
+        return "Ω" if is_quotient else "W"
+    return ""
+
+
+def _solve_propagation(question: str, wants_abs: bool, wants_rel: bool) -> Optional[dict]:
+    """
+    Error propagation for a derived quantity Z combined from ≥2 measured inputs.
+      product/quotient (Z=A·B, A/B): relative errors add  → δZ = Σ δAᵢ
+      sum/difference   (Z=A±B)     : absolute errors add  → ΔZ = Σ ΔAᵢ
+    Returns a solver dict (source="error_calc") or None if not a propagation case.
+    """
+    quantities = [
+        {"value": float(m.group(1)), "err": float(m.group(2)), "unit": m.group(3) or ""}
+        for m in _PM_ONLY_PAT.finditer(question)
+    ]
+    if len(quantities) < 2:
+        return None
+
+    # Operation: prefer an explicit formula RHS, else keyword.
+    rhs, op = None, None
+    mf = _FORMULA_PAT.search(question)
+    if mf:
+        rhs = mf.group(1)
+        if any(c in rhs for c in _MUL_CHARS):
+            op = "mul"
+        elif any(c in rhs for c in _ADD_CHARS):
+            op = "add"
+    if op is None:
+        ql = question.lower()
+        if "series" in ql or re.search(r"\bsum\b", ql) or ("total" in ql and "resist" in ql):
+            op = "add"
+        elif any(k in ql for k in ("power", "product", "area", "volume", "density")):
+            op = "mul"
+    if op is None:
+        return None
+
+    steps: list[str] = []
+    unit0 = quantities[0]["unit"]
+
+    if op == "add":
+        dZ = sum(q["err"] for q in quantities)
+        steps.append("Sum/difference rule: absolute errors add (ΔZ = ΣΔAᵢ).")
+        steps.append("ΔZ = " + " + ".join(_fmt(q["err"]) for q in quantities)
+                     + f" = {_fmt(dZ)} {unit0}")
+        if wants_rel and not wants_abs:
+            Z = sum(q["value"] for q in quantities)
+            if Z:
+                rel = dZ / Z * 100.0
+                steps.append(f"Relative: δZ = ΔZ/Z × 100 = {_fmt(rel)} %")
+                return {"answer": _fmt(rel), "unit": "%", "steps": steps, "source": "error_calc"}
+        return {"answer": _fmt(dZ), "unit": unit0, "steps": steps, "source": "error_calc"}
+
+    # op == "mul": relative errors add
+    rel = sum(q["err"] / q["value"] for q in quantities if q["value"])
+    steps.append("Product/quotient rule: relative errors add (δZ = Σ δAᵢ).")
+    steps.append("δZ = " + " + ".join(f"{_fmt(q['err'])}/{_fmt(q['value'])}" for q in quantities)
+                 + f" = {_fmt(rel)}")
+    if wants_rel and not wants_abs:
+        return {"answer": _fmt(rel * 100.0), "unit": "%", "steps": steps, "source": "error_calc"}
+
+    # absolute error → needs the nominal magnitude |Z|
+    is_quotient = bool(rhs and "/" in rhs)
+    Z = None
+    if rhs:
+        try:
+            import sympy
+            # Map symbol NAME → value as sympify locals so reserved names like
+            # I (imaginary unit), N, E, S are read as our variables, not sympy
+            # built-ins (same pitfall fixed in formula_rag).
+            sym_vals = {
+                m.group(1): float(m.group(2)) for m in _QTY_PM_PAT.finditer(question)
+            }
+            expr = rhs
+            for ch in "·×⋅":
+                expr = expr.replace(ch, "*")
+            Z = abs(float(sympy.sympify(expr, locals=sym_vals)))
+        except Exception as e:
+            logger.warning(f"[ERROR_SOLVER] propagation Z eval failed: {e}")
+            Z = None
+    if Z is None:  # no formula (e.g. "power") → product of the measured values
+        Z = 1.0
+        for q in quantities:
+            Z *= q["value"]
+    dZ = rel * Z
+    unit = _derive_unit([q["unit"] for q in quantities], is_quotient)
+    steps.append(f"Nominal Z = {_fmt(Z)} {unit}".rstrip())
+    steps.append(f"Absolute: ΔZ = δZ × |Z| = {_fmt(rel)} × {_fmt(Z)} = {_fmt(dZ)} {unit}".rstrip())
+    return {"answer": _fmt(dZ), "unit": unit, "steps": steps, "source": "error_calc"}
 
 
 def _fmt(x: float) -> str:
@@ -123,10 +234,21 @@ def solve_error(parsed: dict, question: str = "") -> dict:
         unit = vals.get("unit", "") or ""
         steps: list[str] = []
 
-        wants_abs = "absolute error" in q_lower or "absolute uncertainty" in q_lower
+        wants_abs = bool(re.search(
+            r'absolute\s+(?:error|uncertainty|and\b)|'
+            r'(?:find|calculate|compute|determine)\s+(?:the\s+)?absolute',
+            q_lower))
         wants_rel = bool(re.search(
             r'relative\s+(?:error|uncertainty)|percentage|percent\s+error', q_lower))
         wants_mean = bool(re.search(r'\bmean\b|\baverage\b', q_lower))
+
+        # ── Sub-case: error propagation (≥2 measured inputs combined) ──────────
+        # Must run BEFORE the single-± branch, which would otherwise grab only
+        # the first "value ± error" pair and return a wrong, confident answer.
+        prop = _solve_propagation(question, wants_abs, wants_rel)
+        if prop is not None:
+            logger.info(f"[ERROR_SOLVER] propagation: {prop['answer']} {prop['unit']}")
+            return prop
 
         delta: Optional[float] = None
         x_ref: Optional[float] = None  # denominator for relative error

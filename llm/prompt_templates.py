@@ -337,7 +337,8 @@ Return ONLY a JSON object with this exact structure:
 
 Rules:
 - Convert all values to base SI units (kΩ → multiply by 1000, mA → divide by 1000, μF → ×1e-6)
-- Standard symbols: V (voltage), I (current), R (resistance), P (power), E (energy), C (capacitance), Q (charge), F (force), f (frequency), L (inductance), Z (impedance), X_L (inductive reactance), X_C (capacitive reactance), EMF (electromotive force), cos_phi (power factor), B (magnetic field), Phi (magnetic flux)
+- Standard symbols: U (potential difference / hiệu điện thế — voltage across a component, source, capacitor, plates), V (electric potential / điện thế — V = k*q/r at a point), I (current), R (resistance), P (power), E (energy or electric field), C (capacitance), Q (charge), F (force), f (frequency), L (inductance), Z (impedance), X_L (inductive reactance), X_C (capacitive reactance), EMF (electromotive force), cos_phi (power factor), B (magnetic field), Phi (magnetic flux)
+- VOLTAGE CONVENTION (important): use U for hiệu điện thế (potential difference / voltage). Reserve V ONLY for điện thế (electric potential at a point, V = k*q/r). Even if the problem writes "V" or "voltage" for a potential difference, emit the symbol U.
 - "find" must be a single symbol string
 - "formulas" are SymPy-compatible hints only (e.g. "V = I * R")
 - Pick "domain" by the dominant topic:
@@ -363,6 +364,12 @@ Problem: A voltmeter with least count 0.2 V reads 5.6 V. Find the relative error
 
 Problem: Two point charges q1 = 6 × 10^-8 C and q2 = -6 × 10^-8 C are placed 8 cm apart. Find the force between them.
 {{"given": {{"q1": 6e-08, "q2": -6e-08, "r": 0.08}}, "find": "F", "domain": "electrostatics", "formulas": ["F = k * q1 * q2 / r**2"], "units": {{"q1": "C", "q2": "C", "r": "m"}}}}
+
+Problem: A resistor of 5 kΩ carries a current of 2 mA. Calculate the voltage V across the resistor.
+{{"given": {{"R": 5000, "I": 0.002}}, "find": "U", "domain": "circuits", "formulas": ["U = I * R"], "units": {{"R": "Ω", "I": "A"}}}}
+
+Problem: Find the electric potential at a distance of 0.5 m from a point charge of 5 μC (k = 9e9).
+{{"given": {{"q": 5e-06, "r": 0.5, "k": 9e9}}, "find": "V", "domain": "electrostatics", "formulas": ["V = k * q / r"], "units": {{"q": "C", "r": "m"}}}}
 
 Now extract for this problem:
 Problem: {question}

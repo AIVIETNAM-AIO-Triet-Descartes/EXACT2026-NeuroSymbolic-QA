@@ -47,8 +47,18 @@ _UNIT_FACTORS: dict[str, float] = {
     "N": 1.0,
 }
 
-# Some formulas use U for voltage, others V. Inject both so either formula works.
-_SYM_VOLTAGE_ALIASES = {"U", "u"}
+# Voltage symbol convention (Vietnamese curriculum):
+#   U = hiệu điện thế (potential difference / voltage)  ← canonical in the RAG DB
+#   V = điện thế      (electric potential, only V = k*q/r)
+# Questions may use V for hiệu điện thế (foreign convention); normalize V→U
+# UNLESS the question is about điện thế (electric potential at a point). See the
+# normalizer at the end of extract_given().
+_POTENTIAL_CONTEXT_PAT = re.compile(
+    r'electric\s+potential(?!\s+energy)|'   # "electric potential" but not "...energy"
+    r'potential\s+at\s+a?\s*point|'
+    r'điện\s+thế',
+    re.IGNORECASE,
+)
 
 # Matches: SYM = MANTISSA [× 10^EXP] [UNIT]
 _ASSIGN_PAT = re.compile(
@@ -92,12 +102,16 @@ _CHAIN_PAT = re.compile(
 )
 
 # Verb-context target detector: "calculate the energy" → "E"
+# NOTE: dict order matters — detect_find_from_verb returns the FIRST kw substring
+# match. "potential energy" and "electric potential" must precede the looser
+# "potential"/"energy" cues so U (hiệu điện thế) vs V (điện thế) vs W (thế năng)
+# disambiguate correctly. U = hiệu điện thế, V = điện thế.
 _VERB_TARGET_MAP = {
-    "energy": "E", "resistance": "R", "voltage": "V", "potential difference": "V",
+    "potential energy": "W", "electric potential": "V", "potential difference": "U",
+    "voltage": "U", "energy": "E", "resistance": "R",
     "current": "I", "power": "P", "charge": "Q", "capacitance": "C",
     "force": "F", "frequency": "f", "inductance": "L",
     "electric field": "E_field", "field strength": "E_field",
-    "electric potential": "V", "potential energy": "E",
     "impedance": "Z", "reactance": "X", "power factor": "cos_phi",
 }
 _VERB_PAT = re.compile(
@@ -171,7 +185,7 @@ def extract_given(question: str) -> dict[str, float]:
 
     for m in _ASSIGN_PAT.finditer(question):
         sym = m.group(1)
-        mantissa = float(m.group(2))
+        mantissa = float(m.group(2).rstrip("."))  # tolerate value at sentence end ("0.8.")
         exp_str = m.group(3)
         unit_str = m.group(4) or ""
 
@@ -181,9 +195,6 @@ def extract_given(question: str) -> dict[str, float]:
 
         val_si = val * _UNIT_FACTORS.get(unit_str, 1.0)
         given[sym] = val_si
-
-        if sym in _SYM_VOLTAGE_ALIASES:
-            given["V"] = val_si
 
     # "X cm apart" / "separated by X cm" → AB separation distance
     for m in _APART_PAT.finditer(question):
@@ -247,5 +258,12 @@ def extract_given(question: str) -> dict[str, float]:
             val = float(m.group(1))
             factor = 0.01 if m.group(2).lower() == "cm" else 1.0
             given["d_perp"] = val * factor
+
+    # Voltage symbol normalization: a question may write V for hiệu điện thế
+    # (foreign convention). The RAG DB uses U for hiệu điện thế and reserves V
+    # for điện thế (V = k*q/r). Remap V→U unless điện-thế context is present.
+    if "V" in given and not _POTENTIAL_CONTEXT_PAT.search(question):
+        v_val = given.pop("V")
+        given.setdefault("U", v_val)   # keep an explicit U if one already exists
 
     return given

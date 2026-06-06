@@ -180,8 +180,11 @@ def retrieve_formula(
 # Known equivalent symbol pairs (bidirectional).
 # Covers notation differences between curricula (e.g. Vietnamese: U for voltage)
 # and common textbook variations.
+# NOTE: U↔V removed (2026-06-06). U (hiệu điện thế) and V (điện thế) are now
+# DISTINCT symbols — the parser/regex normalizes voltage to U upstream, and the
+# RAG DB uses U for hiệu điện thế, V only for điện thế (V = k*q/r). Aliasing them
+# here would wrongly bridge potential difference with electric potential.
 _SYMBOL_ALIASES: list[tuple[str, str]] = [
-    ("U", "V"),   # voltage: Vietnamese curriculum uses U, international uses V
     ("W", "E"),   # energy: W (work/energy) vs E
     ("t", "T"),   # time: lowercase vs uppercase
 ]

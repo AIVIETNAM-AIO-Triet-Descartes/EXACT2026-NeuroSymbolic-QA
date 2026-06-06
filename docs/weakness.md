@@ -21,15 +21,17 @@ SymPy can solve `F = k*q1*q2/r**2` for a single pair but cannot handle angle dec
 
 ---
 
-## 2. Formula Database Coverage (20 formulas only)
+## 2. Formula Database Coverage ✅ PARTIALLY RESOLVED (2026-06-03 — 20→51 formulas; domain canonical + FAISS rebuild; còn ~60% dataset chưa cover — xem TODO.md P1)
 
 **Affected:** Any question whose formula is not in `data/rag/physics_formulas.json`
 
 **Symptom:** `formula_rag_node` returns no candidates → SymPy has no formula → `llm_fallback`
 
-**Root cause:** Formula DB has only 20 entries covering basic circuits and electrostatics. Missing: magnetic fields, optics, thermodynamics, mechanics, AC circuits, etc.
+**Root cause (original):** Formula DB had only 20 entries covering basic circuits and electrostatics. Missing: magnetic fields, AC circuits, measurement, electromagnetics.
 
-**Fix needed:** Expand `physics_formulas.json` with more formulas. Each entry needs `formula_sympy`, `domain`, `variables`, `keywords` for retrieval to work.
+**Fix applied (2026-06-03):** Expanded to 51 formulas. Domain canonical (magnetism→electromagnetism, alternating_current→ac_circuits, measurement_error→measurement). 6 formula LHS fixed. FAISS rebuilt (51 vectors).
+
+**Residual gap:** TD/NL/CH/DDT prefixes still missing key formulas (~60% dataset affected). Specific formulas tracked in `docs/TODO.md P1 — Formula DB mở rộng`.
 
 ---
 
@@ -50,13 +52,33 @@ SymPy can solve `F = k*q1*q2/r**2` for a single pair but cannot handle angle dec
 
 ---
 
-## 4. Voltage Symbol Inconsistency (U vs V) ✅ RESOLVED
+## 4. Voltage Symbol Convention (U vs V) ✅ RESOLVED
 
-**Affected:** ~~Formulas using `U` for voltage (formula_012)~~
+**Decision (2026-06-06 — superseded the 2026-05-28 fix):** follow the Vietnamese
+curriculum — `U` = **hiệu điện thế** (potential difference / voltage), `V` =
+**điện thế** (electric potential, only `V = k*q/r`). The two are now DISTINCT
+symbols, not aliases. The parser/regex is responsible for emitting the right one.
 
-**Fix applied (2026-05-28):**
-1. **DB fix** — `formula_012` normalized: `U → V` in `formula_sympy`, `variables`, `example_cot`, `keywords`. `formula_015` normalized: `E_field → E` (consistent with `formula_020`). FAISS index rebuilt.
-2. **Runtime normalize** — `_inject_symbol_aliases()` added to `formula_rag.py`. After retrieval, compares `formula_doc["variables"]` against `parsed["given"]` and injects bidirectional aliases for known pairs: `U↔V` (voltage), `W↔E` (energy), `t↔T` (time). Handles Vietnamese curriculum notation without requiring DB changes.
+**Fix applied (2026-06-06):**
+1. **RAG DB** — 8 voltage formulas `V*→U*` (`U=I*R`, `P=U*I`, `P=U²/R`, KVL
+   `U_source/U1/U2`, divider `U_in/U_out`, `Q=C*U`, `E=½C*U²`, `E=U/d`). Kept
+   `formula_019` `V=k*q/r` (điện thế). Renamed `formula_017` potential energy
+   `U → W` (thế năng) to free `U` for voltage. FAISS rebuilt (51 vec). Done via
+   `scripts/_uv_normalize.py` (formula_sympy + variable keys + keyword tokens;
+   example/latex narration left as-is — cosmetic, units "V"/"V/m" must not break).
+2. **regex_extract** — removed the old `V=U` alias hack; added a `V→U`
+   normalizer (skips điện-thế context); verb map: voltage / potential
+   difference → `U`, electric potential → `V`, potential energy → `W`.
+3. **formula_rag** — **removed** the `U↔V` runtime alias pair from
+   `_SYMBOL_ALIASES` (would re-conflate the now-distinct symbols). Kept `W↔E`,
+   `t↔T`.
+4. **LLM prompt** — `PHYSICS_PARSE_PROMPT` states the U/V convention + 2 few-shot
+   (circuit voltage→U, point-charge potential→V).
+
+**Residual (minor, cosmetic):** `example_cot` / `formula_latex` of the 8 reworked
+formulas still show `V` in narration (not touched to avoid corrupting the unit
+"V"/"V/m"). Does not affect the symbolic solver or chaining; only RAG context
+text shown to the explainer LLM.
 
 ---
 
