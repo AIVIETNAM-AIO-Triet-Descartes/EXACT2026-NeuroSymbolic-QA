@@ -62,7 +62,10 @@ def _parse_formula(formula_str: str) -> Optional[tuple]:
         sym_names.add(lhs_str.strip())
         return Eq(lhs, rhs), sym_names, sym_dict
     except Exception as e:
-        logger.warning(f"[SYMPY_SOLVER] Cannot parse formula '{formula_str}': {e}")
+        logger.warning("Cannot parse formula", extra={"extra": {
+            "parsed_input": formula_str,
+            "error": str(e)
+        }})
         return None
 
 
@@ -178,10 +181,14 @@ def _run_with_timeout(fn, args: tuple, timeout: int) -> Optional[dict]:
         try:
             return future.result(timeout=timeout)
         except FuturesTimeoutError:
-            logger.warning(f"[SYMPY_SOLVER] Timeout after {timeout}s")
+            logger.warning("SymPy solver timeout", extra={"extra": {
+                "error": f"Timeout after {timeout}s"
+            }})
             return None
         except Exception as e:
-            logger.error(f"[SYMPY_SOLVER] Exception in solver: {e}")
+            logger.error("Exception in solver", extra={"extra": {
+                "error": str(e)
+            }})
             return None
 
 
@@ -243,7 +250,10 @@ def solve_physics(
                     break
 
     if not result:
-        logger.warning(f"[SYMPY_SOLVER] All strategies failed for find={find}")
+        logger.warning("SymPy solve failed — switching to llm_fallback", extra={"extra": {
+            "parsed_input": parsed,
+            "error": f"All strategies failed for find={find}"
+        }})
         return {"answer": "", "unit": "", "steps": [], "source": "llm_fallback"}
 
     return result

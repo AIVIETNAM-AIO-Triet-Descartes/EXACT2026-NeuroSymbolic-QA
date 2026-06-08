@@ -12,7 +12,7 @@ Usage:
 from fastapi import FastAPI, HTTPException
 from api.router import classify_query
 from api.schemas import QueryRequest, QueryResponse
-from api.logger import get_logger
+from api.logger import get_logger, log_pipeline_request
 
 logger = get_logger(__name__)
 app = FastAPI(title="EXACT 2026 QA API", version="0.1.0")
@@ -84,7 +84,11 @@ def _run_type2_pipeline(request: QueryRequest) -> QueryResponse:
             )
         if val is not None and not val.is_valid:
             state = {**state, "confidence": 0.4}
-            logger.warning(f"[SELF_VERIFIER] Validation failed: {val.errors}")
+            logger.warning("Self-verification failed", extra={"extra": {
+                "self_verify_failed": True,
+                "answer": sympy_result.get("answer"),
+                "errors": val.errors
+            }})
         for w in (val.warnings if val is not None else []):
             logger.info(f"[SELF_VERIFIER] Warning: {w}")
 
@@ -106,10 +110,20 @@ def _run_type2_pipeline(request: QueryRequest) -> QueryResponse:
     explanation = state.get("explanation") or f"The answer is {answer}."
     cot = state.get("cot") or []
     confidence = state.get("confidence", 1.0)
+    solver_result = state.get("solver_result", {})
+    solver_source = solver_result.get("source", "llm_fallback") if solver_result else "llm_fallback"
 
-    logger.info(
-        f"[TYPE2] done answer={answer!r} confidence={confidence} "
-        f"formula_rag_failed={state.get('_formula_rag_failed', False)}"
+    log_pipeline_request(
+        question=request.question,
+        query_type="type2",
+        answer=str(answer),
+        confidence=confidence,
+        has_fol=False,
+        has_cot=bool(cot),
+        fol_retries=0,
+        fallback_triggered=(solver_source == "llm_fallback"),
+        z3_timeout=False,
+        solver_source=solver_source
     )
 
     return QueryResponse(
@@ -139,7 +153,7 @@ async def handle_query(request: QueryRequest):
         )
 
     except Exception as e:
-        logger.error(f"Unhandled error: {e}")
+        logger.error(f"Pipeline error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
