@@ -1,8 +1,32 @@
 # HANDOFF — EXACT 2026 Track 2 Physics Pipeline
 
 **Branch:** `feature/triet/structure`  
-**Last updated:** 2026-05-29  
+**Last updated:** 2026-06-07  
 **Competition deadline:** June 10, 2026 (dời từ May 30)
+
+> Đây là file **session handoff** — đọc TRƯỚC khi nối tiếp việc qua chat session mới.
+> Worklist sống ở `docs/TODO.md`; reference Track-2 ở `docs/track2_reference.md`.
+
+---
+
+## 0. Trạng thái hiện tại (2026-06-07) — verify theo codebase
+
+**✅ Đã xong (Track 2 pipeline đầy đủ + evaluable):**
+- **Solvers:** `vector_solver` A–F (LD/DT Coulomb/E-field), `resonance_solver` (CHLT Yes/No), `error_solver` (THCB: ±, true-vs-measured, least-count, mean, **error propagation product/quotient + sum/diff** F-045/046), `sympy_solver` dispatch đầy đủ 10 question-type + `vector_solver`/`llm_fallback` chaining.
+- **Multi-formula chaining:** `formula_rag.build_formula_chain()` (dependency closure theo LHS + bridge ω=2πf). E2E RLC `Z` từ {R,L,C,f} → 136.85 ✓.
+- **Formula DB:** 20 → **53 formula**, domain canonical (5 domain), FAISS rebuild 53 vec, 53/53 valid.
+- **U/V convention:** chuẩn hóa `U`=hiệu điện thế, `V`=điện thế (VN curriculum) — DB + regex + prompt + bỏ alias runtime.
+- **Classifier:** 5 domain + 10 question-type (8 prefix). **LLM profile** dev(llama.cpp)/prod(vLLM) qua `config.yaml` + `llm_server_available()` health-check.
+- **Eval harness (P2 — teammate):** `evaluation/` + `scripts/evaluate.py` + `tests/test_eval.py` (18 test pass). Demo 50 câu = 89.66%.
+- **`openai` 2.38.0** đã cài trong venv. **Tests 48/48** (`tests/test_type2.py`).
+
+**🔲 Chưa xong (xem `docs/TODO.md`):**
+- **vLLM FP16 trên VPS** (BẮT BUỘC trước nộp — dev đang llama.cpp GGUF, alias không verify được). Mục §3/§4-P1 dưới đây mô tả setup; **vẫn chưa chạy**.
+- Đo eval **full 1,352 bài** (mới đo subset).
+- Mạch multi-answer trong THCB (multi-find + topology); weakness #5 (fuzzy match), #8d (qualitative).
+- Commit cụm thay đổi 2026-06-02…07.
+
+> ⚠️ Các mục P1–P6 ở §4 bên dưới là handoff CŨ (2026-05-29). Nhiều mục đã xong (P2/P4/P5/P6 ✅, formula DB P3 phần lớn xong); giữ lại làm lịch sử. **Nguồn trạng thái chuẩn = §0 này + `docs/TODO.md`.**
 
 ---
 
@@ -211,7 +235,7 @@ git commit -m "feat: add vector solver strategies A-F, LLM integration via vLLM 
 | CUDA Toolkit | **Chưa cài** (driver có, toolkit không có → cudart64_12.dll missing) |
 | WSL2 | Chưa setup |
 | vLLM | Chưa install |
-| openai package | Chưa install trong venv (cần `.venv\Scripts\pip install openai`) |
+| openai package | ✅ Đã cài (openai 2.38.0) |
 
 ---
 
@@ -225,8 +249,8 @@ llm/llm_reasoner.py                ← OpenAI client wrapper (vLLM-ready)
 llm/prompt_templates.py            ← PHYSICS_COT_PROMPT + all prompts
 configs/config.yaml                ← vLLM server endpoint config
 data/rag/physics_formulas.json     ← Formula DB (cần expand)
-docs/weakness.md                   ← Known weaknesses tracker
-docs/track2_data_info.md           ← Dataset analysis (1352 problems, 8 prefixes)
+docs/TODO.md                       ← Worklist + Known weaknesses tracker (gộp)
+docs/track2_reference.md           ← Data analysis + formula format + gaps + impl plan (gộp)
 ```
 
 ---

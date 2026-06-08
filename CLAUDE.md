@@ -61,7 +61,7 @@ Request → NL→FOL Parser (LLM) → Z3 Solver (deterministic) → Explainer (L
 ```
 Z3 provides deterministic correctness; LLM only handles NL↔FOL translation and explanation. **Status: not wired.** `pipeline/type1/{nl_to_fol,z3_solver,explainer}.py` are empty stubs; `api/main.py` returns a mock answer for Type 1. The Z3 codegen/refinement logic currently lives in `llm/llm_reasoner.py` (`generate_z3_code`, `refine_z3_code`, `_clean_code`) and `scripts/run_pipeline.py` imports the type1 modules defensively.
 
-**Type 2 — Physics** (`Physics_Problems_Text_Only.csv`, ~1352 problems, 8 prefixes — see `docs/track2_data_info.md`) — **fully implemented**:
+**Type 2 — Physics** (`Physics_Problems_Text_Only.csv`, ~1352 problems, 8 prefixes — see `docs/track2_reference.md`) — **fully implemented**:
 ```
 Request → PhysicsClassifier → PhysicsParser → FormulaRAG (FAISS) → SymPy Solver
         → vector_solver fallback → Self-Verifier → CoT Builder → Explainer → Response
@@ -122,8 +122,12 @@ data/
 └── eval/              # (empty)
 docs/
 ├── handoff.md         # session handoff — read FIRST when resuming
-├── SYSTEM.md          # full architecture reference
-├── track2_data_info.md, weakness.md, PHYSICS_DATA.md, ...
+├── TODO.md            # worklist + weakness tracker (gộp)
+├── SYSTEM.md          # full architecture + competition spec (gộp CONTEXT)
+├── track2_reference.md # data analysis + formula format + gaps + impl plan (gộp 4 file)
+├── proposals.md       # PAL code-gen fallback + formula_rag review (gộp)
+├── run_demo_llm_local.md, exact2026_pipeline.mermaid
+└── teammates/         # task-handoff cho teammate khác (handoff_teammate2, teammate2-log)
 tests/                 # test_type2.py, test_pipeline.py substantive; type1 minimal
 ```
 

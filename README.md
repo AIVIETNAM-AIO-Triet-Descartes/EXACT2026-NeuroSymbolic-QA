@@ -77,9 +77,13 @@ EXACT2026-NeuroSymbolic-QA/
 │   └── test_type2.py     #     ⚡ Test Track 2 — kiểm tra pipeline Physics (Parser→SymPy→CoT)
 │
 └── docs/                 # 📚 [DOCUMENTATION] — Tài liệu kỹ thuật và nghiên cứu
-    ├── SYSTEM.md         #     🏗️ SSOT (Single Source of Truth) — mô tả toàn bộ kiến trúc pipeline,
-    │                     #        state schema, tech stack, fallback strategy, API schema, dev rules
-    └── CONTEXT.md        #     🎯 Bối cảnh cuộc thi EXACT 2026 — quy định, timeline, ràng buộc
+    ├── SYSTEM.md         #     🏗️ SSOT — kiến trúc pipeline + bối cảnh cuộc thi (gộp CONTEXT):
+    │                     #        state schema, tech stack, fallback, API schema, dev rules, spec thi
+    ├── TODO.md           #     ✅ Worklist Track 2 + weakness tracker (gộp)
+    ├── track2_reference.md #   📊 Data analysis + formula format + gaps + impl plan (gộp 4 file)
+    ├── handoff.md        #     🔄 Session handoff — đọc trước khi nối tiếp việc
+    ├── proposals.md      #     💡 PAL code-gen fallback + formula_rag review (gộp)
+    └── teammates/        #     👥 Task-handoff cho teammate khác (eval harness)
 ```
 
 ---
