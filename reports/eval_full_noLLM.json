@@ -1,0 +1,4660 @@
+{
+    "overall": {
+        "total": 1352,
+        "evaluable": 379,
+        "correct": 272,
+        "accuracy": 0.7176781002638523
+    },
+    "by_prefix": {
+        "LD": {
+            "total": 397,
+            "evaluable": 206,
+            "correct": 164,
+            "accuracy": 0.7961165048543689
+        },
+        "CH": {
+            "total": 290,
+            "evaluable": 49,
+            "correct": 30,
+            "accuracy": 0.6122448979591837
+        },
+        "NL": {
+            "total": 190,
+            "evaluable": 6,
+            "correct": 6,
+            "accuracy": 1.0
+        },
+        "TD": {
+            "total": 177,
+            "evaluable": 9,
+            "correct": 3,
+            "accuracy": 0.3333333333333333
+        },
+        "DDT": {
+            "total": 130,
+            "evaluable": 13,
+            "correct": 7,
+            "accuracy": 0.5384615384615384
+        },
+        "THCB": {
+            "total": 80,
+            "evaluable": 53,
+            "correct": 51,
+            "accuracy": 0.9622641509433962
+        },
+        "DT": {
+            "total": 68,
+            "evaluable": 23,
+            "correct": 7,
+            "accuracy": 0.30434782608695654
+        },
+        "CHLT": {
+            "total": 20,
+            "evaluable": 20,
+            "correct": 4,
+            "accuracy": 0.2
+        }
+    },
+    "by_kind": {
+        "numeric": {
+            "total": 1230,
+            "evaluable": 333,
+            "correct": 247,
+            "accuracy": 0.7417417417417418
+        },
+        "yes_no": {
+            "total": 21,
+            "evaluable": 21,
+            "correct": 4,
+            "accuracy": 0.19047619047619047
+        },
+        "qualitative": {
+            "total": 76,
+            "evaluable": 0,
+            "correct": 0,
+            "accuracy": 0.0
+        },
+        "multi": {
+            "total": 25,
+            "evaluable": 25,
+            "correct": 21,
+            "accuracy": 0.84
+        }
+    },
+    "by_source": {
+        "sympy": {
+            "total": 79,
+            "evaluable": 78,
+            "correct": 46,
+            "accuracy": 0.5897435897435898
+        },
+        "vector_solver": {
+            "total": 230,
+            "evaluable": 229,
+            "correct": 171,
+            "accuracy": 0.7467248908296943
+        },
+        "llm_fallback": {
+            "total": 987,
+            "evaluable": 16,
+            "correct": 0,
+            "accuracy": 0.0
+        },
+        "error_calc": {
+            "total": 48,
+            "evaluable": 48,
+            "correct": 47,
+            "accuracy": 0.9791666666666666
+        },
+        "circuit": {
+            "total": 4,
+            "evaluable": 4,
+            "correct": 4,
+            "accuracy": 1.0
+        },
+        "resonance": {
+            "total": 4,
+            "evaluable": 4,
+            "correct": 4,
+            "accuracy": 1.0
+        }
+    },
+    "wrong": [
+        {
+            "id": "LD004",
+            "gold": "5.234 × 10^-3",
+            "pred": "0.00417914",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD042",
+            "gold": "0",
+            "pred": "50.5687",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD048",
+            "gold": "14.4",
+            "pred": "10.788",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD060",
+            "gold": "36000",
+            "pred": "17980",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD064",
+            "gold": "10000",
+            "pred": "4994.44",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD065",
+            "gold": "2160",
+            "pred": "4994.44",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD067",
+            "gold": "9.8 × 10^5",
+            "pred": "2.1576e+06",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD076",
+            "gold": "-4 × 10^-7",
+            "pred": "206877",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD088",
+            "gold": "73718",
+            "pred": "36859",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD089",
+            "gold": "3.28 × 10^4",
+            "pred": "36859",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD100",
+            "gold": "5.67 × 10^6",
+            "pred": "4.42131e+06",
+            "kind": "numeric"
+        },
+        {
+            "id": "TD003",
+            "gold": "11.25",
+            "pred": "2.25e-05",
+            "kind": "numeric"
+        },
+        {
+            "id": "TD004",
+            "gold": "45",
+            "pred": "2.25e-05",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT005",
+            "gold": "0.094",
+            "pred": "3.12153e+06",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT006",
+            "gold": "0.168",
+            "pred": "3.35967e+06",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT029",
+            "gold": "36",
+            "pred": "0.00899",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT030",
+            "gold": "48",
+            "pred": "0.00899",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT033",
+            "gold": "6300000",
+            "pred": "11.9867",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT034",
+            "gold": "27.6",
+            "pred": "11.9867",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT035",
+            "gold": "45.10^{5}",
+            "pred": "4.495e+06",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT036",
+            "gold": "12",
+            "pred": "8.091",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT048",
+            "gold": "246",
+            "pred": "876.525",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT052",
+            "gold": "2160",
+            "pred": "4994.44",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT054",
+            "gold": "9.8 . 10^{5}",
+            "pred": "2.1576e+06",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT056",
+            "gold": "9000",
+            "pred": "1.67441e+07",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT062",
+            "gold": "-2.7 . 10^{-8}",
+            "pred": "1.24861e+06",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT084",
+            "gold": "245.91",
+            "pred": "5.08551e+12",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT085",
+            "gold": "32000",
+            "pred": "3.6859e+14",
+            "kind": "numeric"
+        },
+        {
+            "id": "DT096",
+            "gold": "0",
+            "pred": "19977.8",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD263",
+            "gold": "0.4315*10^-3",
+            "pred": "0.00199778",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD274",
+            "gold": "36.32",
+            "pred": "57.536",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD294",
+            "gold": "0.230 × 10⁻³",
+            "pred": "0.230158",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD332",
+            "gold": "4.012*10^6",
+            "pred": "8.13498e+06",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD336",
+            "gold": "1.31*10^7",
+            "pred": "1.49833e+07",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD339",
+            "gold": "1.3*10^7",
+            "pred": "16.8881",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD340",
+            "gold": "8.87*10^6",
+            "pred": "8.02982",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD341",
+            "gold": "1.98*10^7",
+            "pred": "12.586",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD343",
+            "gold": "2.027*10^6",
+            "pred": "8.05504",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD344",
+            "gold": "2.7*10^7",
+            "pred": "6.06825",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD345",
+            "gold": "5.608*10^7",
+            "pred": "3.05898",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD346",
+            "gold": "8.11*10^6",
+            "pred": "50.344",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD347",
+            "gold": "4.725*10^7",
+            "pred": "7.192",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD351",
+            "gold": "2.36*10^7",
+            "pred": "6.90432",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD354",
+            "gold": "1.155*10^7",
+            "pred": "6.75525",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD355",
+            "gold": "6.68 × 10^6",
+            "pred": "8.05504",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD356",
+            "gold": "2.2*10^7",
+            "pred": "11.4712",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD357",
+            "gold": "2.85*10^7",
+            "pred": "11.4712",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD358",
+            "gold": "3.47 × 10^6",
+            "pred": "6.06825",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD359",
+            "gold": "6*10^6",
+            "pred": "17.98",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD360",
+            "gold": "1.34 × 10⁷",
+            "pred": "10.1647",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD379",
+            "gold": "8.28*10^6",
+            "pred": "23.0748",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD380",
+            "gold": "27.51 × 10^6",
+            "pred": "70.0701",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD384",
+            "gold": "5.27*10^6",
+            "pred": "6.04423",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD387",
+            "gold": "9.1*10^6",
+            "pred": "29.3548",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD388",
+            "gold": "5.02*10^6",
+            "pred": "24.1549",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD389",
+            "gold": "1.94*10^6",
+            "pred": "30.9404",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD391",
+            "gold": "2.89*10^6",
+            "pred": "17.0935",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD395",
+            "gold": "7.42*10^6",
+            "pred": "11.9997",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD397",
+            "gold": "3.15*10^6",
+            "pred": "15.4896",
+            "kind": "numeric"
+        },
+        {
+            "id": "LD400",
+            "gold": "2.01*10^7",
+            "pred": "7.60703",
+            "kind": "numeric"
+        },
+        {
+            "id": "TD374",
+            "gold": "0; 0",
+            "pred": "",
+            "kind": "multi"
+        },
+        {
+            "id": "TD376",
+            "gold": "36;12",
+            "pred": "",
+            "kind": "multi"
+        },
+        {
+            "id": "TD392",
+            "gold": "0.354",
+            "pred": "200000",
+            "kind": "numeric"
+        },
+        {
+            "id": "TD400",
+            "gold": "0.020",
+            "pred": "0.06",
+            "kind": "numeric"
+        },
+        {
+            "id": "THCB110",
+            "gold": "0.8; 0.53",
+            "pred": "",
+            "kind": "multi"
+        },
+        {
+            "id": "THCB128",
+            "gold": "200.3; 0.133",
+            "pred": "200.3; 0.1111",
+            "kind": "multi"
+        },
+        {
+            "id": "DDT338",
+            "gold": "63.62",
+            "pred": "10",
+            "kind": "numeric"
+        },
+        {
+            "id": "DDT354",
+            "gold": "No",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "DDT361",
+            "gold": "503.3",
+            "pred": "0.503292",
+            "kind": "numeric"
+        },
+        {
+            "id": "DDT362",
+            "gold": "1.99 × 10⁻³",
+            "pred": "6.28319",
+            "kind": "numeric"
+        },
+        {
+            "id": "DDT369",
+            "gold": "0.02",
+            "pred": "19.8692",
+            "kind": "numeric"
+        },
+        {
+            "id": "DDT390",
+            "gold": "1.26×10⁻³",
+            "pred": "0.5",
+            "kind": "numeric"
+        },
+        {
+            "id": "CHLT001",
+            "gold": "No",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT002",
+            "gold": "Yes",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT003",
+            "gold": "Yes",
+            "pred": "112",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT004",
+            "gold": "Yes",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT005",
+            "gold": "No",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT006",
+            "gold": "Yes",
+            "pred": "79.5775",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT007",
+            "gold": "No",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT008",
+            "gold": "Yes",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT010",
+            "gold": "Yes",
+            "pred": "56.3",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT013",
+            "gold": "No",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT014",
+            "gold": "Yes",
+            "pred": "56.2698",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT015",
+            "gold": "No",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT016",
+            "gold": "Yes",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT018",
+            "gold": "No",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT019",
+            "gold": "Yes",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CHLT020",
+            "gold": "No",
+            "pred": "",
+            "kind": "yes_no"
+        },
+        {
+            "id": "CH002",
+            "gold": "80",
+            "pred": "-80",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH104",
+            "gold": "28.87",
+            "pred": "2.5",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH142",
+            "gold": "66.3",
+            "pred": "100",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH145",
+            "gold": "99.5",
+            "pred": "150",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH148",
+            "gold": "100",
+            "pred": "0.316228",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH149",
+            "gold": "200",
+            "pred": "0.316228",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH150",
+            "gold": "141.4",
+            "pred": "100",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH237",
+            "gold": "51.96",
+            "pred": "90",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH238",
+            "gold": "69.28",
+            "pred": "120",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH239",
+            "gold": "83.67",
+            "pred": "100",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH240",
+            "gold": "30.62",
+            "pred": "75",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH274",
+            "gold": "3",
+            "pred": "90",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH280",
+            "gold": "320",
+            "pred": "80",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH341",
+            "gold": "71.18",
+            "pred": "0.0711763",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH342",
+            "gold": "39.79",
+            "pred": "0.0397887",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH343",
+            "gold": "112.54",
+            "pred": "0.11254",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH345",
+            "gold": "51.05",
+            "pred": "0.0530516",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH348",
+            "gold": "91.89",
+            "pred": "0.0918881",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH368",
+            "gold": "113.14",
+            "pred": "100",
+            "kind": "numeric"
+        }
+    ],
+    "skipped": [
+        {
+            "id": "LD010",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD014",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD016",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD017",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD018",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD021",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD024",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD025",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD032",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD034",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD035",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD036",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD037",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD038",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD039",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD041",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'f₀', '2', 'sqrt'})"
+        },
+        {
+            "id": "LD043",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD044",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD045",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD046",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD047",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'q₂', 'phía', 'về', 'hướng'})"
+        },
+        {
+            "id": "LD049",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD050",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD054",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD057",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD059",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD061",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD062",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD063",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD066",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD068",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD072",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD073",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD074",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD075",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD077",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD078",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD080",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD081",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD084",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD085",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'k', 'a', '2', 'q', 'sqrt'})"
+        },
+        {
+            "id": "LD086",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD087",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'2', 'x', 'q', 'sqrt'})"
+        },
+        {
+            "id": "LD090",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD092",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD094",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD096",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD098",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD099",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD001",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD002",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD006",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD007",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD008",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD009",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD010",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD011",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD012",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD013",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD014",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD015",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD016",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD017",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD018",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD019",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD020",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD021",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD022",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD023",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD024",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD025",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD026",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD027",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD028",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD029",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD030",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD031",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD032",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD033",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD034",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD035",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD036",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD037",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD038",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD039",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD040",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD041",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD042",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD043",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD044",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD045",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD046",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD047",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD048",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD049",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD050",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD051",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD052",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD053",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD054",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD055",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD056",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD057",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD058",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD059",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD060",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD061",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD062",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD063",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD064",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD065",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD066",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD067",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD068",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD069",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD070",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD071",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD072",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD073",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD074",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD075",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD076",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD077",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD078",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD079",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD080",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD081",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD082",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD083",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD084",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD085",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD086",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD087",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD088",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD089",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD090",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD091",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD092",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD093",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD094",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD095",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD096",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD097",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD098",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD099",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD100",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT007",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'2', 'a', 'sqrt'})"
+        },
+        {
+            "id": "DT008",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'h', 'abs', '2k', 'a', '5', 'frac', '1', '2', 'q'})"
+        },
+        {
+            "id": "DT019",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT020",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'k', 'epsilon', 'a', 'frac', '4', '2', 'q', 'sqrt'})"
+        },
+        {
+            "id": "DT025",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT027",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT028",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT040",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT041",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT042",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT043",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT044",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT045",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT046",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT047",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'e_a', 'e_b', '1', '2', 'sqrt'})"
+        },
+        {
+            "id": "DT049",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT050",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT051",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT053",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT058",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT059",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT060",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT061",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT063",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT072",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT073",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT074",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT075",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT080",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT081",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT082",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT083",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT087",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT088",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT089",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT090",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT091",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT092",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT093",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT094",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT095",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT097",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT098",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT099",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DT100",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD101",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD102",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD103",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD104",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD105",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD106",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD107",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD109",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD110",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD111",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD112",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD113",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD114",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD115",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD116",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD117",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD118",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD119",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD120",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD122",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD126",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD127",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD129",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD130",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD133",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD134",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD136",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD139",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD146",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD147",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD149",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD151",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD157",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD158",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD159",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD177",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD178",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD179",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD182",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD203",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD207",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD209",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD211",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD212",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD216",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD217",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD224",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD226",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD227",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD228",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD231",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD232",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD234",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD235",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD236",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD238",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD242",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD243",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD244",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD245",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD246",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD251",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD252",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD253",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD254",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD256",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD258",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD260",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD261",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD265",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD268",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD269",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD271",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD277",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD282",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD283",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD285",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD290",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD291",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD292",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD293",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD295",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD296",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD299",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD301",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD302",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD303",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD305",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD306",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD308",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD309",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD310",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD311",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD312",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD313",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD314",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD315",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD317",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD318",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD319",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD320",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD322",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD324",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD329",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD330",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD335",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD337",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD338",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD342",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD349",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD352",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD353",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD361",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD362",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD363",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD364",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD365",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD366",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD367",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD368",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD369",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD370",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD371",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD372",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD373",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD374",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD375",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD376",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD377",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD378",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD381",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD382",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD383",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD385",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD386",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD390",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD392",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD393",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD394",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD396",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD398",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "LD399",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD101",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD162",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD163",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD164",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD165",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD166",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD167",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD168",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD169",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD170",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD171",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD172",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD173",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD174",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD175",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD176",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD177",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD178",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD179",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD180",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD181",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD182",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD183",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD184",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD185",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD186",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD187",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD188",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD189",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD190",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD191",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD357",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD358",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD359",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD360",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD361",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD362",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD363",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD364",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD365",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD366",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD367",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD368",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD369",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'change', 'not', 'do'})"
+        },
+        {
+            "id": "TD370",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD371",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD372",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD373",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD375",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD377",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'voltage', 'halfed', 'is', 'the'})"
+        },
+        {
+            "id": "TD378",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD379",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD380",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', 'by', 'times', 'decreases'})"
+        },
+        {
+            "id": "TD381",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD382",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD383",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD384",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD385",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD386",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'half', 'by', 'decreases'})"
+        },
+        {
+            "id": "TD387",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD388",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD389",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD390",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD391",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD393",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD394",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD395",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD396",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD397",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD398",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "TD399",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB004",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB067",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB068",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB070",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB071",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'current', 'increases', 'resistance', 'decreases'})"
+        },
+        {
+            "id": "THCB072",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB073",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'lamp', 'shines', 'because', 'the', 'current', 'increases', 'brighter', 'it', 'through'})"
+        },
+        {
+            "id": "THCB074",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB075",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB077",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB079",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB080",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB081",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'current', 'total', 'increases'})"
+        },
+        {
+            "id": "THCB082",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB083",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'is', 'the', 'because', 'current', 'brighter', 'higher'})"
+        },
+        {
+            "id": "THCB084",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB085",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB092",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB102",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB103",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB112",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB113",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB121",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB122",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB125",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB131",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "THCB132",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL001",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL002",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL003",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL004",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL005",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL006",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL007",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL008",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL009",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL010",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL012",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL013",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL014",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL015",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL016",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL017",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL018",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL019",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL020",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL021",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL022",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL023",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL025",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'stored', 'is', 'magnetic', 'of', 'inductor', 'all', 'in', 'the', 'entirely', 'energy'})"
+        },
+        {
+            "id": "NL026",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'stored', 'is', 'of', 'all', 'in', 'capacitor', 'electric', 'the', 'entirely', 'energy'})"
+        },
+        {
+            "id": "NL027",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL028",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL029",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL030",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL032",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL033",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL034",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL035",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL036",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL037",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL038",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL039",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL040",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL082",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL083",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL084",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL085",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL086",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL088",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL089",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL090",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL091",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL092",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL093",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL094",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL095",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'stored', 'is', 'of', 'all', 'in', 'capacitor', 'electric', 'the', 'energy'})"
+        },
+        {
+            "id": "NL096",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL098",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL099",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL100",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'½li₀²', 'maximum', 'wc'})"
+        },
+        {
+            "id": "NL101",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL102",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL103",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL104",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL105",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'at', 'will', 'stored', 'magnetic', 'inductor', 'be', 'in', 'maximum', 'the', 'also', 'energy', 'its'})"
+        },
+        {
+            "id": "NL106",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL107",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL108",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL109",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL110",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL111",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL112",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL113",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL114",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL115",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL116",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL117",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL118",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL119",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'stored', 'is', 'of', 'all', 'in', 'capacitor', 'electric', 'the', 'energy'})"
+        },
+        {
+            "id": "NL120",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'maximum'})"
+        },
+        {
+            "id": "NL121",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL122",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL123",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL124",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL125",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL126",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL127",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL128",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL129",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL130",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL301",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL302",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'u²', 'square', 'the', 'voltage'})"
+        },
+        {
+            "id": "NL303",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'i²', 'w', 'l', '1', '2'})"
+        },
+        {
+            "id": "NL304",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL305",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'parabola', 'upward'})"
+        },
+        {
+            "id": "NL306",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'parabola', 'upward'})"
+        },
+        {
+            "id": "NL307",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'less', 'than'})"
+        },
+        {
+            "id": "NL308",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'is', 'zero', 'the', 'when', 'current'})"
+        },
+        {
+            "id": "NL309",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increase', '4', 'by', 'times'})"
+        },
+        {
+            "id": "NL310",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'unchanged', 'equal'})"
+        },
+        {
+            "id": "NL311",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increase', '2', 'by', 'times'})"
+        },
+        {
+            "id": "NL312",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL313",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL314",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL315",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'line', 'straight', 'upward'})"
+        },
+        {
+            "id": "NL316",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'line', 'straight', 'upward'})"
+        },
+        {
+            "id": "NL317",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', '1', 'reduced', 'to'})"
+        },
+        {
+            "id": "NL318",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'total', 'the', 'energy', 'half'})"
+        },
+        {
+            "id": "NL319",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL320",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'joule'})"
+        },
+        {
+            "id": "NL321",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL322",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL323",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'doubled'})"
+        },
+        {
+            "id": "NL324",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increases', 'linear', 'function'})"
+        },
+        {
+            "id": "NL325",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL326",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL327",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'conservation', 'energy'})"
+        },
+        {
+            "id": "NL328",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'triple'})"
+        },
+        {
+            "id": "NL329",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'w₀sin²', 'w_c', 'ωt'})"
+        },
+        {
+            "id": "NL330",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'1', 'ωc'})"
+        },
+        {
+            "id": "NL331",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL332",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL333",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL334",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL335",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL336",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL337",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL338",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL339",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL340",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL341",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL342",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL343",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL344",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL345",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL346",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL347",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL348",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL349",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL350",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increase', '3', 'times'})"
+        },
+        {
+            "id": "NL351",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL352",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL353",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL354",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL355",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL356",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL357",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL358",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL359",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL360",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL361",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL362",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL363",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL364",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL365",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL366",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL367",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL368",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL369",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL370",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL371",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL372",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL373",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL374",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL375",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL376",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL377",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL378",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', 'times', 'by', 'increases'})"
+        },
+        {
+            "id": "NL379",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL380",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL381",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL382",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL383",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL384",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL385",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL386",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL387",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL388",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL389",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL390",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL391",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL392",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL393",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL394",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL395",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL396",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL397",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL398",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL399",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "NL400",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT131",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT132",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT133",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT134",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT135",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT136",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'number', 'of', 'and', 'intensity', 'density', 'current', 'turns'})"
+        },
+        {
+            "id": "DDT137",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'doubled'})"
+        },
+        {
+            "id": "DDT138",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT139",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT140",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'approximately', 'zero'})"
+        },
+        {
+            "id": "DDT141",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT142",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT143",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'emf', 'an', 'appears', 'opposite', 'direction', 'in', 'the', 'induced', 'electromotive', 'force'})"
+        },
+        {
+            "id": "DDT144",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT145",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'current', 'intensity'})"
+        },
+        {
+            "id": "DDT146",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'electromagnet', 'and', 'relay'})"
+        },
+        {
+            "id": "DDT147",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT148",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT149",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increase', 'and', 'opposite', 'cause', 'direction', 'the', 'current', 'it'})"
+        },
+        {
+            "id": "DDT150",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT151",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT152",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'through', 'current', 'solenoid', 'the'})"
+        },
+        {
+            "id": "DDT153",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'induced', 'emf', 'electromotive', 'force'})"
+        },
+        {
+            "id": "DDT154",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT155",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT156",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'h', 'henry'})"
+        },
+        {
+            "id": "DDT157",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'magnetic', 'in', 'the', 'coil', 'core'})"
+        },
+        {
+            "id": "DDT158",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT159",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT160",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT201",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT202",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT203",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT204",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT205",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'number', 'of', 'cross', 'area', 'length', 'sectional', 'turns'})"
+        },
+        {
+            "id": "DDT206",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'volt', 'v'})"
+        },
+        {
+            "id": "DDT207",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'direct', 'proportion', 'in', 'increases'})"
+        },
+        {
+            "id": "DDT208",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT209",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'b', 'magnetic', 'induction'})"
+        },
+        {
+            "id": "DDT210",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'inside', 'solenoid', 'the'})"
+        },
+        {
+            "id": "DDT211",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT212",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT213",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT214",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT215",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT216",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'number', 'of', 'to', 'in', 'square', 'the', 'turns', 'proportion', 'increases'})"
+        },
+        {
+            "id": "DDT217",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'s', 'area', 'cross', 'sectional'})"
+        },
+        {
+            "id": "DDT218",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT219",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'magnetic', 'b²', 'to', 'the', 'proportionally', 'increases', 'energy'})"
+        },
+        {
+            "id": "DDT220",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'with', 'the', 'time', 'current', 'changes'})"
+        },
+        {
+            "id": "DDT322",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT323",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT326",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT327",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT328",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT329",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT330",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'an', 'circuit', 'the', 'characteristic', 'inductive', 'exhibits'})"
+        },
+        {
+            "id": "DDT332",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT333",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT334",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT336",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT337",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT339",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT340",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'ω', '16', 'and', '30', '38', '0'})"
+        },
+        {
+            "id": "DDT342",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT343",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT344",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT345",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT346",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT347",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT348",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT349",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT350",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'an', 'circuit', 'the', 'characteristic', 'inductive', 'exhibits'})"
+        },
+        {
+            "id": "DDT351",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT352",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'reaches', 'maximum', 'value', 'the', 'charge', 'q', 'its'})"
+        },
+        {
+            "id": "DDT353",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'l', '0', 'u', 'i_max²', '5'})"
+        },
+        {
+            "id": "DDT355",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'ω', '1', 'lc'})"
+        },
+        {
+            "id": "DDT356",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'lc', 't', '2π'})"
+        },
+        {
+            "id": "DDT357",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT358",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'harmonic', 'motion', 'simple', 'shm'})"
+        },
+        {
+            "id": "DDT359",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'henry'})"
+        },
+        {
+            "id": "DDT360",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'phase', 'shift', 'of', 'with', 'waves', 'a', 'sinusoidal', 'π', '2'})"
+        },
+        {
+            "id": "DDT363",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT364",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT365",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT366",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT367",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT368",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT370",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT371",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT372",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT373",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT374",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT375",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT376",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT377",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT378",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT379",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT380",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT381",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT382",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT383",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT384",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT385",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT386",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT387",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT388",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT389",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT391",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT392",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT393",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT394",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT395",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT396",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT397",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT398",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "DDT399",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH001",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH003",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH004",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH005",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH006",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH007",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH008",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH009",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH010",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH011",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH012",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH013",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH015",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH016",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH017",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH018",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH019",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH024",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH025",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH029",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH030",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH031",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH032",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH034",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH040",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH041",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH042",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH043",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH044",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH045",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH046",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH047",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH048",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH049",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH050",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH051",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH052",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH053",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH054",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH055",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH056",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH057",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH058",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH059",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH060",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH061",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH062",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH063",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH064",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH065",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH066",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH067",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH068",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH069",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH070",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH071",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH072",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH073",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH074",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH075",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH076",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH077",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH078",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH079",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH080",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH081",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH082",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH083",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH085",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH086",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH087",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH088",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH089",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH090",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH091",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH092",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH093",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH094",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH095",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH096",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH097",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH098",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH099",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH100",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH101",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH102",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH103",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH105",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH106",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH107",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH108",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH109",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH110",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH141",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH143",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH144",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH146",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH147",
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'100π'})"
+        },
+        {
+            "id": "CH151",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH152",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH153",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH154",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH155",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH156",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH157",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH158",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH159",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH160",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH161",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH162",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH163",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH164",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH165",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH166",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH167",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH168",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH169",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH170",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH171",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH172",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH173",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH174",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH175",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH176",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH177",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH178",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH179",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH180",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH181",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH182",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH183",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH184",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH185",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH186",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH187",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH188",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH189",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH190",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH191",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH192",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH193",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH194",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH195",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH196",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH197",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH198",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH199",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH200",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH201",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH202",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH203",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH204",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH205",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH206",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH207",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH208",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH209",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH210",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH211",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH212",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH213",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH214",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH215",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH216",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH217",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH218",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH219",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH220",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH221",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH222",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH223",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH224",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH225",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH226",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH227",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH228",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH229",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH230",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH231",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH232",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH233",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH234",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH235",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH236",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH241",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH242",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH243",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH244",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH245",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH246",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH247",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH248",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH249",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH250",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH251",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH253",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH260",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH265",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH268",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH269",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH270",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH271",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH272",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH273",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH277",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH278",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH279",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH344",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH346",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH347",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH349",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH350",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH351",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH352",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH353",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH354",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH355",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH356",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH357",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH358",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH359",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH360",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH361",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH362",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH363",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH364",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH365",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH366",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH367",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH369",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH370",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH371",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH372",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH373",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH374",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH375",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH376",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH377",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH378",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH379",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        },
+        {
+            "id": "CH380",
+            "reason": "unparseable: Could not parse prediction '' as a number."
+        }
+    ]
+}

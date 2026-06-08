@@ -287,6 +287,13 @@ def sympy_solver_node(state: dict) -> dict:
     elif q_type in (PhysicsQuestionType.ERROR_CALC, PhysicsQuestionType.MULTI_ANSWER):
         from pipeline.type2.error_solver import solve_error
         sympy_result = solve_error(parsed, state.get("question", ""))
+    elif parsed.get("domain") == "circuits":
+        # DC parallel-resistor networks (THCB lamps + basic circuits). circuit_solver
+        # handles multi-branch / multi-answer (per-branch I + total, R_p, P) that the
+        # scalar path can't; returns None for plain single-formula → solve_physics.
+        from pipeline.type2.circuit_solver import solve_circuit
+        sympy_result = solve_circuit(parsed, state.get("question", "")) \
+            or solve_physics(parsed, q_type)
     else:
         sympy_result = solve_physics(parsed, q_type)
 

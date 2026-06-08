@@ -50,18 +50,25 @@ _READS_PAT = re.compile(
     r'(?:reads?|reading|shows?|displays?|indicates?)\s*(?:of|is|=|:)?\s*'
     + _NUM + r'\s*' + _UNIT, re.IGNORECASE
 )
-# "true value = 50.0 cm" / "true value of a resistor is 50.0 Ohm"
+# Reference value: "true value is 50.0", "actual value is 1.70", "actual weight is
+# 75.0", "true value of a resistor is 50.0". Noun after true/actual is flexible.
 _TRUE_PAT = re.compile(
-    r'true\s+value(?:\s+of\s+[^=:\d]*?)?\s*(?:is|=|:)?\s*' + _NUM + r'\s*' + _UNIT,
+    r'(?:true|actual)\s+\w+(?:\s+\w+){0,3}?\s*(?:is|=|:)?\s*' + _NUM + r'\s*' + _UNIT,
     re.IGNORECASE,
 )
-# "measured = 49.4 cm" / "measured value is 49.4" / "measured value of the circuit is 49.4"
+# Measured value: "measured 49.4", "measured value is 49.4", "measured result is
+# 29.7", "measured a height of 1.65 m", "student measured 74.2 kg". Allow a short
+# noun phrase between "measured" and the number.
 _MEASURED_PAT = re.compile(
-    r'measured(?:\s+value)?(?:\s+of\s+[^=:\d]*?)?\s*(?:is|=|:)?\s*' + _NUM + r'\s*' + _UNIT,
+    r'measured(?:\s+\w+){0,4}?\s*(?:is|=|:|of)?\s*' + _NUM + r'\s*' + _UNIT,
     re.IGNORECASE,
 )
-# Repeated measurements list: "2.04, 2.06, 2.05 s" (≥3 values)
-_LIST_PAT = re.compile(r'((?:[\d.]+\s*[,;]\s*){2,}[\d.]+)\s*' + _UNIT)
+# Repeated measurements list — ≥3 values, tolerant of units between and an "and"
+# before the last: "2.04, 2.06, 2.05 s" / "10.1 cm, 10.3 cm, and 10.2 cm".
+_LIST_PAT = re.compile(
+    r'((?:[\d.]+\s*[a-zA-Zμµ°%]*\s*[,;]\s*(?:and\s+)?){2,}[\d.]+\s*[a-zA-Zμµ°%]*)',
+    re.IGNORECASE,
+)
 
 # ── Error-propagation patterns (F-045/F-046) ──────────────────────────────────
 # Any "value ± error unit" pair (symbol optional): "6.0 ± 0.1 V", "10 ± 0.5 Ω".
@@ -209,11 +216,15 @@ def _parse_values(question: str) -> dict:
 
     m = _LIST_PAT.search(question)
     if m:
-        try:
-            out["values"] = [float(v) for v in re.split(r'[,;]\s*', m.group(1))]
-            out.setdefault("unit", m.group(2) or "")
-        except ValueError:
-            pass
+        run = m.group(1)
+        nums = re.findall(r'[\d.]+', run)
+        if len(nums) >= 3:
+            try:
+                out["values"] = [float(v) for v in nums]
+                units = [u for u in re.findall(r'[a-zA-Zμµ°%]+', run) if u.lower() != "and"]
+                out.setdefault("unit", units[0] if units else "")
+            except ValueError:
+                pass
 
     return out
 
@@ -253,18 +264,38 @@ def solve_error(parsed: dict, question: str = "") -> dict:
         delta: Optional[float] = None
         x_ref: Optional[float] = None  # denominator for relative error
 
-        # ── Sub-case: mean + random error of repeated measurements ────────────
-        if vals.get("values") and (wants_mean or wants_abs or wants_rel):
+        # ── Sub-case: repeated measurements → mean and/or mean-absolute error ──
+        if vals.get("values"):
             xs = vals["values"]
             x_mean = sum(xs) / len(xs)
             delta_mean = sum(abs(x - x_mean) for x in xs) / len(xs)
+            delta_max = max(abs(x - x_mean) for x in xs)
+            # "random error" uses the MAX absolute deviation (dataset THCB007 CoT);
+            # "mean absolute error" / default uses the mean of the deviations.
+            wants_random = bool(re.search(r'random\s+error', q_lower)) \
+                and "mean absolute" not in q_lower
+            err_abs = delta_max if wants_random else delta_mean
             steps.append(f"Measurements: {xs} {unit}")
             steps.append(f"Mean: x̄ = Σxᵢ/n = {_fmt(x_mean)} {unit}")
-            steps.append(f"Mean absolute error: Δx̄ = Σ|xᵢ−x̄|/n = {_fmt(delta_mean)} {unit}")
-            delta, x_ref = delta_mean, x_mean
-            if wants_mean and not (wants_abs or wants_rel):
+            steps.append(
+                (f"Random error: Δx = max|xᵢ−x̄| = {_fmt(err_abs)} {unit}" if wants_random
+                 else f"Mean absolute error: Δx̄ = Σ|xᵢ−x̄|/n = {_fmt(err_abs)} {unit}"))
+            # "mean value AND (absolute / relative) error" → multi-answer "mean; error"
+            # (THCB088/094 convention: value first, then error).
+            if wants_mean and (wants_abs or wants_rel):
+                if wants_rel and not wants_abs:
+                    err, eunit = (err_abs / x_mean * 100.0 if x_mean else 0.0), "%"
+                    steps.append(f"Relative error: δ = Δx/x̄ × 100 = {_fmt(err)} %")
+                else:
+                    err, eunit = err_abs, unit
+                return {"answer": f"{_fmt(x_mean)}; {_fmt(err)}",
+                        "unit": f"{unit}; {eunit}".strip("; "),
+                        "steps": steps, "source": "error_calc"}
+            if wants_mean:                       # mean value only
                 return {"answer": _fmt(x_mean), "unit": unit, "steps": steps,
                         "source": "error_calc"}
+            # error-only ("random error"/"mean absolute error"/deviation) → fall through
+            delta, x_ref = err_abs, x_mean
 
         # ── Sub-case: explicit ± notation ──────────────────────────────────────
         elif "delta" in vals and "x" in vals:

@@ -397,3 +397,58 @@ class TestElectromagneticDispatch:
 		parsed = {"given": {"L": 0.5}, "find": "W_L", "formulas": []}
 		result = solve_physics(parsed, PhysicsQuestionType.ELECTROMAGNETIC)
 		assert result["source"] == "llm_fallback"
+
+
+class TestCircuitSolver:
+	"""Parallel-circuit solver (THCB circuit rows) — Group C."""
+
+	def _solve(self, given, q):
+		from pipeline.type2.circuit_solver import solve_circuit
+		return solve_circuit({"given": given}, q)
+
+	def test_each_current_plus_total_identical(self):
+		# THCB066: U=9V, two identical lamps R=9Ω → 1.0; 1.0; 2.0
+		r = self._solve({"U": 9.0, "R": 9.0},
+		                "Two lamps in parallel, each R = 9. Current through each lamp and the total current.")
+		assert r["source"] == "circuit"
+		assert r["answer"] == "1; 1; 2"
+
+	def test_each_current_distinct_branches(self):
+		# THCB076: R1=20, R2=10, U=10 → 0.5; 1.0
+		r = self._solve({"U": 10.0, "R1": 20.0, "R2": 10.0},
+		                "Two bulbs R1=20, R2=10 in parallel at U=10V. Current through each bulb.")
+		assert r["answer"] == "0.5; 1"
+
+	def test_equivalent_parallel_resistance(self):
+		# THCB078: R1=30, R2=60 ∥ → 20
+		r = self._solve({"R1": 30.0, "R2": 60.0},
+		                "A parallel circuit has R1=30, R2=60. Calculate the equivalent resistance.")
+		assert math.isclose(float(r["answer"]), 20.0, rel_tol=1e-6)
+		assert r["unit"] == "Ω"
+
+	def test_total_current_from_branch_resistances(self):
+		# THCB068: 8∥16 at U=8 → I_total = 1.5
+		r = self._solve({"U": 8.0, "R1": 8.0, "R2": 16.0},
+		                "An 8Ω lamp in parallel with a 16Ω lamp. Calculate the total current.")
+		assert math.isclose(float(r["answer"]), 1.5, rel_tol=1e-6)
+
+	def test_total_power_from_branch_powers(self):
+		# THCB077: P1=10, P2=20 → 30
+		r = self._solve({"P1": 10.0, "P2": 20.0},
+		                "The power of lamps D1 and D2. Calculate the total power of the circuit.")
+		assert math.isclose(float(r["answer"]), 30.0, rel_tol=1e-6)
+
+	def test_kcl_total_current(self):
+		# THCB079: I1=1.2, I2=0.8 → 2.0
+		r = self._solve({"I1": 1.2, "I2": 0.8},
+		                "Current through lamp D1 and lamp D2. Calculate the total current.")
+		assert math.isclose(float(r["answer"]), 2.0, rel_tol=1e-6)
+
+	def test_returns_none_for_plain_ohm(self):
+		# Must NOT hijack a plain single-formula Ohm question (no parallel/lamp signal).
+		assert self._solve({"U": 10.0, "I": 2.0}, "Find the resistance.") is None
+
+	def test_returns_none_for_series_ac_circuit(self):
+		# Must NOT hijack series AC-RLC misclassified as circuits (CH226-style).
+		assert self._solve({"R1": 20.0, "R2": 50.0},
+		                   "Circuit AB: R1=20 in series with segment MB, inductor L, LCω²=1.") is None

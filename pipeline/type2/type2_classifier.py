@@ -101,6 +101,7 @@ class PhysicsClassifier(QuestionClassifier):
         if any(kw in q_lower for kw in (
             "absolute error", "relative error", "least count",
             "uncertainty", "measured value", "measurement error",
+            "random error", "standard deviation", "mean absolute",
         )):
             return "measurement"
 
