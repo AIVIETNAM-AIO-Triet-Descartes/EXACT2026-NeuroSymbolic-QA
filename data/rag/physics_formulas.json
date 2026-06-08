@@ -1220,10 +1220,10 @@
     "topic": "inductive_reactance",
     "domain": "ac_circuits",
     "formula_natural": "Inductive reactance of an inductor",
-    "formula_sympy": "X_L = 2 * pi * f * L",
-    "formula_latex": "X_L = \\omega L = 2\\pi f L",
+    "formula_sympy": "Z_L = 2 * pi * f * L",
+    "formula_latex": "Z_L = \\omega L = 2\\pi f L",
     "variables": {
-      "X_L": {
+      "Z_L": {
         "description": "Inductive reactance",
         "unit": "ohm"
       },
@@ -1251,7 +1251,7 @@
       "MHz → 1e6 Hz"
     ],
     "example_question": "An inductor with an inductance of 0.2 H is connected to an AC source with a frequency of 50 Hz. Calculate its inductive reactance.",
-    "example_cot": "Step 1: Identify L = 0.2 H, f = 50 Hz.\nStep 2: Apply X_L = 2 * pi * f * L.\nStep 3: X_L = 2 * 3.14159265 * 50 * 0.2 = 62.83 ohm.",
+    "example_cot": "Step 1: Identify L = 0.2 H, f = 50 Hz.\nStep 2: Apply Z_L = 2 * pi * f * L.\nStep 3: Z_L = 2 * 3.14159265 * 50 * 0.2 = 62.83 ohm.",
     "example_answer": "62.83",
     "example_unit": "ohm",
     "keywords": [
@@ -1260,9 +1260,9 @@
       "reactance of inductor",
       "calculate inductive reactance",
       "find inductive reactance",
-      "X_L = 2*pi*f*L",
-      "X_L = omega*L",
-      "X_L",
+      "Z_L = 2*pi*f*L",
+      "Z_L = omega*L",
+      "Z_L",
       "f",
       "L"
     ]
@@ -1272,10 +1272,10 @@
     "topic": "capacitive_reactance",
     "domain": "ac_circuits",
     "formula_natural": "Capacitive reactance of a capacitor",
-    "formula_sympy": "X_C = 1 / (2 * pi * f * C)",
-    "formula_latex": "X_C = \\frac{1}{\\omega C} = \\frac{1}{2\\pi f C}",
+    "formula_sympy": "Z_C = 1 / (2 * pi * f * C)",
+    "formula_latex": "Z_C = \\frac{1}{\\omega C} = \\frac{1}{2\\pi f C}",
     "variables": {
-      "X_C": {
+      "Z_C": {
         "description": "Capacitive reactance",
         "unit": "ohm"
       },
@@ -1305,15 +1305,15 @@
       "MHz → 1e6 Hz"
     ],
     "example_question": "A capacitor with a capacitance of 10 uF is connected to an AC source with a frequency of 60 Hz. Calculate its capacitive reactance.",
-    "example_cot": "Step 1: Identify C = 10e-6 F, f = 60 Hz.\nStep 2: Apply X_C = 1 / (2 * pi * f * C).\nStep 3: X_C = 1 / (2 * 3.14159265 * 60 * 10e-6) ≈ 265.26 ohm.",
+    "example_cot": "Step 1: Identify C = 10e-6 F, f = 60 Hz.\nStep 2: Apply Z_C = 1 / (2 * pi * f * C).\nStep 3: Z_C = 1 / (2 * 3.14159265 * 60 * 10e-6) ≈ 265.26 ohm.",
     "example_answer": "265.26",
     "example_unit": "ohm",
     "keywords": [
-      "X_C = 1/(omega*C)",
-      "X_C = 1/(2pi*f*C)",
+      "Z_C = 1/(omega*C)",
+      "Z_C = 1/(2pi*f*C)",
       "capacitive reactance",
       "calculate dung kháng",
-      "X_C",
+      "Z_C",
       "omega",
       "f",
       "C"
@@ -1324,8 +1324,8 @@
     "topic": "impedance_rlc_series",
     "domain": "ac_circuits",
     "formula_natural": "Impedance of a series RLC circuit",
-    "formula_sympy": "Z = sqrt(R**2 + (X_L - X_C)**2)",
-    "formula_latex": "Z = \\sqrt{R^2 + (X_L - X_C)^2}",
+    "formula_sympy": "Z = sqrt(R**2 + (Z_L - Z_C)**2)",
+    "formula_latex": "Z = \\sqrt{R^2 + (Z_L - Z_C)^2}",
     "variables": {
       "Z": {
         "description": "Total impedance of the series RLC circuit",
@@ -1335,11 +1335,11 @@
         "description": "Resistance in the circuit",
         "unit": "ohm"
       },
-      "X_L": {
+      "Z_L": {
         "description": "Inductive reactance",
         "unit": "ohm"
       },
-      "X_C": {
+      "Z_C": {
         "description": "Capacitive reactance",
         "unit": "ohm"
       }
@@ -1358,18 +1358,18 @@
       "MHz → 1e6 Hz"
     ],
     "example_question": "A series RLC circuit has a resistance of 30 ohms, an inductive reactance of 80 ohms, and a capacitive reactance of 40 ohms. Calculate the total impedance.",
-    "example_cot": "Step 1: Identify R = 30 ohms, X_L = 80 ohms, X_C = 40 ohms.\nStep 2: Apply Z = sqrt(R**2 + (X_L - X_C)**2).\nStep 3: Z = sqrt(30**2 + (80 - 40)**2) = sqrt(900 + 1600) = sqrt(2500) = 50 ohms.",
+    "example_cot": "Step 1: Identify R = 30 ohms, Z_L = 80 ohms, Z_C = 40 ohms.\nStep 2: Apply Z = sqrt(R**2 + (Z_L - Z_C)**2).\nStep 3: Z = sqrt(30**2 + (80 - 40)**2) = sqrt(900 + 1600) = sqrt(2500) = 50 ohms.",
     "example_answer": "50",
     "example_unit": "ohm",
     "keywords": [
-      "Z = sqrt(R^2 + (X_L - X_C)^2)",
+      "Z = sqrt(R^2 + (Z_L - Z_C)^2)",
       "impedance",
       "series RLC circuit",
       "total impedance",
       "Z",
       "R",
-      "X_L",
-      "X_C"
+      "Z_L",
+      "Z_C"
     ]
   },
   {
@@ -1580,7 +1580,7 @@
     "domain": "ac_circuits",
     "formula_natural": "Electric resonance condition in an AC circuit",
     "formula_sympy": "omega * L = 1 / (omega * C)",
-    "formula_latex": "X_L = X_C \\Rightarrow \\omega L = \\frac{1}{\\omega C}",
+    "formula_latex": "Z_L = Z_C \\Rightarrow \\omega L = \\frac{1}{\\omega C}",
     "variables": {
       "omega": {
         "description": "Angular frequency of the AC circuit",
@@ -1607,7 +1607,7 @@
     "example_unit": "F",
     "keywords": [
       "resonance",
-      "X_L = X_C",
+      "Z_L = Z_C",
       "RLC circuit",
       "angular frequency",
       "inductance",

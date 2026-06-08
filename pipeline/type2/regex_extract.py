@@ -112,7 +112,10 @@ _VERB_TARGET_MAP = {
     "current": "I", "power": "P", "charge": "Q", "capacitance": "C",
     "force": "F", "frequency": "f", "inductance": "L",
     "electric field": "E_field", "field strength": "E_field",
-    "impedance": "Z", "reactance": "X", "power factor": "cos_phi",
+    # reactance: VN convention Z_L (cảm kháng) / Z_C (dung kháng) / Z (tổng trở).
+    # Specific kinds MUST precede the generic "reactance" (substring match order).
+    "impedance": "Z", "inductive reactance": "Z_L", "capacitive reactance": "Z_C",
+    "reactance": "Z_L", "power factor": "cos_phi",
 }
 _VERB_PAT = re.compile(
     r'\b(?:calculate|find|determine|compute|what\s+is)\s+(?:the\s+)?'
@@ -265,5 +268,11 @@ def extract_given(question: str) -> dict[str, float]:
     if "V" in given and not _POTENTIAL_CONTEXT_PAT.search(question):
         v_val = given.pop("V")
         given.setdefault("U", v_val)   # keep an explicit U if one already exists
+
+    # Reactance symbol canonicalization (VN curriculum): international X_L/X_C →
+    # Z_L (cảm kháng) / Z_C (dung kháng). The RAG DB + solver use Z_L/Z_C.
+    for foreign, canon in (("X_L", "Z_L"), ("X_C", "Z_C")):
+        if foreign in given:
+            given.setdefault(canon, given.pop(foreign))
 
     return given

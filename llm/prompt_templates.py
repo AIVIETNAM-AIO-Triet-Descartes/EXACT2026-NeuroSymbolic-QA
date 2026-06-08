@@ -319,7 +319,7 @@ Output ONLY the corrected Python code. No markdown, no explanations.
 SYSTEM_PROMPT_PHYSICS = (
     "You are a physics problem solver. "
     "Extract variables precisely from problem text. "
-    "Use standard SI symbol notation (V, I, R, P, E, C, Q, F, f, L, B, Z, X_L, X_C, "
+    "Use Vietnamese-curriculum symbol notation (U, V, I, R, P, E, C, Q, F, f, L, B, Z, Z_L, Z_C, "
     "EMF, cos_phi, Phi, n). "
     "Return only valid JSON. No explanation outside JSON."
 )
@@ -337,13 +337,14 @@ Return ONLY a JSON object with this exact structure:
 
 Rules:
 - Convert all values to base SI units (kΩ → multiply by 1000, mA → divide by 1000, μF → ×1e-6)
-- Standard symbols: U (potential difference / hiệu điện thế — voltage across a component, source, capacitor, plates), V (electric potential / điện thế — V = k*q/r at a point), I (current), R (resistance), P (power), E (energy or electric field), C (capacitance), Q (charge), F (force), f (frequency), L (inductance), Z (impedance), X_L (inductive reactance), X_C (capacitive reactance), EMF (electromotive force), cos_phi (power factor), B (magnetic field), Phi (magnetic flux)
+- Standard symbols: U (potential difference / hiệu điện thế — voltage across a component, source, capacitor, plates), V (electric potential / điện thế — V = k*q/r at a point), I (current), R (resistance), P (power), E (energy or electric field), C (capacitance), Q (charge), F (force), f (frequency), L (inductance), Z (impedance), X_L (inductive reactance), X_C (capacitive reactance), EMF (electromotive force), cos_phi (power factor), B (magnetic field), Phi (magnetic flux), Z_L (inductive reactance / cảm kháng), Z_C (capacitive reactance / dung kháng)
+- REACTANCE CONVENTION (Vietnamese curriculum): use Z_L for inductive reactance (cảm kháng), Z_C for capacitive reactance (dung kháng), Z for total impedance (tổng trở). Even if the problem writes X_L / X_C (international notation), emit Z_L / Z_C.
 - VOLTAGE CONVENTION (important): use U for hiệu điện thế (potential difference / voltage). Reserve V ONLY for điện thế (electric potential at a point, V = k*q/r). Even if the problem writes "V" or "voltage" for a potential difference, emit the symbol U.
 - "find" must be a single symbol string
 - "formulas" are SymPy-compatible hints only (e.g. "V = I * R")
 - Pick "domain" by the dominant topic:
   - "circuits": DC resistor networks — Ohm's law, series/parallel R, KVL/KCL (no AC)
-  - "ac_circuits": AC RLC — impedance Z, reactance X_L/X_C, power factor cosφ, resonance
+  - "ac_circuits": AC RLC — impedance Z, reactance Z_L/Z_C, power factor cosφ, resonance
   - "electrostatics": point charges, Coulomb force, electric field, capacitor charge/energy
   - "electromagnetism": solenoid magnetic field, magnetic flux, induced EMF, self-inductance
   - "measurement": measurement error analysis — absolute/relative error, error propagation
@@ -354,7 +355,7 @@ Problem: Calculate the energy stored in capacitor C when C = 100 μF and U = 30 
 {{"given": {{"C": 0.0001, "U": 30}}, "find": "E", "domain": "electrostatics", "formulas": ["E = 0.5 * C * U**2"], "units": {{"C": "F", "U": "V"}}}}
 
 Problem: An RLC series circuit has R = 100 Ω, L = 0.5 H, C = 50 μF at f = 50 Hz. Find the impedance Z.
-{{"given": {{"R": 100, "L": 0.5, "C": 5e-05, "f": 50}}, "find": "Z", "domain": "ac_circuits", "formulas": ["Z = sqrt(R**2 + (X_L - X_C)**2)"], "units": {{"R": "Ω", "L": "H", "C": "F", "f": "Hz"}}}}
+{{"given": {{"R": 100, "L": 0.5, "C": 5e-05, "f": 50}}, "find": "Z", "domain": "ac_circuits", "formulas": ["Z = sqrt(R**2 + (Z_L - Z_C)**2)"], "units": {{"R": "Ω", "L": "H", "C": "F", "f": "Hz"}}}}
 
 Problem: A solenoid with N = 1000 turns over length l = 0.5 m carries current I = 2 A. Calculate the magnetic field B inside.
 {{"given": {{"N": 1000, "l": 0.5, "I": 2}}, "find": "B", "domain": "electromagnetism", "formulas": ["B = mu_0 * (N / l) * I"], "units": {{"l": "m", "I": "A"}}}}

@@ -59,7 +59,8 @@ Chaining + DB + solvers xong. Fallback còn cao trên **floor no-LLM** do:
   2. **Extraction phrasal** — giá trị mạch hay viết "8Ω lamp"/"voltage of 8V" (không dạng `SYM=value`) → regex bỏ sót → `given={}` (THCB068/074). `--use-llm` (LLM augment) lấp được nên **không phải lo gấp**; muốn chắc chắn đầy đủ (no-LLM floor) thì bổ sung regex phrasal cho Ω/V trong `regex_extract`.
   3. **Topology logic** — quy tắc song song/nối tiếp: map nhánh→R (R1↔đèn1…), `R_parallel=(R1*R2)/(R1+R2)`, `I_total=ΣI`, "mỗi đèn"→dòng từng nhánh. Cần cả retrieval đúng formula song song (THCB074 không lấy được `formula_003`) lẫn logic ghép.
   Vài câu **định tính** (THCB071, THCB073) thuộc weakness #8d. **Cần (theo thứ tự):** (a) nâng `detect_find_from_verb` → trả list các target thay vì 1 chuỗi; (b) `circuit_multi_solver` giải từng biến trong list + topology song song/nối tiếp, ghép kết quả bằng `;`; (c) [optional] regex phrasal Ω/V cho no-LLM floor. Đo bằng eval harness (P2) trước khi làm để tránh overfit.
-- [ ] Weakness #5: MULTI_STEP fuzzy symbol match (chaining đã giảm áp lực, vẫn cần khi tên biến lệch).
+- [x] Weakness #5: MULTI_STEP symbol mismatch + **đổi reactance X_L→Z_L, X_C→Z_C** (2026-06-07 — chuẩn VN: Z_L cảm kháng, Z_C dung kháng, Z tổng trở). Giải **deterministic-only** (không LLM fuzzy): (1) DB formula_027/028/029/035 `X_*→Z_*` + FAISS rebuild 53; (2) prompt flip rule + few-shot; (3) `regex_extract` canonicalize `X_L→Z_L`/`X_C→Z_C` + verb map `inductive/capacitive reactance→Z_L/Z_C`; (4) `_SYMBOL_ALIASES` thêm `Z_L↔X_L`, `Z_C↔X_C` (2 chiều, cùng đại lượng). E2E chain Z=136.85 ✓, alias foreign X_L→Z_L ✓, 48/48 test. **Cách 2 (LLM fuzzy trong `_solve_multi_step`) — KHÔNG implement** (YAGNI: parser đã canonicalize + alias tĩnh phủ tập hữu hạn; residual ngoài bảng hiếm → nếu eval lộ thì THÊM vào bảng alias, không gọi LLM).
+  - **Minor cần để ý:** verb map generic `"reactance"→Z_L` là đoán mặc định (câu "find the reactance" không nói rõ loại → mặc định cảm kháng). Hiếm gặp; đo eval rồi chỉnh nếu sai.
 - [ ] Weakness #8d: qualitative proportional (ưu tiên thấp).
 - [x] TD U/V alias bug (2026-06-06 — **đổi hướng**: chuẩn hóa `U`=hiệu điện thế, `V`=điện thế theo chương trình VN). RAG DB: 8 formula `V*→U*` (Ohm/P=UI/P=U²R/KVL/divider/Q=CU/E=½CU²/E=U/d), giữ `V=k*q/r` (điện thế), `U=k*q1*q2/r` thế năng→`W` (tránh clash). `regex_extract`: bỏ alias hack, normalize `V→U` trừ context điện thế, verb map voltage/pot.diff→`U`. LLM prompt: rule + 2 few-shot. FAISS rebuild 51 vec, 44/44 test. (bonus: fix crash `float("0.8.")` trailing-dot trong `_ASSIGN_PAT`).
 - [x] Tech debt: `demo_type2.py` import `regex_extract` (2026-06-03 — xóa 244 dòng copy, single source; demo 44/44 test ✓).
@@ -155,15 +156,21 @@ text shown to the explainer LLM.
 
 ---
 
-### 5. MULTI_STEP Chain Termination
+### 5. MULTI_STEP Chain Termination ✅ RESOLVED (2026-06-07 — deterministic canonicalization, không LLM fuzzy)
 
 **Affected:** Multi-step problems where intermediate variable names differ between formulas
 
 **Symptom:** `_solve_multi_step` loops through all formulas but never accumulates `find` variable
 
-**Root cause:** Chain propagation checks `str(unknown) == find`. If SymPy names the solved symbol differently (e.g., subscript vs plain), the check fails silently.
+**Root cause:** Chain propagation checks `str(unknown) == find`. If the symbol notation differs (e.g. international `X_L` vs VN `Z_L`), the check fails silently.
 
-**Fix needed:** Add fuzzy symbol matching in `_solve_multi_step` accumulated dict lookup.
+**Fix applied (2026-06-07) — 2 lớp deterministic + chuẩn hóa reactance VN:**
+1. **Canonical = Z_L (cảm kháng) / Z_C (dung kháng) / Z (tổng trở)** theo chương trình VN. DB formula_027/028/029/035 đổi `X_*→Z_*`; prompt + few-shot flip; FAISS rebuild 53.
+2. **Canonicalize tại parse** — `regex_extract` đổi `X_L→Z_L`, `X_C→Z_C` + verb map `inductive/capacitive reactance → Z_L/Z_C`.
+3. **Alias tĩnh tại solve** — `_SYMBOL_ALIASES` thêm `Z_L↔X_L`, `Z_C↔X_C` (2 chiều an toàn — cùng đại lượng, khác U/V). Bắt residual path LLM-augment nhả X_L + input ngoại.
+4. **Chain** (`build_formula_chain`) match exact LHS — chạy đúng khi DB+given đều canonical. E2E chain Z=136.85 ✓.
+
+**KHÔNG làm (proposals.md Cách 2 — LLM fuzzy match):** YAGNI. Variant là tập hữu hạn đã biết → 2 lớp deterministic phủ hết. Residual ngoài bảng (LLM nhả ký hiệu lạ) hiếm → xử lý đúng = THÊM vào `_SYMBOL_ALIASES` (đo qua eval), KHÔNG gọi LLM mỗi lần kẹt. Giữ làm last-resort note nếu eval lộ miss thật.
 
 ---
 

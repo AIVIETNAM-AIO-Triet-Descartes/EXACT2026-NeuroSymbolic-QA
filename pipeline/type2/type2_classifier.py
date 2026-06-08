@@ -160,7 +160,7 @@ class PhysicsClassifier(QuestionClassifier):
         if domain == "electromagnetism":
             return PhysicsQuestionType.ELECTROMAGNETIC
 
-        # 4b. Mạch RLC xoay chiều (CH) — thường nhiều bước (X_L/X_C → Z → I/P).
+        # 4b. Mạch RLC xoay chiều (CH) — thường nhiều bước (Z_L/Z_C → Z → I/P).
         #     MULTI_STEP cho phép sympy_solver chain công thức; fallback single nếu chỉ 1.
         if domain == "ac_circuits":
             return PhysicsQuestionType.MULTI_STEP

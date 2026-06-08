@@ -70,6 +70,9 @@ Giả sử hệ thống gặp câu hỏi: *"Một tụ điện có điện dung 
 
 ## Giải quyết Weakness #5: MULTI_STEP Fuzzy Symbol Match
 
+> ✅ **ĐÃ GIẢI QUYẾT (2026-06-07) — deterministic-only, KHÁC đề xuất gốc bên dưới.**
+> Làm theo hướng canonicalization (giống U/V): chuẩn hóa reactance VN `Z_L/Z_C`, canonicalize ở `regex_extract` + alias tĩnh `Z_L↔X_L`/`Z_C↔X_C` trong `_SYMBOL_ALIASES`. **Cách 1 (prompt rule) giữ — flip sang Z_L/Z_C. Cách 2 (LLM fuzzy trong solver) KHÔNG implement** (YAGNI — chi tiết ở `docs/TODO.md` Weakness #5). Đề xuất gốc dưới giữ làm lịch sử.
+
 Dựa trên sự đồng thuận, tôi sẽ thực hiện giải pháp "Phòng thủ nhiều lớp" (Defense in Depth) bằng cách kết hợp cả 2 phương pháp: chuẩn hóa ký hiệu từ đầu bằng LLM Parser và dùng LLM làm thông dịch viên lúc kẹt trong Solver.
 
 ### Đề xuất Thay đổi

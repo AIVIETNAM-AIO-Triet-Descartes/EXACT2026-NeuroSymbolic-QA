@@ -9,7 +9,7 @@ it to the driving frequency f with a relative tolerance. Deterministic → the
 sympy_solver_node confidence map treats source="resonance" like "sympy" (1.0).
 
 Note on R: every CHLT row carries an R value, but R plays no part in the Yes/No
-check — f0 depends only on L and C (at resonance X_L = X_C → Z = R). R is
+check — f0 depends only on L and C (at resonance Z_L = Z_C → Z = R). R is
 extracted by the parser and intentionally ignored here.
 
 Dispatch (sympy_solver_node, T2-16): only when q_type == YES_NO AND

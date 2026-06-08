@@ -185,8 +185,10 @@ def retrieve_formula(
 # RAG DB uses U for hiệu điện thế, V only for điện thế (V = k*q/r). Aliasing them
 # here would wrongly bridge potential difference with electric potential.
 _SYMBOL_ALIASES: list[tuple[str, str]] = [
-    ("W", "E"),   # energy: W (work/energy) vs E
-    ("t", "T"),   # time: lowercase vs uppercase
+    ("W", "E"),       # energy: W (work/energy) vs E
+    ("t", "T"),       # time: lowercase vs uppercase
+    ("Z_L", "X_L"),   # inductive reactance: VN Z_L (canonical) ↔ international X_L
+    ("Z_C", "X_C"),   # capacitive reactance: VN Z_C (canonical) ↔ international X_C
 ]
 
 
@@ -226,7 +228,7 @@ def _inject_symbol_aliases(parsed: dict, formula_doc: dict) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════
-# Dependency-chain builder (multi-formula problems, e.g. RLC: X_L→X_C→Z)
+# Dependency-chain builder (multi-formula problems, e.g. RLC: Z_L→Z_C→Z)
 # ══════════════════════════════════════════════════════════════
 
 # Universal bridges not always present as DB entries (angular frequency from f).
@@ -255,8 +257,8 @@ def build_formula_chain(
     solver can compute it first. Returns formulas in dependency-first order
     (leaves → target last), ready for `_solve_multi_step` to chain.
 
-    Example (RLC impedance): given {R,L,C,f}, target "Z = sqrt(R**2+(X_L-X_C)**2)"
-      → ["omega = 2*pi*f", "X_L = omega*L", "X_C = 1/(omega*C)", "Z = sqrt(...)"]
+    Example (RLC impedance): given {R,L,C,f}, target "Z = sqrt(R**2+(Z_L-Z_C)**2)"
+      → ["omega = 2*pi*f", "Z_L = omega*L", "Z_C = 1/(omega*C)", "Z = sqrt(...)"]
     """
     by_lhs: dict[str, str] = {}
     for d in all_docs:
@@ -325,7 +327,7 @@ def formula_rag_node(state: dict) -> dict:
         # Normalize symbol aliases before solver substitution
         parsed = _inject_symbol_aliases(parsed, formula_doc)
         given_keys = set((parsed.get("given") or {}).keys())
-        # Resolve dependency chain so multi-formula problems (RLC X_L→X_C→Z,
+        # Resolve dependency chain so multi-formula problems (RLC Z_L→Z_C→Z,
         # solenoid n→B, …) get all intermediate formulas, not just the target.
         chain = build_formula_chain(formula_doc["formula_sympy"], docs, given_keys)
         updated_parsed = {
