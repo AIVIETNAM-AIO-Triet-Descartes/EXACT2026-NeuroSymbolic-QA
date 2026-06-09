@@ -1,9 +1,9 @@
 {
     "overall": {
         "total": 1352,
-        "evaluable": 379,
-        "correct": 272,
-        "accuracy": 0.7176781002638523
+        "evaluable": 383,
+        "correct": 276,
+        "accuracy": 0.720626631853786
     },
     "by_prefix": {
         "LD": {
@@ -14,9 +14,9 @@
         },
         "CH": {
             "total": 290,
-            "evaluable": 49,
-            "correct": 30,
-            "accuracy": 0.6122448979591837
+            "evaluable": 53,
+            "correct": 33,
+            "accuracy": 0.6226415094339622
         },
         "NL": {
             "total": 190,
@@ -51,22 +51,22 @@
         "CHLT": {
             "total": 20,
             "evaluable": 20,
-            "correct": 4,
-            "accuracy": 0.2
+            "correct": 5,
+            "accuracy": 0.25
         }
     },
     "by_kind": {
         "numeric": {
             "total": 1230,
-            "evaluable": 333,
-            "correct": 247,
-            "accuracy": 0.7417417417417418
+            "evaluable": 337,
+            "correct": 250,
+            "accuracy": 0.7418397626112759
         },
         "yes_no": {
             "total": 21,
             "evaluable": 21,
-            "correct": 4,
-            "accuracy": 0.19047619047619047
+            "correct": 5,
+            "accuracy": 0.23809523809523808
         },
         "qualitative": {
             "total": 76,
@@ -83,10 +83,10 @@
     },
     "by_source": {
         "sympy": {
-            "total": 79,
-            "evaluable": 78,
-            "correct": 46,
-            "accuracy": 0.5897435897435898
+            "total": 83,
+            "evaluable": 82,
+            "correct": 49,
+            "accuracy": 0.5975609756097561
         },
         "vector_solver": {
             "total": 230,
@@ -95,8 +95,8 @@
             "accuracy": 0.7467248908296943
         },
         "llm_fallback": {
-            "total": 987,
-            "evaluable": 16,
+            "total": 982,
+            "evaluable": 15,
             "correct": 0,
             "accuracy": 0.0
         },
@@ -113,9 +113,9 @@
             "accuracy": 1.0
         },
         "resonance": {
-            "total": 4,
-            "evaluable": 4,
-            "correct": 4,
+            "total": 5,
+            "evaluable": 5,
+            "correct": 5,
             "accuracy": 1.0
         }
     },
@@ -619,12 +619,6 @@
             "kind": "yes_no"
         },
         {
-            "id": "CHLT015",
-            "gold": "No",
-            "pred": "",
-            "kind": "yes_no"
-        },
-        {
             "id": "CHLT016",
             "gold": "Yes",
             "pred": "",
@@ -652,6 +646,12 @@
             "id": "CH002",
             "gold": "80",
             "pred": "-80",
+            "kind": "numeric"
+        },
+        {
+            "id": "CH089",
+            "gold": "70.36",
+            "pred": "0.0001",
             "kind": "numeric"
         },
         {
@@ -826,7 +826,7 @@
         },
         {
             "id": "LD041",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'f₀', '2', 'sqrt'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'sqrt', '2', 'f₀'})"
         },
         {
             "id": "LD043",
@@ -846,7 +846,7 @@
         },
         {
             "id": "LD047",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'q₂', 'phía', 'về', 'hướng'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'phía', 'q₂', 'hướng', 'về'})"
         },
         {
             "id": "LD049",
@@ -926,7 +926,7 @@
         },
         {
             "id": "LD085",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'k', 'a', '2', 'q', 'sqrt'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'k', 'q', 'a', '2', 'sqrt'})"
         },
         {
             "id": "LD086",
@@ -934,7 +934,7 @@
         },
         {
             "id": "LD087",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'2', 'x', 'q', 'sqrt'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'x', 'q', 'sqrt', '2'})"
         },
         {
             "id": "LD090",
@@ -1350,11 +1350,11 @@
         },
         {
             "id": "DT007",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'2', 'a', 'sqrt'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'a', 'sqrt', '2'})"
         },
         {
             "id": "DT008",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'h', 'abs', '2k', 'a', '5', 'frac', '1', '2', 'q'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'q', 'h', 'a', 'abs', '1', '2', '5', 'frac', '2k'})"
         },
         {
             "id": "DT019",
@@ -1362,7 +1362,7 @@
         },
         {
             "id": "DT020",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'k', 'epsilon', 'a', 'frac', '4', '2', 'q', 'sqrt'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', 'k', 'q', 'epsilon', 'a', '2', 'frac', 'sqrt'})"
         },
         {
             "id": "DT025",
@@ -1406,7 +1406,7 @@
         },
         {
             "id": "DT047",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'e_a', 'e_b', '1', '2', 'sqrt'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'1', '2', 'e_b', 'sqrt', 'e_a'})"
         },
         {
             "id": "DT049",
@@ -2270,7 +2270,7 @@
         },
         {
             "id": "TD369",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'change', 'not', 'do'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'not', 'do', 'change'})"
         },
         {
             "id": "TD370",
@@ -2294,7 +2294,7 @@
         },
         {
             "id": "TD377",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'voltage', 'halfed', 'is', 'the'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'the', 'halfed', 'voltage', 'is'})"
         },
         {
             "id": "TD378",
@@ -2306,7 +2306,7 @@
         },
         {
             "id": "TD380",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', 'by', 'times', 'decreases'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', 'decreases', 'times', 'by'})"
         },
         {
             "id": "TD381",
@@ -2330,7 +2330,7 @@
         },
         {
             "id": "TD386",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'half', 'by', 'decreases'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'half', 'decreases', 'by'})"
         },
         {
             "id": "TD387",
@@ -2398,7 +2398,7 @@
         },
         {
             "id": "THCB071",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'current', 'increases', 'resistance', 'decreases'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'decreases', 'increases', 'current', 'resistance'})"
         },
         {
             "id": "THCB072",
@@ -2406,7 +2406,7 @@
         },
         {
             "id": "THCB073",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'lamp', 'shines', 'because', 'the', 'current', 'increases', 'brighter', 'it', 'through'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'shines', 'current', 'through', 'because', 'the', 'brighter', 'increases', 'lamp', 'it'})"
         },
         {
             "id": "THCB074",
@@ -2430,7 +2430,7 @@
         },
         {
             "id": "THCB081",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'current', 'total', 'increases'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'total', 'increases', 'current'})"
         },
         {
             "id": "THCB082",
@@ -2438,7 +2438,7 @@
         },
         {
             "id": "THCB083",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'is', 'the', 'because', 'current', 'brighter', 'higher'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'current', 'because', 'is', 'the', 'higher', 'brighter'})"
         },
         {
             "id": "THCB084",
@@ -2578,11 +2578,11 @@
         },
         {
             "id": "NL025",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'stored', 'is', 'magnetic', 'of', 'inductor', 'all', 'in', 'the', 'entirely', 'energy'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'inductor', 'magnetic', 'energy', 'is', 'the', 'field', 'entirely', 'all', 'of', 'stored', 'in'})"
         },
         {
             "id": "NL026",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'stored', 'is', 'of', 'all', 'in', 'capacitor', 'electric', 'the', 'entirely', 'energy'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'energy', 'is', 'the', 'field', 'entirely', 'all', 'electric', 'of', 'stored', 'in', 'capacitor'})"
         },
         {
             "id": "NL027",
@@ -2686,7 +2686,7 @@
         },
         {
             "id": "NL095",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'stored', 'is', 'of', 'all', 'in', 'capacitor', 'electric', 'the', 'energy'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'energy', 'is', 'the', 'field', 'electric', 'all', 'of', 'stored', 'in', 'capacitor'})"
         },
         {
             "id": "NL096",
@@ -2702,7 +2702,7 @@
         },
         {
             "id": "NL100",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'½li₀²', 'maximum', 'wc'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'maximum', '½li₀²', 'wc'})"
         },
         {
             "id": "NL101",
@@ -2722,7 +2722,7 @@
         },
         {
             "id": "NL105",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'at', 'will', 'stored', 'magnetic', 'inductor', 'be', 'in', 'maximum', 'the', 'also', 'energy', 'its'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'inductor', 'will', 'magnetic', 'also', 'energy', 'maximum', 'its', 'the', 'at', 'be', 'stored', 'in'})"
         },
         {
             "id": "NL106",
@@ -2778,7 +2778,7 @@
         },
         {
             "id": "NL119",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'stored', 'is', 'of', 'all', 'in', 'capacitor', 'electric', 'the', 'energy'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'energy', 'is', 'the', 'field', 'electric', 'all', 'of', 'stored', 'in', 'capacitor'})"
         },
         {
             "id": "NL120",
@@ -2830,11 +2830,11 @@
         },
         {
             "id": "NL302",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'u²', 'square', 'the', 'voltage'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'the', 'u²', 'of', 'square', 'voltage'})"
         },
         {
             "id": "NL303",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'i²', 'w', 'l', '1', '2'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'i²', 'w', '1', '2', 'l'})"
         },
         {
             "id": "NL304",
@@ -2850,23 +2850,23 @@
         },
         {
             "id": "NL307",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'less', 'than'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'than', 'less'})"
         },
         {
             "id": "NL308",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'is', 'zero', 'the', 'when', 'current'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'when', 'current', 'is', 'the', 'zero'})"
         },
         {
             "id": "NL309",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increase', '4', 'by', 'times'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', 'increase', 'times', 'by'})"
         },
         {
             "id": "NL310",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'unchanged', 'equal'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'equal', 'unchanged'})"
         },
         {
             "id": "NL311",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increase', '2', 'by', 'times'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'times', 'increase', '2', 'by'})"
         },
         {
             "id": "NL312",
@@ -2882,19 +2882,19 @@
         },
         {
             "id": "NL315",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'line', 'straight', 'upward'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'straight', 'line', 'upward'})"
         },
         {
             "id": "NL316",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'line', 'straight', 'upward'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'straight', 'line', 'upward'})"
         },
         {
             "id": "NL317",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', '1', 'reduced', 'to'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', 'reduced', '1', 'to'})"
         },
         {
             "id": "NL318",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'total', 'the', 'energy', 'half'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'energy', 'the', 'of', 'total', 'half'})"
         },
         {
             "id": "NL319",
@@ -2918,7 +2918,7 @@
         },
         {
             "id": "NL324",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increases', 'linear', 'function'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'linear', 'increases', 'function'})"
         },
         {
             "id": "NL325",
@@ -2930,7 +2930,7 @@
         },
         {
             "id": "NL327",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'conservation', 'energy'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'energy', 'conservation', 'of'})"
         },
         {
             "id": "NL328",
@@ -2938,11 +2938,11 @@
         },
         {
             "id": "NL329",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'w₀sin²', 'w_c', 'ωt'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'w₀sin²', 'ωt', 'w_c'})"
         },
         {
             "id": "NL330",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'1', 'ωc'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'ωc', '1'})"
         },
         {
             "id": "NL331",
@@ -3022,7 +3022,7 @@
         },
         {
             "id": "NL350",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increase', '3', 'times'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increase', 'times', '3'})"
         },
         {
             "id": "NL351",
@@ -3134,7 +3134,7 @@
         },
         {
             "id": "NL378",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', 'times', 'by', 'increases'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'4', 'increases', 'times', 'by'})"
         },
         {
             "id": "NL379",
@@ -3246,7 +3246,7 @@
         },
         {
             "id": "DDT136",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'number', 'of', 'and', 'intensity', 'density', 'current', 'turns'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'current', 'and', 'intensity', 'of', 'number', 'turns', 'density'})"
         },
         {
             "id": "DDT137",
@@ -3274,7 +3274,7 @@
         },
         {
             "id": "DDT143",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'emf', 'an', 'appears', 'opposite', 'direction', 'in', 'the', 'induced', 'electromotive', 'force'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'electromotive', 'appears', 'the', 'direction', 'opposite', 'force', 'in', 'an', 'induced', 'emf'})"
         },
         {
             "id": "DDT144",
@@ -3298,7 +3298,7 @@
         },
         {
             "id": "DDT149",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increase', 'and', 'opposite', 'cause', 'direction', 'the', 'current', 'it'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'cause', 'current', 'and', 'the', 'direction', 'opposite', 'it', 'increase'})"
         },
         {
             "id": "DDT150",
@@ -3310,11 +3310,11 @@
         },
         {
             "id": "DDT152",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'through', 'current', 'solenoid', 'the'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'the', 'solenoid', 'current', 'through'})"
         },
         {
             "id": "DDT153",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'induced', 'emf', 'electromotive', 'force'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'induced', 'emf', 'force', 'electromotive'})"
         },
         {
             "id": "DDT154",
@@ -3330,7 +3330,7 @@
         },
         {
             "id": "DDT157",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'magnetic', 'in', 'the', 'coil', 'core'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'magnetic', 'coil', 'field', 'the', 'in', 'core'})"
         },
         {
             "id": "DDT158",
@@ -3362,7 +3362,7 @@
         },
         {
             "id": "DDT205",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'number', 'of', 'cross', 'area', 'length', 'sectional', 'turns'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'length', 'cross', 'area', 'sectional', 'of', 'number', 'turns'})"
         },
         {
             "id": "DDT206",
@@ -3370,7 +3370,7 @@
         },
         {
             "id": "DDT207",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'direct', 'proportion', 'in', 'increases'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'in', 'proportion', 'increases', 'direct'})"
         },
         {
             "id": "DDT208",
@@ -3378,11 +3378,11 @@
         },
         {
             "id": "DDT209",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'b', 'magnetic', 'induction'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'magnetic', 'b', 'induction'})"
         },
         {
             "id": "DDT210",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'inside', 'solenoid', 'the'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'the', 'inside', 'solenoid'})"
         },
         {
             "id": "DDT211",
@@ -3406,11 +3406,11 @@
         },
         {
             "id": "DDT216",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'number', 'of', 'to', 'in', 'square', 'the', 'turns', 'proportion', 'increases'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'to', 'the', 'proportion', 'increases', 'of', 'number', 'in', 'turns', 'square'})"
         },
         {
             "id": "DDT217",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'s', 'area', 'cross', 'sectional'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'cross', 'area', 'sectional', 's'})"
         },
         {
             "id": "DDT218",
@@ -3418,11 +3418,11 @@
         },
         {
             "id": "DDT219",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'magnetic', 'b²', 'to', 'the', 'proportionally', 'increases', 'energy'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'b²', 'to', 'magnetic', 'energy', 'field', 'the', 'increases', 'proportionally'})"
         },
         {
             "id": "DDT220",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'with', 'the', 'time', 'current', 'changes'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'current', 'time', 'the', 'changes', 'with'})"
         },
         {
             "id": "DDT322",
@@ -3450,7 +3450,7 @@
         },
         {
             "id": "DDT330",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'an', 'circuit', 'the', 'characteristic', 'inductive', 'exhibits'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'inductive', 'exhibits', 'characteristic', 'the', 'an', 'circuit'})"
         },
         {
             "id": "DDT332",
@@ -3478,7 +3478,7 @@
         },
         {
             "id": "DDT340",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'ω', '16', 'and', '30', '38', '0'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'16', 'and', 'ω', '30', '0', '38'})"
         },
         {
             "id": "DDT342",
@@ -3514,7 +3514,7 @@
         },
         {
             "id": "DDT350",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'an', 'circuit', 'the', 'characteristic', 'inductive', 'exhibits'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'inductive', 'exhibits', 'characteristic', 'the', 'an', 'circuit'})"
         },
         {
             "id": "DDT351",
@@ -3522,19 +3522,19 @@
         },
         {
             "id": "DDT352",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'reaches', 'maximum', 'value', 'the', 'charge', 'q', 'its'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'q', 'value', 'charge', 'maximum', 'its', 'the', 'reaches'})"
         },
         {
             "id": "DDT353",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'l', '0', 'u', 'i_max²', '5'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'u', '5', 'l', 'i_max²', '0'})"
         },
         {
             "id": "DDT355",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'ω', '1', 'lc'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'lc', 'ω', '1'})"
         },
         {
             "id": "DDT356",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'lc', 't', '2π'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'t', '2π', 'lc'})"
         },
         {
             "id": "DDT357",
@@ -3542,7 +3542,7 @@
         },
         {
             "id": "DDT358",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'harmonic', 'motion', 'simple', 'shm'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'shm', 'motion', 'simple', 'harmonic'})"
         },
         {
             "id": "DDT359",
@@ -3550,7 +3550,7 @@
         },
         {
             "id": "DDT360",
-            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'phase', 'shift', 'of', 'with', 'waves', 'a', 'sinusoidal', 'π', '2'})"
+            "reason": "qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'phase', 'waves', 'a', 'sinusoidal', 'shift', '2', 'of', 'π', 'with'})"
         },
         {
             "id": "DDT363",
@@ -3929,10 +3929,6 @@
             "reason": "unparseable: Could not parse prediction '' as a number."
         },
         {
-            "id": "CH075",
-            "reason": "unparseable: Could not parse prediction '' as a number."
-        },
-        {
             "id": "CH076",
             "reason": "unparseable: Could not parse prediction '' as a number."
         },
@@ -3981,10 +3977,6 @@
             "reason": "unparseable: Could not parse prediction '' as a number."
         },
         {
-            "id": "CH089",
-            "reason": "unparseable: Could not parse prediction '' as a number."
-        },
-        {
             "id": "CH090",
             "reason": "unparseable: Could not parse prediction '' as a number."
         },
@@ -4009,19 +4001,11 @@
             "reason": "unparseable: Could not parse prediction '' as a number."
         },
         {
-            "id": "CH096",
-            "reason": "unparseable: Could not parse prediction '' as a number."
-        },
-        {
             "id": "CH097",
             "reason": "unparseable: Could not parse prediction '' as a number."
         },
         {
             "id": "CH098",
-            "reason": "unparseable: Could not parse prediction '' as a number."
-        },
-        {
-            "id": "CH099",
             "reason": "unparseable: Could not parse prediction '' as a number."
         },
         {

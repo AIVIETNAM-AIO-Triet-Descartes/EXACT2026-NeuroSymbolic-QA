@@ -5281,8 +5281,8 @@
     },
     {
         "id": "CHLT015",
-        "answer": "",
-        "source": "llm_fallback"
+        "answer": "No",
+        "source": "resonance"
     },
     {
         "id": "CHLT016",
@@ -5681,8 +5681,8 @@
     },
     {
         "id": "CH075",
-        "answer": "",
-        "source": "llm_fallback"
+        "answer": "2.50176e-06",
+        "source": "sympy"
     },
     {
         "id": "CH076",
@@ -5751,8 +5751,8 @@
     },
     {
         "id": "CH089",
-        "answer": "",
-        "source": "llm_fallback"
+        "answer": "0.0001",
+        "source": "sympy"
     },
     {
         "id": "CH090",
@@ -5786,8 +5786,8 @@
     },
     {
         "id": "CH096",
-        "answer": "",
-        "source": "llm_fallback"
+        "answer": "8.79524e-07",
+        "source": "sympy"
     },
     {
         "id": "CH097",
@@ -5801,8 +5801,8 @@
     },
     {
         "id": "CH099",
-        "answer": "",
-        "source": "llm_fallback"
+        "answer": "5.06606e-06",
+        "source": "sympy"
     },
     {
         "id": "CH100",

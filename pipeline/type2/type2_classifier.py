@@ -105,10 +105,14 @@ class PhysicsClassifier(QuestionClassifier):
         )):
             return "measurement"
 
-        # AC RLC (CH/CHLT) — tín hiệu AC mạnh, đặt trước electrostatics
+        # AC RLC (CH/CHLT) — tín hiệu AC mạnh, đặt trước electrostatics.
+        # Stem "resona" phủ MỌI dạng: resonance/resonant (danh/tính từ) +
+        # resonate/resonates/resonating (động từ). Nhiều câu CH dùng VERB "resonate"
+        # + "capacitor/inductor" bị kéo nhầm sang electrostatics nếu chỉ match danh từ.
+        # (đo 2026-06-07: 90/290 CH misroute; route đúng → LC-tuning giải bằng formula_039.)
         if any(kw in q_lower for kw in (
             "impedance", "reactance", "rlc", "alternating",
-            "power factor", "resonance", "resonant", "a.c.",
+            "power factor", "resona", "a.c.",
         )):
             return "ac_circuits"
 
