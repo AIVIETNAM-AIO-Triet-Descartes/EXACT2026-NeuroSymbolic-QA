@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 EXACT 2026 competition entry — an explainable QA system for educational and physics problems, submitted to IEEE IJCNN 2026 (URA Research Group, HCMUT Vietnam). The system must use only **open-source LLMs ≤8B parameters** (LLaMA, Mistral, Qwen, Phi family) — calling closed-source APIs (OpenAI, Anthropic, Gemini, etc.) is a **competition rules violation**.
 
-Competition timeline: Registration Apr 10–May 10, active competition May 5–30 (deadline extended to **June 10, 2026**), final round Jun 15, paper due Jun 30–Jul 15 2026.
+Competition timeline: submission **deadline extended to June 12, 2026** (Phase 1 eval Jun 1–2, Phase 2 Jun 5–7, Top 10 Jun 10, Public Test Day Jun 15). Live API round = **50 queries (25 Type 1 + 25 Type 2)**, 60s/query, no retry.
+
+> ⚠️ **Official spec vs codebase:** the API layer + several assumptions are out of date vs the committee docs. See **`docs/official_spec_gaps.md`** (gap analysis from `docs/context/` PDFs) before touching `api/`. Key: endpoint is `POST /predict` (single, both types, route by `type` field), response is a **JSON list** of `{query_id, answer, unit, explanation, premises_used, reasoning}` — NOT the schema in the "API Response Schema" section below (that section is the OLD internal design).
 
 ## LLM Backend — vLLM (important)
 
@@ -73,10 +75,10 @@ Request → PhysicsClassifier → PhysicsParser → FormulaRAG (FAISS) → SymPy
 - `type2_validation.py` — Self-Verifier; downgrades confidence on failed validation.
 - `cot_builder.py` / `explainer.py` — narrate steps and generate NL explanation.
 
-**Type Router logic** (`api/router.py`):
-1. `premises` list non-empty → **Type 1**
-2. physics keywords in question → **Type 2**
-3. default → **Type 1**
+**Type Router logic** (`api/router.py`): ⚠️ **OBSOLETE for the official API.** The committee sends an explicit `type` field (`"type1"`/`"type2"`) — route on that, not keywords. The keyword classifier below may stay only as an internal fallback. (See `docs/official_spec_gaps.md`.)
+1. ~~`premises` list non-empty → **Type 1**~~
+2. ~~physics keywords in question → **Type 2**~~
+3. ~~default → **Type 1**~~
 
 **Fallback strategy**: if Z3/SymPy/vector solver fails, fall back to LLM CoT (`solve_physics_cot` / `solve_with_cot`). Log the failure and lower the confidence score.
 
@@ -133,23 +135,36 @@ tests/                 # test_type2.py, test_pipeline.py substantive; type1 mini
 
 **Implementation status**: Type 2 physics pipeline complete and evaluable (demo ~78% on the vector-solver subset). Type 1 logic pipeline is scaffolded but not wired (empty solver stubs, mock API response). vLLM server not yet set up locally (needs WSL2 + CUDA Toolkit). See `docs/handoff.md` for the prioritized next steps (P1 vLLM setup → P2 LLM test → P3 expand formulas → P4 CHLT Yes/No solver → P5 DT routing → P6 commit).
 
-## API Response Schema
+## API Schema — OFFICIAL (Submission Guide §3–4)
 
+**This is the binding contract. The current `api/` code does NOT match it yet — see `docs/official_spec_gaps.md`.**
+
+Single endpoint `POST /predict` handles both types, routed by the input `type` field.
+
+**Request** (one JSON object; every field always present, empty `""`/`[]` when N/A):
 ```python
-{
-    "answer": str,           # required
-    "explanation": str,      # required
-    # optional extended fields:
-    "fol": str,              # first-order logic formula (Type 1)
-    "cot": list[str],        # chain-of-thought steps
-    "premises": list[str],   # supporting premises used
-    "confidence": float,     # 0.0–1.0
-}
+{ "query_id": str, "type": "type1"|"type2", "query": str,
+  "premises": list[str],   # Type 1 NL premises (0-indexed); [] for Type 2
+  "options":  list[str] }  # MCQ choice set; [] for free-form / Type 2
 ```
 
-**Never include an `idx` field** — it is stripped and will cause evaluation errors.
+**Response** — a JSON **LIST** (one object per query, even for one):
+```python
+[{
+  "query_id": str,         # MUST echo input query_id
+  "answer": str,           # Type 2: numeric value ONLY (unit separate). Type 1: chosen option / number / text
+  "unit": str,             # ASCII only: "ohm","uF","nC","V/m","A","W","J"...  ""  for Type 1
+  "explanation": str,      # required, non-empty (NOT scored this round)
+  "premises_used": list[int],  # 0-based premise indices used (Type 1); [] for Type 2
+  "reasoning": {"type": "fol"|"cot"|"proof", "steps": list[str]} | None  # optional (P3)
+}]
+```
 
-Confidence convention (`pipeline/state.py`): 1.0 symbolic solver success · 0.6 RAG+LLM fallback · 0.5 LLM-only fallback · 0.4 SymPy succeeded but self-verification failed · 0.3 LLM generation error.
+- **`query_id` is mandatory** (echo input). The old ban on `idx` still holds — `idx` ≠ `query_id`.
+- **There is NO `confidence` field in the official output.** Keep confidence/source INTERNAL only (for fallback selection), do not emit.
+- Type 2 scoring = answer + unit BOTH correct (use ASCII units). Type 1 = answer 50% + `premises_used` 50%.
+
+Confidence convention (INTERNAL, `pipeline/state.py`): 1.0 symbolic solver success · 0.6 RAG+LLM fallback · 0.5 LLM-only fallback · 0.4 SymPy succeeded but self-verification failed · 0.3 LLM generation error.
 
 ## Hard Rules
 

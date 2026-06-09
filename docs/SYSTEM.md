@@ -87,6 +87,8 @@ The challenge promotes **Explainable AI (XAI)** — systems must not only be acc
 
 ### API Submission Format
 
+> 🚨 **STALE** — phần mô tả API + dataset count (5520 problems, Type1 464/913) bên dưới là bản CŨ. Spec + số liệu chuẩn ở **`docs/official_spec_gaps.md`** (API `/predict`, Type2 ~1354, Type1 411/808, deadline 12/06).
+
 Each team exposes an **HTTP API endpoint**. For every query, the endpoint must return:
 
 ```json
@@ -743,6 +745,8 @@ def sympy_solver_node(state: PipelineState) -> PipelineState:
 ---
 
 ### 6. API Schema
+
+> 🚨 **STALE — KHÔNG dùng schema dưới đây.** Đây là thiết kế NỘI BỘ cũ (`/query`, response 1 object). Spec BTC chính thức = `POST /predict`, response JSON **list** `{query_id, answer, unit(ASCII), explanation, premises_used, reasoning}`. **Nguồn chuẩn: `docs/official_spec_gaps.md` + `CLAUDE.md` §"API Schema — OFFICIAL".**
 
 #### Request
 ```json

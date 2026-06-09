@@ -2,31 +2,58 @@
 
 **Branch:** `feature/triet/structure`  
 **Last updated:** 2026-06-07  
-**Competition deadline:** June 10, 2026 (dời từ May 30)
+**Competition deadline:** **June 12, 2026** (gia hạn — Submission Guide §7; trước đó May 30 → Jun 10 → Jun 12)
 
 > Đây là file **session handoff** — đọc TRƯỚC khi nối tiếp việc qua chat session mới.
 > Worklist sống ở `docs/TODO.md`; reference Track-2 ở `docs/track2_reference.md`.
 
 ---
 
-## 0. Trạng thái hiện tại (2026-06-07) — verify theo codebase
+## 0. TỔNG HỢP TOÀN CẢNH (2026-06-07) — đọc cái này TRƯỚC
 
-**✅ Đã xong (Track 2 pipeline đầy đủ + evaluable):**
-- **Solvers:** `vector_solver` A–F (LD/DT Coulomb/E-field), `resonance_solver` (CHLT Yes/No), `error_solver` (THCB: ±, true-vs-measured, least-count, mean, **error propagation product/quotient + sum/diff** F-045/046), `sympy_solver` dispatch đầy đủ 10 question-type + `vector_solver`/`llm_fallback` chaining.
-- **Multi-formula chaining:** `formula_rag.build_formula_chain()` (dependency closure theo LHS + bridge ω=2πf). E2E RLC `Z` từ {R,L,C,f} → 136.85 ✓.
-- **Formula DB:** 20 → **53 formula**, domain canonical (5 domain), FAISS rebuild 53 vec, 53/53 valid.
-- **U/V convention:** chuẩn hóa `U`=hiệu điện thế, `V`=điện thế (VN curriculum) — DB + regex + prompt + bỏ alias runtime.
-- **Classifier:** 5 domain + 10 question-type (8 prefix). **LLM profile** dev(llama.cpp)/prod(vLLM) qua `config.yaml` + `llm_server_available()` health-check.
-- **Eval harness (P2 — teammate):** `evaluation/` + `scripts/evaluate.py` + `tests/test_eval.py` (18 test pass). Demo 50 câu = 89.66%.
-- **`openai` 2.38.0** đã cài trong venv. **Tests 48/48** (`tests/test_type2.py`).
+> Nguồn trạng thái chuẩn = §0 này + `docs/TODO.md` (worklist chi tiết + weakness tracker).
+> §1–7 bên dưới là handoff CŨ (2026-05-29), giữ làm lịch sử — đừng tin số liệu cũ ở đó.
 
-**🔲 Chưa xong (xem `docs/TODO.md`):**
-- **vLLM FP16 trên VPS** (BẮT BUỘC trước nộp — dev đang llama.cpp GGUF, alias không verify được). Mục §3/§4-P1 dưới đây mô tả setup; **vẫn chưa chạy**.
-- Đo eval **full 1,352 bài** (mới đo subset).
-- Mạch multi-answer trong THCB (multi-find + topology); weakness #5 (fuzzy match), #8d (qualitative).
-- Commit cụm thay đổi 2026-06-02…07.
+### ✅ ĐÃ LÀM ĐƯỢC (Track 2 pipeline đầy đủ + evaluable, no-LLM chạy được)
 
-> ⚠️ Các mục P1–P6 ở §4 bên dưới là handoff CŨ (2026-05-29). Nhiều mục đã xong (P2/P4/P5/P6 ✅, formula DB P3 phần lớn xong); giữ lại làm lịch sử. **Nguồn trạng thái chuẩn = §0 này + `docs/TODO.md`.**
+**Solvers (dispatch đầy đủ trong `sympy_solver_node`):**
+- `vector_solver` A–F — LD/DT Coulomb + E-field (verify LD030 ✓).
+- `resonance_solver` — CHLT Yes/No (f₀=1/(2π√LC)), guard domain+L/C/f.
+- `error_solver` — THCB sai số: ±, true-vs-measured, least-count, mean/random (max-dev), **error propagation** (product/quotient δZ=ΣδAᵢ, sum/diff ΔZ=ΣΔAᵢ), **measurement multi-answer** (mean+error, abs+rel → `;`).
+- `circuit_solver` (MỚI) — mạch song song: I_i=U/R_i, R_p, I_total=ΣI, P, KCL; multi-find local; guard `parallel/lamp/bulb` (tránh hijack CH series).
+- `_solve_multi_step` + `formula_rag.build_formula_chain()` — chain đa công thức (closure theo LHS + bridge ω=2πf). E2E RLC Z=136.85 ✓.
+
+**Symbol convention (chuẩn chương trình VN):**
+- `U`=hiệu điện thế, `V`=điện thế (V=k*q/r); `Z_L`=cảm kháng, `Z_C`=dung kháng, `Z`=tổng trở. Áp ở DB + `regex_extract` (canonicalize) + prompt + `_SYMBOL_ALIASES` (Z_L↔X_L, Z_C↔X_C cho input ngoại).
+
+**Knowledge + classifier:**
+- Formula DB **53** (5 domain canonical), FAISS rebuild, 53/53 valid.
+- Classifier 5 domain + 10 question-type; cue `"resona"` route CH resonance đúng ac_circuits (CH ac 200→231, CHLT 14→20).
+- LLM profile dev(llama.cpp)/prod(vLLM) qua `config.yaml` + `llm_server_available()` health-check. `openai 2.38.0` đã cài.
+
+**Eval harness (P2, teammate):** `evaluation/` + `scripts/evaluate.py` + `tests/test_eval.py`. Chạy: `demo_type2.py --output X.json` → `evaluate.py --pred X --truth <csv>` → `reports/`.
+
+**Kết quả eval no-LLM floor (full 1352, 2026-06-07):** Accuracy **72.06%** (276/383 evaluable). By-prefix: LD 80% · THCB **96%** · CH 62% · CHLT 25% · DT/TD/DDT thấp (extraction/LLM). Tests **56/56** (`tests/test_type2.py`). *(no-LLM = sàn bi quan; nhiều câu chờ LLM lấp given.)*
+
+### 🔲 CHƯA LÀM
+- **🚨 [CRITICAL] Rebuild API layer theo spec chính thức BTC** — endpoint `POST /predict` (1 endpoint, route bằng field `type`), response là **JSON list** `{query_id, answer, unit(ASCII), explanation, premises_used, reasoning}`. Code `api/` hiện tại theo schema CŨ, KHÔNG khớp. **Đọc `docs/official_spec_gaps.md`** (phân tích đầy đủ từ `docs/context/` PDF). Deadline **12/06** (không phải 10/06).
+- **vLLM FP16 trên VPS — BẮT BUỘC trước nộp.** Dev đang llama.cpp GGUF (alias không verify được → không hợp lệ). Setup ở §4-P1. → rồi mới chạy được bản nộp.
+- **Đo eval full `--use-llm`** (mới đo no-LLM floor + subset 50 câu LLM). Cần sau khi vLLM lên.
+- **Qualitative (#8d)** — NL/DDT/THCB định tính (THCB071/073/081/083…) → LLM, chưa xử lý.
+- **CH226-245** (mạch AB series, LCω²=1) — route đúng ac_circuits rồi nhưng cần reasoning "Z_L=Z_C triệt tiêu" → vẫn cần LLM.
+- **Commit** — toàn bộ thay đổi 2026-06-02…07 còn ở working tree (user tự commit).
+
+### 🎯 MUỐN CẢI TIẾN (next, ưu tiên giảm dần)
+1. **Chạy full `--use-llm` + eval** sau khi có vLLM → đo "bung" thật (routing CH/CHLT + circuit phrasal kỳ vọng tăng mạnh khi LLM lấp given).
+2. **Circuit phrasal extraction** (regex Ω/V cho "8Ω lamp", "voltage of 8V") — cứng-hóa no-LLM floor cho ~10 câu THCB circuit (hiện given={} không LLM). Optional vì LLM augment che.
+3. **Retrieval P1** — query FAISS chọn nhầm giữa 16 formula ac_circuits; thêm keywords doc (formula_rag_review §2). Đo bằng eval harness trước.
+4. **2 unit-eval scripts** (teammate, spec `docs/teammates/evaluation_scripts_proposal.md`): `evaluate_rag.py` + `evaluate_classifier.py` — khoanh vùng lỗi RAG vs classifier vs solver.
+5. **Edge nhỏ** (KHÔNG overfit): THCB110/128 (wording/mean lệch — có thể lỗi dataset), verb-map generic "reactance"→Z_L mặc định.
+
+### Nguyên tắc làm việc (giữ xuyên suốt)
+- Dataset có ~vài chục câu sai → **implement tổng thể, KHÔNG overfit từng sample**; phân tích case sai (pipeline vs dataset) ở bước cuối.
+- LLM chỉ **trích (parser) + fallback (CoT/code)** — KHÔNG để LLM tự tính (PAL: symbolic lo phép toán).
+- Mọi cải tiến lớn: **đo eval trước/sau** để xác nhận net gain + 0 regression.
 
 ---
 
