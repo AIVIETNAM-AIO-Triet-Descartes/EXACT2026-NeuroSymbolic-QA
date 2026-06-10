@@ -30,6 +30,7 @@ Thumbs.db
 *.safetensors
 *.pt
 *.pth
+models/
 
 # Logs & outputs
 logs/
@@ -41,6 +42,9 @@ results/
 .cache/
 *.pkl
 *.pickle
+data/train/
+data/eval/
+checkpoints/
 
 # Jupyter
 .ipynb_checkpoints/
@@ -49,5 +53,13 @@ results/
 .env
 .env.local
 
-# evaluate
+# Docs
+docs/SKILLS.md
+docs/APPROACHES.md
+docs/SETUP.md
+docs/exact2026_pipeline.mermaid
+
+# Misc
+.pytest_cache/
+.ruff_cache/
 evaluate/*

@@ -1,0 +1,20 @@
+llm:
+  model_name: "Qwen/Qwen2.5-7B-Instruct"
+  model_path: "./models/qwen2.5-7b"
+  device: "cuda"           # cuda | cpu | mps
+  max_new_tokens: 1024
+  temperature: 0.1
+  do_sample: false         # deterministic output preferred for competition
+
+pipeline:
+  z3_timeout: 5            # seconds before Z3 fallback
+  sympy_timeout: 10
+  retry_attempts: 2
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+
+logging:
+  level: "INFO"
+  format: "json"
