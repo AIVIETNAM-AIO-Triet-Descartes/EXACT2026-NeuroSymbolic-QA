@@ -1,11 +1,68 @@
-.venv/
+# Python
 __pycache__/
-*.pyc
-.env
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Models (large files)
+*.gguf
+*.bin
+*.safetensors
+*.pt
+*.pth
 models/
+
+# Logs & outputs
+logs/
+output/
+results/
+*.log
+
+# Data cache
+.cache/
+*.pkl
+*.pickle
 data/train/
 data/eval/
 checkpoints/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment
+.env
+.env.local
+
+# Docs
+docs/SKILLS.md
+docs/APPROACHES.md
+docs/SETUP.md
+docs/exact2026_pipeline.mermaid
+
+# Misc
+.pytest_cache/
+.ruff_cache/
+evaluate/*
 *.egg-info/
 .pytest_cache/
 .ruff_cache/

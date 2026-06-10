@@ -12,11 +12,11 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.preprocessor.fol_normalizer import FOLNormalizer, FOLStyle
-from src.preprocessor.question_classifier import (
+from pipeline.type1.fol_normalizer import FOLNormalizer, FOLStyle
+from pipeline.type1.question_classifier import (
     QuestionClassifier, QuestionType, detect_answer_type,
 )
-from src.reasoning.logic_tree import LogicTree, FOLPremiseParser
+from pipeline.type1.logic_tree import LogicTree, FOLPremiseParser
 
 
 def test_fol_normalizer():

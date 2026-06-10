@@ -7,14 +7,15 @@ pydantic>=2.0.0
 z3-solver>=4.13.0
 sympy>=1.12
 
-# LLM inference — gọi qua vLLM OpenAI-compatible server
-# Serve: vllm serve Qwen/Qwen2.5-7B-Instruct --port 8000  (Linux/WSL2)
-openai>=1.30.0
+# Logic / Grammar
+lark>=1.1.9
 
-# Transformers (dùng cho tokenizer, classifier, không inference trực tiếp)
+# LLM inference
+openai>=1.30.0
 transformers>=4.40.0
 accelerate>=0.27.0
 torch>=2.2.0
+llama-cpp-python>=0.2.56
 
 # Fine-tuning (optional)
 peft>=0.10.0
@@ -30,10 +31,16 @@ faiss-cpu>=1.8.0
 langchain>=0.2.0
 langchain-community>=0.2.0
 
+# Evaluation & Analysis
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+tqdm>=4.66.1
+
 # Utilities
 python-dotenv>=1.0.0
 pyyaml>=6.0
 httpx>=0.27.0
 tenacity>=8.2.0
 loguru>=0.7.0
-tqdm>=4.66.1
+rich>=13.7.0
