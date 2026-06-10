@@ -150,7 +150,7 @@ class Z3Translator:
         This method constructs Z3 Python code programmatically from the
         parsed FOL, executes it, and returns the result.
         """
-        from src.preprocessor.fol_normalizer import FOLNormalizer
+        from pipeline.type1.fol_normalizer import FOLNormalizer
 
         normalizer = FOLNormalizer()
         norm_list = normalizer.normalize_batch(premises_fol)

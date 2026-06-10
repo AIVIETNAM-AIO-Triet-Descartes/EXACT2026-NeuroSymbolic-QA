@@ -33,15 +33,15 @@ from dataclasses import dataclass, field, asdict
 from loguru import logger
 from tqdm import tqdm
 
-from src.preprocessor.fol_normalizer import FOLNormalizer
-from src.preprocessor.question_classifier import (
+from pipeline.type1.fol_normalizer import FOLNormalizer
+from pipeline.type1.question_classifier import (
     QuestionClassifier, QuestionType, detect_answer_type,
 )
-from src.reasoning.logic_tree import LogicTree
-from src.reasoning.z3_solver import (
+from pipeline.type1.logic_tree import LogicTree
+from pipeline.type1.z3_solver import (
     Z3Translator, EntailmentChecker, execute_z3_code,
 )
-from src.llm.llm_reasoner import LLMReasoner, create_reasoner
+from llm.llm_reasoner import LLMReasoner, create_reasoner
 
 
 # ══════════════════════════════════════════════════════════════

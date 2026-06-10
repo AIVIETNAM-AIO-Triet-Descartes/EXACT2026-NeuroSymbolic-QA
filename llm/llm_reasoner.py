@@ -16,7 +16,7 @@ import os
 from typing import Optional, Dict, List
 from loguru import logger
 
-from src.llm.prompt_templates import (
+from llm.prompt_templates import (
     SYSTEM_PROMPT_LOGIC,
     SYSTEM_PROMPT_Z3,
     EXPLANATION_PROMPT,
