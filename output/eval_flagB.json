@@ -1,0 +1,102 @@
+[
+    {
+        "id": "TD401",
+        "answer": "0.045",
+        "source": "sympy"
+    },
+    {
+        "id": "TD402",
+        "answer": "0.0001",
+        "source": "sympy"
+    },
+    {
+        "id": "LD001",
+        "answer": "0.0489056",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD002",
+        "answer": "0.0244218",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD003",
+        "answer": "6.7529",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD004",
+        "answer": "0.00417914",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD005",
+        "answer": "1.55711e-26",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD006",
+        "answer": "0.00123034",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD007",
+        "answer": "17.2608",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD008",
+        "answer": "7",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD009",
+        "answer": "8.66025",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD010",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD011",
+        "answer": "5",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD012",
+        "answer": "0.389278",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD013",
+        "answer": "10",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD014",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD015",
+        "answer": "15.1327",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD016",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD017",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD018",
+        "answer": "",
+        "source": "llm_fallback"
+    }
+]

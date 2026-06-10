@@ -22,23 +22,29 @@ import re
 from typing import Optional
 
 # ── SI unit conversion table (prefix+base → SI factor) ────────────────────────
+# Micro prefix is keyed ASCII "u" ONLY (μF → uF). Both Unicode micro glyphs
+# (μ U+03BC greek mu, µ U+00B5 micro sign) are normalized to "u" by
+# _unit_factor() before lookup, so an input may use μF / µF / uF interchangeably
+# and resolve to the single canonical key. This kills the old dual-maintenance
+# bug class where μV existed but uV did not (silent 1e6 error). Ω stays Unicode
+# here (the table is Ω-keyed: Ω/kΩ/MΩ); ASCII-ohm is an OUTPUT concern (units.py).
 _UNIT_FACTORS: dict[str, float] = {
     # Capacitance
-    "pF": 1e-12, "nF": 1e-9, "μF": 1e-6, "uF": 1e-6, "mF": 1e-3, "F": 1.0,
+    "pF": 1e-12, "nF": 1e-9, "uF": 1e-6, "mF": 1e-3, "F": 1.0,
     # Resistance
     "mΩ": 1e-3, "Ω": 1.0, "kΩ": 1e3, "MΩ": 1e6,
     # Current
-    "μA": 1e-6, "uA": 1e-6, "mA": 1e-3, "A": 1.0, "kA": 1e3,
+    "uA": 1e-6, "mA": 1e-3, "A": 1.0, "kA": 1e3,
     # Voltage
-    "μV": 1e-6, "mV": 1e-3, "V": 1.0, "kV": 1e3,
+    "uV": 1e-6, "mV": 1e-3, "V": 1.0, "kV": 1e3,
     # Power
-    "μW": 1e-6, "mW": 1e-3, "W": 1.0, "kW": 1e3, "MW": 1e6,
+    "uW": 1e-6, "mW": 1e-3, "W": 1.0, "kW": 1e3, "MW": 1e6,
     # Energy
-    "μJ": 1e-6, "mJ": 1e-3, "J": 1.0, "kJ": 1e3,
+    "uJ": 1e-6, "mJ": 1e-3, "J": 1.0, "kJ": 1e3,
     # Charge
-    "nC": 1e-9, "μC": 1e-6, "uC": 1e-6, "mC": 1e-3, "C": 1.0,
+    "nC": 1e-9, "uC": 1e-6, "mC": 1e-3, "C": 1.0,
     # Inductance
-    "μH": 1e-6, "mH": 1e-3, "H": 1.0,
+    "uH": 1e-6, "mH": 1e-3, "H": 1.0,
     # Length (for distance-based formulas)
     "mm": 1e-3, "cm": 1e-2, "m": 1.0, "km": 1e3,
     # Frequency
@@ -46,6 +52,14 @@ _UNIT_FACTORS: dict[str, float] = {
     # Force
     "N": 1.0,
 }
+
+
+def _unit_factor(unit_str: str) -> float:
+    """SI factor for a unit token. Normalizes the micro prefix (μ/µ → u) so the
+    Unicode and ASCII spellings share one canonical key. Unknown unit → 1.0
+    (numeric still extracted; only the prefix scaling is lost)."""
+    u = unit_str.replace("μ", "u").replace("µ", "u")
+    return _UNIT_FACTORS.get(u, 1.0)
 
 # Voltage symbol convention (Vietnamese curriculum):
 #   U = hiệu điện thế (potential difference / voltage)  ← canonical in the RAG DB
@@ -196,7 +210,7 @@ def extract_given(question: str) -> dict[str, float]:
         if exp_str:
             val *= 10 ** int(exp_str.replace("−", "-"))
 
-        val_si = val * _UNIT_FACTORS.get(unit_str, 1.0)
+        val_si = val * _unit_factor(unit_str)
         given[sym] = val_si
 
     # "X cm apart" / "separated by X cm" → AB separation distance
@@ -223,7 +237,7 @@ def extract_given(question: str) -> dict[str, float]:
         exp_str = m.group(3)
         unit_str = m.group(4) or ""
         val = mantissa * (10 ** int(exp_str.replace("−", "-")) if exp_str else 1)
-        val_si = val * _UNIT_FACTORS.get(unit_str, 1.0)
+        val_si = val * _unit_factor(unit_str)
         for sym in re.findall(r'[A-Za-z_]\w*', syms_part):
             given[sym] = val_si
 
@@ -234,7 +248,7 @@ def extract_given(question: str) -> dict[str, float]:
         exp = int(m.group(3))
         unit_str = m.group(4) or ""
         sign = -1.0 if mantissa < 0 else 1.0
-        val_si = sign * (abs(mantissa) ** exp) * _UNIT_FACTORS.get(unit_str, 1.0)
+        val_si = sign * (abs(mantissa) ** exp) * _unit_factor(unit_str)
         given[sym] = val_si
 
     # Negated chain: "q1 = -q2 = 10^-7 C" → q1=+1e-7, q2=-1e-7
@@ -251,7 +265,7 @@ def extract_given(question: str) -> dict[str, float]:
             val = mantissa * (10 ** int(sci_exp.replace("−", "-")))
         else:
             val = mantissa
-        val_si = val * _UNIT_FACTORS.get(unit_str, 1.0)
+        val_si = val * _unit_factor(unit_str)
         given[sym_pos] = val_si
         given[sym_neg] = -val_si
 

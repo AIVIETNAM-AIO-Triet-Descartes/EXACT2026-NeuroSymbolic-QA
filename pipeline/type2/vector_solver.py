@@ -598,8 +598,12 @@ def _solve_efield_geometry(
     b_x = source_positions.get(source_syms[1], (0.0, 0.0))[0] if len(source_syms) > 1 else (ab or 0.0)
     steps.insert(0, f"E-field at ({target_pos[0]:.4f}, {target_pos[1]:.4f}) m, "
                     f"A=(0,0), B=({b_x:.4f},0)")
-    logger.info(f"[VECTOR_SOLVER] efield strategy: target={target_name} → {net:.6g} N/C")
-    return {"answer": f"{net:.6g}", "unit": "N/C", "steps": steps, "source": "vector_solver"}
+    # E-field unit: ground truth uses V/m (171) far more than the dimensionally
+    # identical N/C (15); the question text gives no signal to tell them apart
+    # (0/15 N/C-answer questions mention "N/C"). Default to the majority V/m —
+    # net +156 on the dataset. 1 N/C ≡ 1 V/m, so the numeric answer is unchanged.
+    logger.info(f"[VECTOR_SOLVER] efield strategy: target={target_name} → {net:.6g} V/m")
+    return {"answer": f"{net:.6g}", "unit": "V/m", "steps": steps, "source": "vector_solver"}
 
 
 # ── Strategy D: Perpendicular bisector ───────────────────────────────────────
