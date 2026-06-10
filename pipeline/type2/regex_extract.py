@@ -165,12 +165,53 @@ _NEG_CHAIN_PAT = re.compile(
     r'\s*([μuμnmkMGp]?[A-Z\xd6a-z]{1,4})?'
 )
 
+# Expression-valued assignment (fraction / sqrt / mixed scientific) that the
+# plain decimal _ASSIGN_PAT cannot represent, e.g. "q = (1)/(3) × 10^-6 C",
+# "q = 9*sqrt(3)×10^-27 C", "F = √3 N". The value blob is a run of math tokens
+# (digits, operators, parens, sqrt, √); a trailing alphabetic unit is captured
+# separately. The blob is validated by SymPy in _eval_value_expr — an over-greedy
+# or garbage capture simply fails to evaluate to a finite real and is dropped
+# (safe). Only used when the value carries an expression marker (see _EXPR_MARKERS)
+# so it never steals plain numerics from _ASSIGN_PAT.
+_EXPR_ASSIGN_PAT = re.compile(
+    r'\b([A-Za-z_]\w*)\s*=\s*'
+    r'((?:sqrt|[\d.+\-*/()^×x√])(?:sqrt|[\d.\s+\-*/()^×x√])*)'  # math blob
+    r'\s*([μuµnmkMGp]?[A-Za-zΩ]{1,4})?'                          # optional unit
+)
+_EXPR_MARKERS = ('(', ')', '/', 'sqrt', '√')
+
 # Unicode superscript digits/minus → ASCII helper
 _SUP_TABLE = str.maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺', '0123456789-+')
 
 
 def _normalize_superscripts(text: str) -> str:
     return text.translate(_SUP_TABLE)
+
+
+def _eval_value_expr(expr: str) -> Optional[float]:
+    """
+    Evaluate a math-expression value (fraction / sqrt / scientific) to a float via
+    SymPy — deterministic, NO LLM. Notation is normalized to SymPy form first
+    (√→sqrt, ^→**, ×·→*). Returns None unless the expression resolves to a finite
+    real with no free symbols, so a garbage capture is safely dropped rather than
+    poisoning the solver. Keeps the symbolic math in SymPy (PAL): the LLM never
+    does the arithmetic.
+    """
+    s = _normalize_superscripts(expr).strip()
+    if not s or len(s) > 200:
+        return None
+    s = re.sub(r'√\s*\(', 'sqrt(', s)                      # √( → sqrt(
+    s = re.sub(r'√\s*(\d+(?:\.\d+)?)', r'sqrt(\1)', s)     # √3 → sqrt(3)
+    s = s.replace('×', '*').replace('·', '*').replace('^', '**')  # ^ is XOR in SymPy
+    s = re.sub(r'(?<=[\d).])\s*x\s*(?=[\d(])', '*', s)     # "3 x 10" → "3*10"
+    try:
+        from sympy import sympify
+        val = sympify(s, locals={})
+        if not val.free_symbols and val.is_real:
+            return float(val.evalf())
+    except Exception:
+        return None
+    return None
 
 
 def detect_find_from_verb(question: str) -> Optional[str]:
@@ -194,7 +235,8 @@ def extract_given(question: str) -> dict[str, float]:
     """
     Extract {symbol: SI_value} from question text via regex.
     Handles: C = 100 μF, q1 = 6 × 10^-8 C, chained and negated-chain assignments,
-    bare-power notation, and a few geometry distances (AB, side a, perpendicular).
+    bare-power notation, expression values evaluated by SymPy (q = (1)/(3)×10^-6 C,
+    F = 9*sqrt(3)×10^-27 N, √3), and a few geometry distances (AB, side, bisector).
     """
     given: dict[str, float] = {}
     # Normalize Unicode superscript chars (⁻⁸ → -8) before regex matching
@@ -212,6 +254,19 @@ def extract_given(question: str) -> dict[str, float]:
 
         val_si = val * _unit_factor(unit_str)
         given[sym] = val_si
+
+    # Expression-valued assignments (fraction / sqrt / mixed scientific) that the
+    # plain decimal pattern above cannot represent. SymPy-evaluated, deterministic.
+    # Only fires when the value carries an expression marker — plain numerics are
+    # left to _ASSIGN_PAT, so this adds no regression on the common case.
+    for m in _EXPR_ASSIGN_PAT.finditer(question):
+        raw_val = m.group(2)
+        if not any(mk in raw_val for mk in _EXPR_MARKERS):
+            continue
+        val = _eval_value_expr(raw_val)
+        if val is None:
+            continue
+        given[m.group(1)] = val * _unit_factor(m.group(3) or "")
 
     # "X cm apart" / "separated by X cm" → AB separation distance
     for m in _APART_PAT.finditer(question):

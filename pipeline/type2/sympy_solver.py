@@ -29,6 +29,9 @@ _UNIT_MAP: dict[str, str] = {
     "E": "J", "C": "F", "Q": "C", "F": "N",
     "f": "Hz", "L": "H", "B": "T",
     "R_total": "Ω", "R1": "Ω", "R2": "Ω", "R3": "Ω",
+    # E_field is produced by vector_solver (Strategy F), not this scalar path,
+    # but map it too for safety so any future SymPy route emits a consistent unit.
+    "E_field": "V/m",
 }
 
 
