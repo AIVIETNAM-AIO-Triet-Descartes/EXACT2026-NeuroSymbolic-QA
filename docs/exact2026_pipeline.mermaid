@@ -1,0 +1,116 @@
+flowchart TD
+    %% ─── INPUT ───
+    REQ(["🌐 HTTP Request\n{ question, premises? }"])
+
+    %% ─── LAYER 1: API Gateway ───
+    GW["① API Gateway\nFastAPI + Uvicorn\nValidate & parse JSON"]
+
+    %% ─── LAYER 2: Router ───
+    ROUTER{"② Router Agent\nClassify query type"}
+    R_COND{"premises\npresent?"}
+    R_KW{"physics\nkeywords?"}
+
+    %% ─── TRACK 1 ───
+    subgraph TRACK1["🧠 TRACK 1 — Logic / Educational QA (Type 1)"]
+        direction TB
+        T1_PARSE["③a Text Parser Agent\nLLM ≤ 8B\nNL premises → FOL"]
+        T1_EVAL{"④a Logic Evaluator\nCheck FOL syntax\nRetry ≤ 3×"}
+        T1_RAG["④a Fallback\nRAG + LLM reasoning\nwith raw premises-NL"]
+        T1_Z3["⑤a Z3 Solver\nProve / disprove\neach answer option\n→ answer + proof_steps"]
+    end
+
+    %% ─── TRACK 2 ───
+    subgraph TRACK2["⚡ TRACK 2 — Physics Computation (Type 2)"]
+        direction TB
+
+        T2_PARSE["③b Physics Parser Node\n╔ Stage 1 — Regex pre-pass (no LLM) ╗\n  extract {symbol=value} → SI convert\n╔ Stage 2 — LLM augment (best-effort) ╗\n  fill gaps + formula hints\n  (skipped if vLLM server DOWN)\n─────────────────────────────────\nPhysicsClassifier (rule-based, inline):\n  domain: circuits / electrostatics /\n          electromagnetism / ac_circuits /\n          measurement\n  question_type: 10 PhysicsQuestionType\n  target_variable: E, R, I, f …"]
+
+        T2_RAG["④b Formula RAG\nLayer 1: exact domain + find-in-variables\nLayer 2: FAISS semantic search\n+ build_formula_chain() dependency closure\n+ alias injection (U↔V, ω↔f)\n→ ordered formula list"]
+
+        T2_SOLVER_DISPATCH{"⑤b Solver Dispatch\n(sympy_solver_node)"}
+
+        T2_RESONANCE["YES_NO\n+ domain=ac_circuits\n+ L,C,f present\n→ resonance_solver\nf₀=1/(2π√LC)\nconf=1.0"]
+
+        T2_ERROR["ERROR_CALC\nMULTI_ANSWER\n→ error_solver\nabs/rel/propagation\nmulti ';'-join\nconf=1.0"]
+
+        T2_SYMPY["SINGLE_FORMULA\nCIRCUIT\nELECTROSTATIC\nMULTI_STEP\nELECTROMAGNETIC (alias)\n→ SymPy Solver\n_solve_single / _solve_multi_step\nconf=1.0"]
+
+        T2_VEC["⑤b Vector Solver fallback\nCoulomb multi-charge + 2D geometry\nvector_solver.py\n(called when SymPy → llm_fallback)"]
+
+        T2_LLM_FALLBACK["⑤b LLM CoT fallback\nsolve_physics_cot()\nYES_NO(non-resonance) / QUALITATIVE\n+ any solver failure\nconf=0.5  source=llm_cot|llm_fallback"]
+
+        T2_VAL["⑥b Self-Verifier\ntype2_validation\nFiniteness + physical constraints\nis_valid=False → confidence=0.4\n(never blocks pipeline)"]
+
+        T2_COT["⑥c CoT Builder\nFormat steps → numbered list\nPure string formatting, no LLM"]
+    end
+
+    %% ─── SHARED ENDING ───
+    EXPLAIN["⑦ Explainer Agent\nLLM ≤ 8B — llm_server_available() guard\nGenerate NL explanation\nfallback: 'The answer is X Y.'"]
+    BUILDER["⑧ Response Builder\nAssemble JSON\nper API schema"]
+    RESP(["📤 HTTP Response\n{ answer✅, explanation✅,\nfol?, cot?, premises?, confidence? }"])
+
+    %% ─── FLOW ───
+    REQ --> GW
+    GW -->|"Valid"| ROUTER
+    GW -->|"Invalid schema"| ERR422(["HTTP 422"])
+
+    ROUTER --> R_COND
+    R_COND -->|"Yes"| TRACK1
+    R_COND -->|"No"| R_KW
+    R_KW -->|"Match"| TRACK2
+    R_KW -->|"No match\n(default fallback)"| TRACK1
+
+    %% Track 1 internal
+    TRACK1 --> T1_PARSE
+    T1_PARSE --> T1_EVAL
+    T1_EVAL -->|"✅ Valid FOL"| T1_Z3
+    T1_EVAL -->|"🔁 Retry (fol_retries < 3)"| T1_PARSE
+    T1_EVAL -->|"❌ fol_retries ≥ 3"| T1_RAG
+    T1_Z3 --> EXPLAIN
+    T1_RAG --> EXPLAIN
+
+    %% Track 2 internal
+    TRACK2 --> T2_PARSE
+    T2_PARSE --> T2_RAG
+    T2_RAG --> T2_SOLVER_DISPATCH
+
+    T2_SOLVER_DISPATCH -->|"YES_NO\n+ ac_circuits\n+ L,C,f"| T2_RESONANCE
+    T2_SOLVER_DISPATCH -->|"ERROR_CALC\nMULTI_ANSWER"| T2_ERROR
+    T2_SOLVER_DISPATCH -->|"SINGLE_FORMULA\nCIRCUIT\nELECTROSTATIC\nMULTI_STEP\nELECTROMAGNETIC"| T2_SYMPY
+    T2_SOLVER_DISPATCH -->|"YES_NO (other)\nQUALITATIVE"| T2_LLM_FALLBACK
+
+    T2_SYMPY -->|"✅ Solved"| T2_VAL
+    T2_SYMPY -->|"❌ source=llm_fallback"| T2_VEC
+    T2_VEC -->|"✅ Vector solved"| T2_VAL
+    T2_VEC -->|"❌ Still failed"| T2_LLM_FALLBACK
+
+    T2_RESONANCE --> T2_VAL
+    T2_ERROR --> T2_VAL
+    T2_LLM_FALLBACK --> T2_COT
+
+    T2_VAL -->|"confidence adjusted"| T2_COT
+
+    T2_COT --> EXPLAIN
+
+    %% Shared ending
+    EXPLAIN -->|"✅ OK or server DOWN fallback"| BUILDER
+    BUILDER --> RESP
+
+    %% ─── STYLES ───
+    classDef gateway fill:#4A90D9,stroke:#2C5F8A,color:#fff,rx:8
+    classDef router fill:#E8A838,stroke:#B07820,color:#fff
+    classDef track1 fill:#6DB33F,stroke:#4A8A28,color:#fff
+    classDef track2 fill:#9B59B6,stroke:#7D3C98,color:#fff
+    classDef shared fill:#E74C3C,stroke:#C0392B,color:#fff
+    classDef fallback fill:#95A5A6,stroke:#7F8C8D,color:#fff
+    classDef io fill:#2ECC71,stroke:#27AE60,color:#fff
+    classDef solver fill:#1ABC9C,stroke:#148F77,color:#fff
+
+    class GW gateway
+    class ROUTER,R_COND,R_KW,T2_SOLVER_DISPATCH router
+    class T1_PARSE,T1_EVAL,T1_Z3,T1_RAG track1
+    class T2_PARSE,T2_RAG,T2_SYMPY,T2_VEC,T2_VAL,T2_COT track2
+    class T2_RESONANCE,T2_ERROR solver
+    class T2_LLM_FALLBACK,FB_LLM fallback
+    class EXPLAIN,BUILDER shared
+    class REQ,RESP,ERR422 io

@@ -1,0 +1,6762 @@
+[
+    {
+        "id": "TD401",
+        "answer": "0.045",
+        "source": "sympy"
+    },
+    {
+        "id": "TD402",
+        "answer": "0.0001",
+        "source": "sympy"
+    },
+    {
+        "id": "LD001",
+        "answer": "0.0489056",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD002",
+        "answer": "0.0244218",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD003",
+        "answer": "6.7529",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD004",
+        "answer": "0.00417914",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD005",
+        "answer": "1.55711e-26",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD006",
+        "answer": "0.00123034",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD007",
+        "answer": "17.2608",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD008",
+        "answer": "7",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD009",
+        "answer": "8.66025",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD010",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD011",
+        "answer": "5",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD012",
+        "answer": "0.389278",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD013",
+        "answer": "10",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD014",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD015",
+        "answer": "15.1327",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD016",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD017",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD018",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD019",
+        "answer": "7.2111",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD020",
+        "answer": "120",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD021",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD022",
+        "answer": "14.384",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD023",
+        "answer": "6",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD024",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD025",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD026",
+        "answer": "0.1798",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD027",
+        "answer": "0.0302064",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD028",
+        "answer": "0.0276173",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD029",
+        "answer": "0.04495",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD030",
+        "answer": "0.0007192",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD031",
+        "answer": "0.112375",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD032",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD033",
+        "answer": "0.000839067",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD034",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD035",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD036",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD037",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD038",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD039",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD040",
+        "answer": "15",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD041",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD042",
+        "answer": "50.5687",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD043",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD044",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD045",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD046",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD047",
+        "answer": "11.0082",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD048",
+        "answer": "10.788",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD049",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD050",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD051",
+        "answer": "639289",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD052",
+        "answer": "350891",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD053",
+        "answer": "3.12153e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD054",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD055",
+        "answer": "0.701782",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD056",
+        "answer": "3.35967e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD057",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD058",
+        "answer": "6.40088e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD059",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD060",
+        "answer": "17980",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD061",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD062",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD063",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD064",
+        "answer": "4994.44",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD065",
+        "answer": "4994.44",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD066",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD067",
+        "answer": "2.1576e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD068",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD069",
+        "answer": "8990",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD070",
+        "answer": "449500",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD071",
+        "answer": "199778",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD072",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD073",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD074",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD075",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD076",
+        "answer": "206877",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD077",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD078",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD079",
+        "answer": "0",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD080",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD081",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD082",
+        "answer": "389278",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD083",
+        "answer": "956.043",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD084",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD085",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD086",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD087",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD088",
+        "answer": "36859",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD089",
+        "answer": "36859",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD090",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD091",
+        "answer": "431520",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD092",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD094",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD095",
+        "answer": "0",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD096",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD097",
+        "answer": "3.74583e+07",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD098",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD099",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD100",
+        "answer": "4.42131e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "TD001",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD002",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD003",
+        "answer": "2.25e-05",
+        "source": "sympy"
+    },
+    {
+        "id": "TD004",
+        "answer": "2.25e-05",
+        "source": "sympy"
+    },
+    {
+        "id": "TD005",
+        "answer": "1.2e-09",
+        "source": "sympy"
+    },
+    {
+        "id": "TD006",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD007",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD008",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD009",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD010",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD011",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD012",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD013",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD014",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD015",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD016",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD017",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD018",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD019",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD020",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD021",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD022",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD023",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD024",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD025",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD026",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD027",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD028",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD029",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD030",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD031",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD032",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD033",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD034",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD035",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD036",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD037",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD038",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD039",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD040",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD041",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD042",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD043",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD044",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD045",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD046",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD047",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD048",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD049",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD050",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD051",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD052",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD053",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD054",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD055",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD056",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD057",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD058",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD059",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD060",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD061",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD062",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD063",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD064",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD065",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD066",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD067",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD068",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD069",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD070",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD071",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD072",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD073",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD074",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD075",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD076",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD077",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD078",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD079",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD080",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD081",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD082",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD083",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD084",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD085",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD086",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD087",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD088",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD089",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD090",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD091",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD092",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD093",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD094",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD095",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD096",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD097",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD098",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD099",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD100",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT001",
+        "answer": "3.49246e-10",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT002",
+        "answer": "639289",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT003",
+        "answer": "350891",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT004",
+        "answer": "0.701782",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT005",
+        "answer": "3.12153e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT006",
+        "answer": "3.35967e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT007",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT008",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT019",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT020",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT025",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT027",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT028",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT029",
+        "answer": "0.00899",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT030",
+        "answer": "0.00899",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT033",
+        "answer": "11.9867",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT034",
+        "answer": "11.9867",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT035",
+        "answer": "4.495e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT036",
+        "answer": "8.091",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT037",
+        "answer": "8.091",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT040",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT041",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT042",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT043",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT044",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT045",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT046",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT047",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT048",
+        "answer": "876.525",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT049",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT050",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT051",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT052",
+        "answer": "4994.44",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT053",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT054",
+        "answer": "2.1576e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT055",
+        "answer": "537.774",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT056",
+        "answer": "1.67441e+07",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT057",
+        "answer": "449500",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT058",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT059",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT060",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT061",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT062",
+        "answer": "1.24861e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT063",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT072",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT073",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT074",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT075",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT080",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT081",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT082",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT083",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT084",
+        "answer": "5.08551e+12",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT085",
+        "answer": "3.6859e+14",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT087",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT088",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT089",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT090",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT091",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT092",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT093",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT094",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT095",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT096",
+        "answer": "19977.8",
+        "source": "vector_solver"
+    },
+    {
+        "id": "DT097",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT098",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT099",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DT100",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD101",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD102",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD103",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD104",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD105",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD106",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD107",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD108",
+        "answer": "0.840713",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD109",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD110",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD111",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD112",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD113",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD114",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD115",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD116",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD117",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD118",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD119",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD120",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD121",
+        "answer": "8.60233",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD122",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD123",
+        "answer": "14.1264",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD124",
+        "answer": "0.00181385",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD125",
+        "answer": "7.54983",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD126",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD127",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD128",
+        "answer": "0.0028768",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD129",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD130",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD131",
+        "answer": "8.66025",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD132",
+        "answer": "11.2694",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD133",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD134",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD135",
+        "answer": "8.66025",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD136",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD137",
+        "answer": "0.115072",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD138",
+        "answer": "64.728",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD139",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD140",
+        "answer": "0.173013",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD141",
+        "answer": "9.48683",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD142",
+        "answer": "2.26731",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD143",
+        "answer": "7.54983",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD144",
+        "answer": "0.16182",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD145",
+        "answer": "0.0280937",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD146",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD147",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD148",
+        "answer": "10.4403",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD149",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD150",
+        "answer": "36.277",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD151",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD152",
+        "answer": "3.81413",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD153",
+        "answer": "7.93725",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD154",
+        "answer": "0.0978911",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD155",
+        "answer": "0.64728",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD156",
+        "answer": "12.8062",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD157",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD158",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD159",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD160",
+        "answer": "7.81025",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD161",
+        "answer": "11.1355",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD162",
+        "answer": "3.82683",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD163",
+        "answer": "15.5929",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD164",
+        "answer": "11.4018",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD165",
+        "answer": "8.25943",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD166",
+        "answer": "8.50088",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD167",
+        "answer": "13.2288",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD168",
+        "answer": "7.817",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD169",
+        "answer": "18.3544",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD170",
+        "answer": "8.88819",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD171",
+        "answer": "15.6205",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD172",
+        "answer": "4.3589",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD173",
+        "answer": "10.6283",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD174",
+        "answer": "6.9282",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD175",
+        "answer": "7",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD176",
+        "answer": "9.78329",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD177",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD178",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD179",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD180",
+        "answer": "8.60233",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD181",
+        "answer": "12.7671",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD182",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD183",
+        "answer": "5.56776",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD184",
+        "answer": "10.7037",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD185",
+        "answer": "7.87355",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD186",
+        "answer": "15.7162",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD187",
+        "answer": "8.69718",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD188",
+        "answer": "13.9057",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD189",
+        "answer": "14.6017",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD190",
+        "answer": "6.50849",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD191",
+        "answer": "15.5326",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD192",
+        "answer": "8.25943",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD193",
+        "answer": "8",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD194",
+        "answer": "8.25943",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD195",
+        "answer": "5.8945",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD196",
+        "answer": "11.1803",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD197",
+        "answer": "9.78329",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD198",
+        "answer": "9.36475",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD199",
+        "answer": "9.16515",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD200",
+        "answer": "10.1699",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD201",
+        "answer": "280.937",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD202",
+        "answer": "0.452873",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD203",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD204",
+        "answer": "9.10238",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD205",
+        "answer": "5.82552",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD206",
+        "answer": "0.226436",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD207",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD208",
+        "answer": "7.192",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD209",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD210",
+        "answer": "0.004495",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD211",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD212",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD213",
+        "answer": "0.0622845",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD214",
+        "answer": "0.0010171",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD215",
+        "answer": "0.565057",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD216",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD217",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD218",
+        "answer": "0.64728",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD219",
+        "answer": "0.0017122",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD220",
+        "answer": "0.000508551",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD221",
+        "answer": "19.9778",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD222",
+        "answer": "4.60288",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD223",
+        "answer": "0.127858",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD224",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD225",
+        "answer": "7.192",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD226",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD227",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD228",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD229",
+        "answer": "319.644",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD230",
+        "answer": "35.3161",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD231",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD232",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD233",
+        "answer": "6.79309",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD234",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD235",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD236",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD237",
+        "answer": "1.798",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD238",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD239",
+        "answer": "64.728",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD240",
+        "answer": "0.000622845",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD241",
+        "answer": "0.0319644",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD242",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD243",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD244",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD245",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD246",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD247",
+        "answer": "1.81149",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD248",
+        "answer": "0.494425",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD249",
+        "answer": "0.163246",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD250",
+        "answer": "1.798",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD251",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD252",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD253",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD254",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD255",
+        "answer": "0.0127138",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD256",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD257",
+        "answer": "0.07192",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD258",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD259",
+        "answer": "0.0020342",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD260",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD261",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD262",
+        "answer": "0.000254276",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD263",
+        "answer": "0.00199778",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD264",
+        "answer": "0.217662",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD265",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD266",
+        "answer": "0.0321636",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD267",
+        "answer": "352.408",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD268",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD269",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD270",
+        "answer": "179.8",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD271",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD272",
+        "answer": "2.26436",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD273",
+        "answer": "978.911",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD274",
+        "answer": "57.536",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD275",
+        "answer": "1.01137",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD276",
+        "answer": "9.10238",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD277",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD278",
+        "answer": "0.408116",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD279",
+        "answer": "2.7682",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD280",
+        "answer": "0.4495",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD281",
+        "answer": "0.027682",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD282",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD283",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD284",
+        "answer": "0.01798",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD285",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD286",
+        "answer": "582.552",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD287",
+        "answer": "1.02732",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD288",
+        "answer": "3.52408",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD289",
+        "answer": "0.01798",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD290",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD291",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD292",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD293",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD294",
+        "answer": "0.230158",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD295",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD296",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD297",
+        "answer": "1.83512e+07",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD298",
+        "answer": "8.13498e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD299",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD300",
+        "answer": "6.24819e+07",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD301",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD302",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD303",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD304",
+        "answer": "3.83661e+07",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD305",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD306",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD307",
+        "answer": "1.49217e+07",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD308",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD309",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD310",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD311",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD312",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD313",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD314",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD315",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD316",
+        "answer": "1.68464e+07",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD317",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD318",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD319",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD320",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD321",
+        "answer": "1.31541e+07",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD322",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD323",
+        "answer": "1.27669e+08",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD324",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD325",
+        "answer": "7.36961e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD326",
+        "answer": "1.27669e+08",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD327",
+        "answer": "4.35693e+07",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD328",
+        "answer": "3.28665e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD329",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD330",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD331",
+        "answer": "9.92063e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD332",
+        "answer": "8.13498e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD333",
+        "answer": "9.17249e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD334",
+        "answer": "9.92063e+06",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD335",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD336",
+        "answer": "1.49833e+07",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD337",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD338",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD339",
+        "answer": "16.8881",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD340",
+        "answer": "8.02982",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD341",
+        "answer": "12.586",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD342",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD343",
+        "answer": "8.05504",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD344",
+        "answer": "6.06825",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD345",
+        "answer": "3.05898",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD346",
+        "answer": "50.344",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD347",
+        "answer": "7.192",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD349",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD351",
+        "answer": "6.90432",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD352",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD353",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD354",
+        "answer": "6.75525",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD355",
+        "answer": "8.05504",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD356",
+        "answer": "11.4712",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD357",
+        "answer": "11.4712",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD358",
+        "answer": "6.06825",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD359",
+        "answer": "17.98",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD360",
+        "answer": "10.1647",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD361",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD362",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD363",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD364",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD365",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD366",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD367",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD368",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD369",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD370",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD371",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD372",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD373",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD374",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD375",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD376",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD377",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD378",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD379",
+        "answer": "23.0748",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD380",
+        "answer": "70.0701",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD381",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD382",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD383",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD384",
+        "answer": "6.04423",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD385",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD386",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD387",
+        "answer": "29.3548",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD388",
+        "answer": "24.1549",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD389",
+        "answer": "30.9404",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD390",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD391",
+        "answer": "17.0935",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD392",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD393",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD394",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD395",
+        "answer": "11.9997",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD396",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD397",
+        "answer": "15.4896",
+        "source": "vector_solver"
+    },
+    {
+        "id": "LD398",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD399",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "LD400",
+        "answer": "7.60703",
+        "source": "vector_solver"
+    },
+    {
+        "id": "TD101",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD162",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD163",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD164",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD165",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD166",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD167",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD168",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD169",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD170",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD171",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD172",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD173",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD174",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD175",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD176",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD177",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD178",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD179",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD180",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD181",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD182",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD183",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD184",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD185",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD186",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD187",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD188",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD189",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD190",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD191",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD357",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD358",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD359",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD360",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD361",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD362",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD363",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD364",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD365",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD366",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD367",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD368",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD369",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD370",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD371",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD372",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD373",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD374",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD375",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD376",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD377",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD378",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD379",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD380",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD381",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD382",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD383",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD384",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD385",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD386",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD387",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD388",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD389",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD390",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD391",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD392",
+        "answer": "200000",
+        "source": "sympy"
+    },
+    {
+        "id": "TD393",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD394",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD395",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD396",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD397",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD398",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD399",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "TD400",
+        "answer": "0.06",
+        "source": "sympy"
+    },
+    {
+        "id": "THCB001",
+        "answer": "0.1",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB002",
+        "answer": "3.571",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB003",
+        "answer": "1",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB004",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB005",
+        "answer": "4.211",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB006",
+        "answer": "0.4",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB007",
+        "answer": "0.2",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB008",
+        "answer": "0.186",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB009",
+        "answer": "1.5",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB010",
+        "answer": "3.922",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB066",
+        "answer": "1; 1; 2",
+        "source": "circuit"
+    },
+    {
+        "id": "THCB067",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB068",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB069",
+        "answer": "1",
+        "source": "circuit"
+    },
+    {
+        "id": "THCB070",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB071",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB072",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB073",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB074",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB075",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB076",
+        "answer": "0.5; 1",
+        "source": "circuit"
+    },
+    {
+        "id": "THCB077",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB078",
+        "answer": "20",
+        "source": "circuit"
+    },
+    {
+        "id": "THCB079",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB080",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB081",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB082",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB083",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB084",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB085",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB086",
+        "answer": "0.8",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB087",
+        "answer": "0.6; 1.2",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB088",
+        "answer": "10.2; 0.06667",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB089",
+        "answer": "0.8333",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB090",
+        "answer": "0.05; 2.941",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB091",
+        "answer": "0.625",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB092",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB093",
+        "answer": "0.3; 1",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB094",
+        "answer": "100.2; 0.1333",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB095",
+        "answer": "3.333",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB096",
+        "answer": "1.111",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB097",
+        "answer": "0.3; 1.5",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB098",
+        "answer": "14; 0.06667",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB099",
+        "answer": "0.5479",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB100",
+        "answer": "0.8; 1.067",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB101",
+        "answer": "0.5",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB102",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB103",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB104",
+        "answer": "50; 0.1333",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB105",
+        "answer": "2.5",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB106",
+        "answer": "1",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB107",
+        "answer": "1.5; 1.5",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB108",
+        "answer": "120; 0.1333",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB109",
+        "answer": "0.5",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB110",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB111",
+        "answer": "0.6667",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB112",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB113",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB114",
+        "answer": "10; 0.06667",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB115",
+        "answer": "2",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB116",
+        "answer": "0.5",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB117",
+        "answer": "0.2; 0.3333",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB118",
+        "answer": "36.7; 0.06667",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB119",
+        "answer": "1.667",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB120",
+        "answer": "0.5; 0.7692",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB121",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB122",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB123",
+        "answer": "2; 0.06667",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB124",
+        "answer": "2",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB125",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB126",
+        "answer": "0.2857",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB127",
+        "answer": "0.5; 1.25",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB128",
+        "answer": "200.3; 0.1111",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB129",
+        "answer": "0.4545",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB130",
+        "answer": "1; 0.6061",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB131",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB132",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "THCB133",
+        "answer": "20; 0.06667",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB134",
+        "answer": "1.667",
+        "source": "error_calc"
+    },
+    {
+        "id": "THCB135",
+        "answer": "0.4167",
+        "source": "error_calc"
+    },
+    {
+        "id": "NL001",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL002",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL003",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL004",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL005",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL006",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL007",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL008",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL009",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL010",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL011",
+        "answer": "0.216",
+        "source": "sympy"
+    },
+    {
+        "id": "NL012",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL013",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL014",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL015",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL016",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL017",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL018",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL019",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL020",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL021",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL022",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL023",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL024",
+        "answer": "0.18",
+        "source": "sympy"
+    },
+    {
+        "id": "NL025",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL026",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL027",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL028",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL029",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL030",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL031",
+        "answer": "0.675",
+        "source": "sympy"
+    },
+    {
+        "id": "NL032",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL033",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL034",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL035",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL036",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL037",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL038",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL039",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL040",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL081",
+        "answer": "0.125",
+        "source": "sympy"
+    },
+    {
+        "id": "NL082",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL083",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL084",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL085",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL086",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL087",
+        "answer": "0.0891",
+        "source": "sympy"
+    },
+    {
+        "id": "NL088",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL089",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL090",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL091",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL092",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL093",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL094",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL095",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL096",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL097",
+        "answer": "0.45",
+        "source": "sympy"
+    },
+    {
+        "id": "NL098",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL099",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL100",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL101",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL102",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL103",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL104",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL105",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL106",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL107",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL108",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL109",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL110",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL111",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL112",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL113",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL114",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL115",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL116",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL117",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL118",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL119",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL120",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL121",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL122",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL123",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL124",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL125",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL126",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL127",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL128",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL129",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL130",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL301",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL302",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL303",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL304",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL305",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL306",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL307",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL308",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL309",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL310",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL311",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL312",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL313",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL314",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL315",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL316",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL317",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL318",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL319",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL320",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL321",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL322",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL323",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL324",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL325",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL326",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL327",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL328",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL329",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL330",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL331",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL332",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL333",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL334",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL335",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL336",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL337",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL338",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL339",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL340",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL341",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL342",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL343",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL344",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL345",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL346",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL347",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL348",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL349",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL350",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL351",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL352",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL353",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL354",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL355",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL356",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL357",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL358",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL359",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL360",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL361",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL362",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL363",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL364",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL365",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL366",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL367",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL368",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL369",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL370",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL371",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL372",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL373",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL374",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL375",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL376",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL377",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL378",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL379",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL380",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL381",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL382",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL383",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL384",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL385",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL386",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL387",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL388",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL389",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL390",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL391",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL392",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL393",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL394",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL395",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL396",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL397",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL398",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL399",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "NL400",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT131",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT132",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT133",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT134",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT135",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT136",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT137",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT138",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT139",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT140",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT141",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT142",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT143",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT144",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT145",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT146",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT147",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT148",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT149",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT150",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT151",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT152",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT153",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT154",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT155",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT156",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT157",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT158",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT159",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT160",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT201",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT202",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT203",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT204",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT205",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT206",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT207",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT208",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT209",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT210",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT211",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT212",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT213",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT214",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT215",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT216",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT217",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT218",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT219",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT220",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT321",
+        "answer": "126.835",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT322",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT323",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT324",
+        "answer": "75.3982",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT325",
+        "answer": "53.0516",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT326",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT327",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT328",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT329",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT330",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT331",
+        "answer": "10.0344",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT332",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT333",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT334",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT335",
+        "answer": "31.831",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT336",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT337",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT338",
+        "answer": "10",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT339",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT340",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT341",
+        "answer": "45.7943",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT342",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT343",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT344",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT345",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT346",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT347",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT348",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT349",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT350",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT351",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT352",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT353",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT354",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT355",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT356",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT357",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT358",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT359",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT360",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT361",
+        "answer": "0.503292",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT362",
+        "answer": "6.28319",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT363",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT364",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT365",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT366",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT367",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT368",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT369",
+        "answer": "19.8692",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT370",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT371",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT372",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT373",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT374",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT375",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT376",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT377",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT378",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT379",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT380",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT381",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT382",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT383",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT384",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT385",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT386",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT387",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT388",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT389",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT390",
+        "answer": "0.5",
+        "source": "sympy"
+    },
+    {
+        "id": "DDT391",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT392",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT393",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT394",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT395",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT396",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT397",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT398",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT399",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "DDT400",
+        "answer": "0.00753982",
+        "source": "sympy"
+    },
+    {
+        "id": "CHLT001",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CHLT002",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CHLT003",
+        "answer": "112",
+        "source": "sympy"
+    },
+    {
+        "id": "CHLT004",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CHLT005",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CHLT006",
+        "answer": "79.5775",
+        "source": "sympy"
+    },
+    {
+        "id": "CHLT007",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CHLT008",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CHLT009",
+        "answer": "No",
+        "source": "resonance"
+    },
+    {
+        "id": "CHLT010",
+        "answer": "56.3",
+        "source": "sympy"
+    },
+    {
+        "id": "CHLT011",
+        "answer": "No",
+        "source": "resonance"
+    },
+    {
+        "id": "CHLT012",
+        "answer": "Yes",
+        "source": "resonance"
+    },
+    {
+        "id": "CHLT013",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CHLT014",
+        "answer": "56.2698",
+        "source": "sympy"
+    },
+    {
+        "id": "CHLT015",
+        "answer": "No",
+        "source": "resonance"
+    },
+    {
+        "id": "CHLT016",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CHLT017",
+        "answer": "Yes",
+        "source": "resonance"
+    },
+    {
+        "id": "CHLT018",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CHLT019",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CHLT020",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH001",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH002",
+        "answer": "-80",
+        "source": "sympy"
+    },
+    {
+        "id": "CH003",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH004",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH005",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH006",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH007",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH008",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH009",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH010",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH011",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH012",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH013",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH014",
+        "answer": "68",
+        "source": "sympy"
+    },
+    {
+        "id": "CH015",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH016",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH017",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH018",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH019",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH020",
+        "answer": "300",
+        "source": "sympy"
+    },
+    {
+        "id": "CH021",
+        "answer": "39.7887",
+        "source": "sympy"
+    },
+    {
+        "id": "CH022",
+        "answer": "50.3292",
+        "source": "sympy"
+    },
+    {
+        "id": "CH023",
+        "answer": "91.8881",
+        "source": "sympy"
+    },
+    {
+        "id": "CH024",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH025",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH026",
+        "answer": "53.0516",
+        "source": "sympy"
+    },
+    {
+        "id": "CH027",
+        "answer": "64.9747",
+        "source": "sympy"
+    },
+    {
+        "id": "CH028",
+        "answer": "63.662",
+        "source": "sympy"
+    },
+    {
+        "id": "CH029",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH030",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH031",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH032",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH033",
+        "answer": "75.0264",
+        "source": "sympy"
+    },
+    {
+        "id": "CH034",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH035",
+        "answer": "159.155",
+        "source": "sympy"
+    },
+    {
+        "id": "CH036",
+        "answer": "125.823",
+        "source": "sympy"
+    },
+    {
+        "id": "CH037",
+        "answer": "225.079",
+        "source": "sympy"
+    },
+    {
+        "id": "CH038",
+        "answer": "53.0516",
+        "source": "sympy"
+    },
+    {
+        "id": "CH039",
+        "answer": "100.658",
+        "source": "sympy"
+    },
+    {
+        "id": "CH040",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH041",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH042",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH043",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH044",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH045",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH046",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH047",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH048",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH049",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH050",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH051",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH052",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH053",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH054",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH055",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH056",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH057",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH058",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH059",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH060",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH061",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH062",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH063",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH064",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH065",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH066",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH067",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH068",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH069",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH070",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH071",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH072",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH073",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH074",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH075",
+        "answer": "2.50176e-06",
+        "source": "sympy"
+    },
+    {
+        "id": "CH076",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH077",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH078",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH079",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH080",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH081",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH082",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH083",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH084",
+        "answer": "0.0202642",
+        "source": "sympy"
+    },
+    {
+        "id": "CH085",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH086",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH087",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH088",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH089",
+        "answer": "0.0001",
+        "source": "sympy"
+    },
+    {
+        "id": "CH090",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH091",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH092",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH093",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH094",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH095",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH096",
+        "answer": "8.79524e-07",
+        "source": "sympy"
+    },
+    {
+        "id": "CH097",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH098",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH099",
+        "answer": "5.06606e-06",
+        "source": "sympy"
+    },
+    {
+        "id": "CH100",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH101",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH102",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH103",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH104",
+        "answer": "2.5",
+        "source": "sympy"
+    },
+    {
+        "id": "CH105",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH106",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH107",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH108",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH109",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH110",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH141",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH142",
+        "answer": "100",
+        "source": "sympy"
+    },
+    {
+        "id": "CH143",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH144",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH145",
+        "answer": "150",
+        "source": "sympy"
+    },
+    {
+        "id": "CH146",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH147",
+        "answer": "0.0503292",
+        "source": "sympy"
+    },
+    {
+        "id": "CH148",
+        "answer": "0.316228",
+        "source": "sympy"
+    },
+    {
+        "id": "CH149",
+        "answer": "0.316228",
+        "source": "sympy"
+    },
+    {
+        "id": "CH150",
+        "answer": "100",
+        "source": "sympy"
+    },
+    {
+        "id": "CH151",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH152",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH153",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH154",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH155",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH156",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH157",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH158",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH159",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH160",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH161",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH162",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH163",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH164",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH165",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH166",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH167",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH168",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH169",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH170",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH171",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH172",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH173",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH174",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH175",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH176",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH177",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH178",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH179",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH180",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH181",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH182",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH183",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH184",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH185",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH186",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH187",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH188",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH189",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH190",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH191",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH192",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH193",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH194",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH195",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH196",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH197",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH198",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH199",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH200",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH201",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH202",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH203",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH204",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH205",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH206",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH207",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH208",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH209",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH210",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH211",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH212",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH213",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH214",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH215",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH216",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH217",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH218",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH219",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH220",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH221",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH222",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH223",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH224",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH225",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH226",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH227",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH228",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH229",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH230",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH231",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH232",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH233",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH234",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH235",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH236",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH237",
+        "answer": "90",
+        "source": "sympy"
+    },
+    {
+        "id": "CH238",
+        "answer": "120",
+        "source": "sympy"
+    },
+    {
+        "id": "CH239",
+        "answer": "100",
+        "source": "sympy"
+    },
+    {
+        "id": "CH240",
+        "answer": "75",
+        "source": "sympy"
+    },
+    {
+        "id": "CH241",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH242",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH243",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH244",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH245",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH246",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH247",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH248",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH249",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH250",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH251",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH252",
+        "answer": "150",
+        "source": "sympy"
+    },
+    {
+        "id": "CH253",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH254",
+        "answer": "100",
+        "source": "sympy"
+    },
+    {
+        "id": "CH255",
+        "answer": "90",
+        "source": "sympy"
+    },
+    {
+        "id": "CH256",
+        "answer": "200",
+        "source": "sympy"
+    },
+    {
+        "id": "CH257",
+        "answer": "110",
+        "source": "sympy"
+    },
+    {
+        "id": "CH258",
+        "answer": "75",
+        "source": "sympy"
+    },
+    {
+        "id": "CH259",
+        "answer": "180",
+        "source": "sympy"
+    },
+    {
+        "id": "CH260",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH261",
+        "answer": "130",
+        "source": "sympy"
+    },
+    {
+        "id": "CH262",
+        "answer": "120",
+        "source": "sympy"
+    },
+    {
+        "id": "CH263",
+        "answer": "80",
+        "source": "sympy"
+    },
+    {
+        "id": "CH264",
+        "answer": "100",
+        "source": "sympy"
+    },
+    {
+        "id": "CH265",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH266",
+        "answer": "5",
+        "source": "sympy"
+    },
+    {
+        "id": "CH267",
+        "answer": "4",
+        "source": "sympy"
+    },
+    {
+        "id": "CH268",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH269",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH270",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH271",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH272",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH273",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH274",
+        "answer": "90",
+        "source": "sympy"
+    },
+    {
+        "id": "CH275",
+        "answer": "360",
+        "source": "sympy"
+    },
+    {
+        "id": "CH276",
+        "answer": "540",
+        "source": "sympy"
+    },
+    {
+        "id": "CH277",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH278",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH279",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH280",
+        "answer": "80",
+        "source": "sympy"
+    },
+    {
+        "id": "CH341",
+        "answer": "0.0711763",
+        "source": "sympy"
+    },
+    {
+        "id": "CH342",
+        "answer": "0.0397887",
+        "source": "sympy"
+    },
+    {
+        "id": "CH343",
+        "answer": "0.11254",
+        "source": "sympy"
+    },
+    {
+        "id": "CH344",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH345",
+        "answer": "0.0530516",
+        "source": "sympy"
+    },
+    {
+        "id": "CH346",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH347",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH348",
+        "answer": "0.0918881",
+        "source": "sympy"
+    },
+    {
+        "id": "CH349",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH350",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH351",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH352",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH353",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH354",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH355",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH356",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH357",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH358",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH359",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH360",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH361",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH362",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH363",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH364",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH365",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH366",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH367",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH368",
+        "answer": "100",
+        "source": "sympy"
+    },
+    {
+        "id": "CH369",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH370",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH371",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH372",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH373",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH374",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH375",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH376",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH377",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH378",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH379",
+        "answer": "",
+        "source": "llm_fallback"
+    },
+    {
+        "id": "CH380",
+        "answer": "",
+        "source": "llm_fallback"
+    }
+]

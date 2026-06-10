@@ -63,3 +63,6 @@ docs/exact2026_pipeline.mermaid
 .pytest_cache/
 .ruff_cache/
 evaluate/*
+*.egg-info/
+.pytest_cache/
+.ruff_cache/

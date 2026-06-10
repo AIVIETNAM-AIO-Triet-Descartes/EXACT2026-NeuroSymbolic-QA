@@ -1,4 +1,5 @@
 from typing import Literal
+import re
 
 PHYSICS_KEYWORDS = {
     "calculate", "resistance", "voltage", "current",
@@ -6,6 +7,16 @@ PHYSICS_KEYWORDS = {
     "ohm", "ampere", "farad", "watt", "coulomb",
     "electric", "parallel", "series", "kirchhoff"
 }
+
+
+def _extract_words(text: str) -> set[str]:
+    """Tokenize words and add a light singular form for plural nouns."""
+    raw_words = re.findall(r"[a-zA-Z]+", text.lower())
+    words = set(raw_words)
+    for word in raw_words:
+        if word.endswith("s") and len(word) > 3:
+            words.add(word[:-1])
+    return words
 
 
 def classify_query(question: str, premises: list[str]) -> Literal["type1", "type2"]:
@@ -17,7 +28,7 @@ def classify_query(question: str, premises: list[str]) -> Literal["type1", "type
     """
     if premises:
         return "type1"
-    words = set(question.lower().split())
+    words = _extract_words(question)
     if PHYSICS_KEYWORDS & words:
         return "type2"
     return "type1"

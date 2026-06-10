@@ -11,12 +11,13 @@ sympy>=1.12
 lark>=1.1.9
 
 # LLM inference
+openai>=1.30.0
 transformers>=4.40.0
 accelerate>=0.27.0
 torch>=2.2.0
 llama-cpp-python>=0.2.56
 
-# Fine-tuning (Approach 2, optional during setup)
+# Fine-tuning (optional)
 peft>=0.10.0
 bitsandbytes>=0.43.0
 trl>=0.8.0
