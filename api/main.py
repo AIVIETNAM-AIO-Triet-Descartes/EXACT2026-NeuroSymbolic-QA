@@ -9,6 +9,9 @@ Usage:
     uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 """
 
+import os
+
+import httpx
 from fastapi import FastAPI, HTTPException
 from api.schemas import UnifiedRequest, UnifiedResponse
 from api.logger import get_logger, log_pipeline_request
@@ -16,6 +19,10 @@ from api.response_builder import build_response
 
 logger = get_logger(__name__)
 app = FastAPI(title="EXACT 2026 QA API", version="0.1.0")
+
+# vLLM listens on 127.0.0.1:8001 (internal only). The committee reaches its model
+# list through the public FastAPI port via the /v1/models proxy below.
+VLLM_BASE = os.getenv("VLLM_BASE", "http://127.0.0.1:8001")
 
 
 # ══════════════════════════════════════════════════════════════
@@ -165,6 +172,20 @@ async def handle_predict(request: UnifiedRequest):
     except Exception as e:
         logger.error(f"Pipeline error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v1/models")
+async def proxy_models():
+    """Forward vLLM's model list so the committee can verify the served model
+    (≤8B rule) without exposing the internal vLLM port to the Internet. The
+    returned `id` comes from the model's real config.json — verifiable."""
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(f"{VLLM_BASE}/v1/models")
+        return resp.json()
+    except Exception as e:
+        logger.error(f"/v1/models proxy failed: {e}")
+        raise HTTPException(status_code=503, detail=f"vLLM unreachable: {e}")
 
 
 @app.get("/health")
