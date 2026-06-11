@@ -196,6 +196,113 @@ def _run_with_timeout(fn, args: tuple, timeout: int) -> Optional[dict]:
 
 
 # ══════════════════════════════════════════════════════════════
+# PAL (Program-Aided LM) sandbox — LLM writes code, the MACHINE computes
+# ══════════════════════════════════════════════════════════════
+# The LLM (generate_sympy_code) emits sympy/math Python; we run it here so the
+# arithmetic is deterministic (zero arithmetic hallucination — docs/docs_vytriet/
+# proposals.md §2). Defense in depth: (1) deny-list scan, (2) whitelisted imports,
+# (3) stripped builtins, (4) thread timeout via _run_with_timeout.
+
+_PAL_FORBIDDEN = (
+    "import os", "import sys", "import subprocess", "import socket",
+    "import shutil", "import requests", "import urllib", "import pickle",
+    "import marshal", "from os", "from sys", "from subprocess",
+    "__import__", "open(", "eval(", "exec(", "compile(", "input(",
+    "getattr(", "setattr(", "delattr(", "globals(", "locals(",
+    "__subclasses__", "__bases__", "__globals__", "__builtins__",
+)
+_PAL_ALLOWED_MODULES = {"math", "cmath", "sympy", "numpy", "fractions", "decimal"}
+
+
+def _pal_safe_import(name, *args, **kwargs):
+    """Whitelisted __import__ for the PAL sandbox."""
+    if name.split(".")[0] not in _PAL_ALLOWED_MODULES:
+        raise ImportError(f"PAL sandbox: import '{name}' not allowed")
+    return __import__(name, *args, **kwargs)
+
+
+def _run_pal_code(code: str) -> Optional[dict]:
+    """Exec whitelisted PAL code; read {answer, unit} from its globals. No timeout
+    here — execute_generated_code wraps this in _run_with_timeout."""
+    import math
+    import sympy
+
+    safe_builtins = {
+        "abs": abs, "min": min, "max": max, "round": round, "sum": sum,
+        "pow": pow, "len": len, "range": range, "float": float, "int": int,
+        "str": str, "bool": bool, "list": list, "dict": dict, "tuple": tuple,
+        "set": set, "enumerate": enumerate, "zip": zip, "sorted": sorted,
+        "map": map, "filter": filter, "print": print, "complex": complex,
+        "ValueError": ValueError, "ZeroDivisionError": ZeroDivisionError,
+        "__import__": _pal_safe_import,
+    }
+    g = {"__builtins__": safe_builtins, "math": math, "sympy": sympy, "sp": sympy}
+    exec(code, g)  # noqa: S102 — sandboxed: deny-list + whitelist imports + timeout
+
+    ans = g.get("answer")
+    if ans is None and callable(g.get("solve")):
+        ans = g["solve"]()
+    if ans is None:
+        return None
+
+    try:
+        ans_val = float(ans)
+        answer_str = f"{ans_val:.6g}"
+    except (TypeError, ValueError):
+        try:  # sympy expression → evalf
+            ans_val = float(sympy.sympify(ans).evalf())
+            answer_str = f"{ans_val:.6g}"
+        except Exception:
+            answer_str = str(ans)  # non-numeric (e.g. "Yes")
+    return {"answer": answer_str, "unit": str(g.get("unit") or "")}
+
+
+def execute_generated_code(code: str, timeout: int = 5) -> Optional[dict]:
+    """Run LLM-generated PAL code in a sandbox. Returns {answer, unit} or None on
+    rejected/failed/timed-out code. NEVER raises."""
+    if not code or len(code) > 4000:
+        return None
+    low = code.lower()
+    if any(tok in low for tok in _PAL_FORBIDDEN):
+        logger.warning("[PAL] rejected generated code (forbidden token)")
+        return None
+    return _run_with_timeout(_run_pal_code, (code,), timeout)
+
+
+def _llm_fallback_chain(state: dict, parsed: dict) -> Optional[dict]:
+    """LLM fallback when every symbolic solver fails: PAL code-gen+exec FIRST
+    (machine does the arithmetic → no hallucination), CoT as last resort. Returns
+    None when the LLM server is down — preserving the no-LLM floor + offline tests."""
+    try:
+        from llm import llm_server_available
+        if not llm_server_available():
+            return None
+        from llm import get_shared_reasoner
+
+        reasoner = get_shared_reasoner()
+        question = state.get("question", "")
+        given = parsed.get("given", {}) or {}
+        find = parsed.get("find", "") or ""
+        formulas = parsed.get("formulas", []) or []
+
+        # 1. PAL — LLM writes code, sandbox executes (preferred).
+        code = reasoner.generate_sympy_code(question, given, find, formulas)
+        pal = execute_generated_code(code, timeout=5)
+        if pal and pal.get("answer") not in (None, ""):
+            logger.info("[PAL] solved via generated code")
+            return {"answer": pal["answer"], "unit": pal.get("unit", ""),
+                    "steps": [code], "source": "llm_pal"}
+
+        # 2. CoT — last resort (LLM does the arithmetic itself).
+        cot = reasoner.solve_physics_cot(question, given, find, formulas)
+        if cot and cot.get("answer"):
+            return cot
+    except Exception as e:
+        logger.warning(f"[PAL] LLM fallback chain failed: {e}")
+    return None
+
+
+# ══════════════════════════════════════════════════════════════
 # Main dispatch
 # ══════════════════════════════════════════════════════════════
 
@@ -290,15 +397,25 @@ def sympy_solver_node(state: dict) -> dict:
     elif q_type in (PhysicsQuestionType.ERROR_CALC, PhysicsQuestionType.MULTI_ANSWER):
         from pipeline.type2.error_solver import solve_error
         sympy_result = solve_error(parsed, state.get("question", ""))
-    elif parsed.get("domain") == "circuits":
-        # DC parallel-resistor networks (THCB lamps + basic circuits). circuit_solver
-        # handles multi-branch / multi-answer (per-branch I + total, R_p, P) that the
-        # scalar path can't; returns None for plain single-formula → solve_physics.
-        from pipeline.type2.circuit_solver import solve_circuit
-        sympy_result = solve_circuit(parsed, state.get("question", "")) \
-            or solve_physics(parsed, q_type)
     else:
-        sympy_result = solve_physics(parsed, q_type)
+        # A YES_NO that missed the resonance gate (wrong domain / missing L,C,f) is
+        # likely a non-resonance question the classifier mislabelled (over-broad
+        # "does it"/"will it" cues — weakness #2a). Downgrade to the generic symbolic
+        # path so it ATTEMPTS sympy before dropping to the LLM fallback. Safe: a
+        # genuine yes/no has no "find the X" verb → find="" → solve_physics returns
+        # llm_fallback anyway (0 regression); a misclassified compute question now
+        # gets a real symbolic shot.
+        if q_type == PhysicsQuestionType.YES_NO:
+            q_type = PhysicsQuestionType.SINGLE_FORMULA
+        if parsed.get("domain") == "circuits":
+            # DC parallel-resistor networks (THCB lamps + basic circuits). circuit_solver
+            # handles multi-branch / multi-answer (per-branch I + total, R_p, P) that the
+            # scalar path can't; returns None for plain single-formula → solve_physics.
+            from pipeline.type2.circuit_solver import solve_circuit
+            sympy_result = solve_circuit(parsed, state.get("question", "")) \
+                or solve_physics(parsed, q_type)
+        else:
+            sympy_result = solve_physics(parsed, q_type)
 
     # Vector solver fallback: handles multi-charge Coulomb + force+angle problems
     if sympy_result.get("source") == "llm_fallback":
@@ -307,9 +424,39 @@ def sympy_solver_node(state: dict) -> dict:
         if vec_result:
             sympy_result = vec_result
 
-    confidence = state.get("confidence", 1.0)
+    # LLM fallback chain (PAL code-gen → CoT) when all symbolic solvers fail.
+    # Gated by llm_server_available() inside the helper → no-LLM floor unchanged.
     if sympy_result.get("source") == "llm_fallback":
+        llm_res = _llm_fallback_chain(state, parsed)
+        if llm_res:
+            sympy_result = llm_res
+
+    # Phrasal-derived symbolic answer + FAILS self-validation → don't trust it;
+    # defer to PAL/LLM instead of blocking the fallback. Prose extraction can feed
+    # a wrong-formula match (a confident-but-wrong number). The no-LLM floor is
+    # untouched (helper returns None when the server is down → keep sympy answer).
+    elif (parsed.get("_phrasal_used")
+          and sympy_result.get("source") in ("sympy", "circuit")):
+        from pipeline.type2.type2_validation import validate_sympy_result
+        try:
+            v = validate_sympy_result(sympy_result.get("answer") or None,
+                                      parsed.get("find"))
+            suspect = v is not None and not v.is_valid
+        except Exception:
+            suspect = False
+        if suspect:
+            llm_res = _llm_fallback_chain(state, parsed)
+            if llm_res:
+                logger.info("[SYMPY_SOLVER] phrasal answer failed verify → PAL/LLM")
+                sympy_result = llm_res
+
+    confidence = state.get("confidence", 1.0)
+    _src = sympy_result.get("source")
+    if _src in ("llm_fallback", "llm_cot"):
         confidence = min(confidence, 0.5)
+    elif _src == "llm_pal":
+        # PAL = machine-computed (deterministic arithmetic) > LLM-only CoT.
+        confidence = min(confidence, 0.6)
 
     solver_result: SolverResult = {
         "answer": sympy_result.get("answer", ""),

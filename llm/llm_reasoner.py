@@ -29,6 +29,7 @@ from llm.prompt_templates import (
     SYSTEM_PROMPT_PHYSICS,
     PHYSICS_PARSE_PROMPT,
     PHYSICS_COT_PROMPT,
+    PHYSICS_PAL_PROMPT,
     PHYSICS_EXPLAIN_PROMPT,
 )
 
@@ -551,6 +552,40 @@ class LLMReasoner:
             "steps": [raw] if raw else [],
             "source": "llm_cot",
         }
+
+    def generate_sympy_code(
+        self,
+        question: str,
+        given: Optional[Dict] = None,
+        find: str = "",
+        formulas: Optional[List] = None,
+    ) -> str:
+        """
+        PAL (Program-Aided) fallback: ask the LLM to WRITE Python (sympy/math) that
+        computes the answer, instead of doing the arithmetic itself. Returns the raw
+        code string (code fences stripped) — the CALLER runs it in a sandbox
+        (`pipeline.type2.sympy_solver.execute_generated_code`). "" on failure.
+
+        Rationale (docs/docs_vytriet/proposals.md §2): 8B models choose formulas and
+        substitute well but mis-compute floats / scientific notation. Letting the
+        machine execute the code removes arithmetic hallucination.
+        """
+        prompt = PHYSICS_PAL_PROMPT.format(
+            question=question,
+            given=given or {},
+            find=find or "",
+            formulas=formulas or [],
+        )
+        raw = self._chat(SYSTEM_PROMPT_PHYSICS, prompt, max_tokens=512)
+        return self._strip_code_fences(raw)
+
+    @staticmethod
+    def _strip_code_fences(raw: str) -> str:
+        """Extract code from a ```python ...``` block, else return raw stripped."""
+        if not raw:
+            return ""
+        m = re.search(r'```(?:python)?\s*(.*?)```', raw, re.DOTALL)
+        return (m.group(1) if m else raw).strip()
 
     def explain_physics(
         self,

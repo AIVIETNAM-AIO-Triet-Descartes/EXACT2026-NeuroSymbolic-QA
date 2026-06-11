@@ -370,6 +370,35 @@ where <unit> is ASCII (ohm, uF, nC, V/m, A, W, J, ...) and <number> is the numer
 
 Solution:"""
 
+# PAL (Program-Aided) solver: the LLM WRITES Python (sympy/math) instead of doing
+# arithmetic itself — the sandbox executes it, eliminating arithmetic hallucination
+# (8B models pick formulas well but mis-compute floats / scientific notation).
+PHYSICS_PAL_PROMPT = """Write Python code to solve this physics problem. Do NOT compute the numbers yourself — the code will be executed to obtain the result.
+
+Problem:
+{question}
+
+Known values (already in SI units): {given}
+Find: {find}
+Candidate formulas: {formulas}
+
+Requirements:
+- Use ONLY the `math` and `sympy` libraries (already importable). No file, network, or OS access.
+- Assign the final numeric result to a variable named `answer` (a float, in SI base units).
+- Assign the ASCII unit string to a variable named `unit` (e.g. "A", "ohm", "V/m", "J"; "" if dimensionless).
+- Keep the symbol convention: U=voltage, Z_L/Z_C/Z for inductive/capacitive reactance/impedance.
+- Output ONLY one Python code block, no prose.
+
+Example:
+```python
+import sympy as sp
+C, Q = 5e-6, 20e-6          # capacitance (F), charge (C)
+answer = float(Q**2 / (2 * C))
+unit = "J"
+```
+
+Code:"""
+
 # Short NL explanation for an already-solved problem.
 PHYSICS_EXPLAIN_PROMPT = """Write a concise 2-3 sentence explanation for this solved physics problem.
 

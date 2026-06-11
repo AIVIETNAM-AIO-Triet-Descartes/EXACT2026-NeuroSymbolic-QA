@@ -37,7 +37,7 @@ class SolverResult(TypedDict):
     """FOL (First-Order Logic) đã được validate — chỉ có ở Type 1. None cho Type 2."""
 
     source: Literal["z3", "sympy", "vector_solver", "resonance", "error_calc",
-                    "llm_cot", "llm_fallback"]
+                    "llm_pal", "llm_cot", "llm_fallback"]
     """
     Nguồn tạo ra kết quả — dùng để log và set confidence:
     - "z3"            → symbolic proof, confidence = 1.0
@@ -45,6 +45,7 @@ class SolverResult(TypedDict):
     - "vector_solver" → Coulomb/E-field vector geometry (Type 2), confidence = 1.0
     - "resonance"     → CHLT Yes/No resonance check (deterministic), confidence = 1.0
     - "error_calc"    → THCB measurement-error computation (deterministic), confidence = 1.0
+    - "llm_pal"       → PAL: LLM viết code, sandbox chạy (machine tính), confidence = 0.6
     - "llm_cot"       → LLM CoT fallback parse thành công, confidence = 0.5–0.6
     - "llm_fallback"  → LLM tự suy luận, confidence = 0.6 (RAG+LLM) hoặc 0.5 (LLM only)
     """

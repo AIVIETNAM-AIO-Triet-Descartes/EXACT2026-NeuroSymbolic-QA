@@ -214,6 +214,94 @@ def _eval_value_expr(expr: str) -> Optional[float]:
     return None
 
 
+# ── Phrasal value extraction ──────────────────────────────────────────────────
+# The dataset frequently states quantities in PROSE — "impedance of 120 Ω",
+# "charged to a voltage of 600 V", "current is 0.5 A" — not the `symbol = value`
+# form _ASSIGN_PAT needs. Measured on the full no-LLM floor, ~446 of 977 fallback
+# questions had EMPTY regex `given` purely because of this. Each entry maps a noun
+# cue to a canonical symbol PLUS the SI-dimension units that legitimise the match,
+# so a length ("radius of 10 cm") can never be mistaken for a resistance. Explicit
+# `sym = value` always wins — phrasal only fills a symbol NOT already extracted.
+#
+# Ordering matters: multi-word cues ("inductive reactance") precede the looser
+# substrings ("reactance"); the first field that fills a symbol wins via setdefault.
+_PHRASAL_CONNECT = (
+    r'(?:\s+(?:[A-Za-z_]\w*\s+)?'                       # optional symbol token (e.g. "Z")
+    r'(?:of\s+about|of|is|are|was|equal\s+to|equals?|'
+    r'reads?|measured(?:\s+(?:as|to\s+be))?|measuring|about|at|=|:)\s+)'
+)
+_PHRASAL_NUM = r'([+-]?\d+(?:\.\d+)?)(?:\s*[x×*]\s*10\^?([-]?\d+))?\s*'
+_OHM = r'(m?Ω|[kM]?Ω|ohms?)'
+_VOLT = r'(k?V|mV)(?![/\w])'
+_AMP = r'([umµμ]?A|kA)\b'
+_FARAD = r'([pnumµμ]?F)\b'
+_HENRY = r'([umµμ]?H)\b'
+_HZ = r'(k?Hz|MHz)'
+_WATT = r'([umµμkM]?W)\b'
+_JOULE = r'([umµμk]?J)\b'
+_COUL = r'([numµμ]?C)\b'
+_TESLA = r'(m?T)\b'
+
+_PHRASAL_FIELDS: list[tuple[str, str, str]] = [
+    (r'inductive\s+reactance', 'Z_L', _OHM),
+    (r'capacitive\s+reactance', 'Z_C', _OHM),
+    (r'impedance',              'Z',   _OHM),
+    (r'resistance',             'R',   _OHM),
+    (r'capacitance',            'C',   _FARAD),
+    (r'self[-\s]?inductance',   'L',   _HENRY),
+    (r'inductance',             'L',   _HENRY),
+    (r'potential\s+difference', 'U',   _VOLT),
+    (r'voltage',                'U',   _VOLT),
+    (r'electromotive\s+force',  'EMF', _VOLT),
+    (r'\bemf\b',                'EMF', _VOLT),
+    (r'current',                'I',   _AMP),
+    (r'frequency',              'f',   _HZ),
+    (r'\bpower\b',              'P',   _WATT),
+    (r'energy',                 'E',   _JOULE),
+    (r'charge',                 'Q',   _COUL),
+    (r'magnetic\s+field',       'B',   _TESLA),
+]
+_PHRASAL_COMPILED = [
+    (re.compile(noun + _PHRASAL_CONNECT + _PHRASAL_NUM + unit, re.IGNORECASE), sym)
+    for noun, sym, unit in _PHRASAL_FIELDS
+]
+
+
+# Multi-charge / vector-geometry cue. Phrasal extraction must NOT fire on these:
+# LD/DT Coulomb problems are solved by vector_solver (which does its own parsing),
+# and injecting a phrasal "charge of … / force of …" value pollutes `given` and
+# breaks the vector strategy selection (measured: 30 previously-correct vector
+# solves regressed). vector_solver territory stays phrasal-free.
+_VECTOR_CUE_PAT = re.compile(
+    r'\bq_?[1-9]\b|\bcharges\b|triangle|vertic|equilateral|midpoint|'
+    r'placed\s+at|corner|two\s+charges|three\s+charges',
+    re.IGNORECASE,
+)
+
+
+def _extract_phrasal(question: str, given: dict) -> set:
+    """Fill `given` from prose statements of quantities (unit-dimension gated).
+    Mutates `given` in place; only sets symbols NOT already present. Skipped for
+    multi-charge/vector problems (vector_solver owns those — see _VECTOR_CUE_PAT).
+    Returns the set of symbols this pass added (for downstream reliability gating)."""
+    added: set = set()
+    if _VECTOR_CUE_PAT.search(question):
+        return added
+    for pat, sym in _PHRASAL_COMPILED:
+        if sym in given:
+            continue
+        m = pat.search(question)
+        if not m:
+            continue
+        mantissa = float(m.group(1))
+        exp_str = m.group(2)
+        unit_str = m.group(3) or ""
+        val = mantissa * (10 ** int(exp_str) if exp_str else 1)
+        given[sym] = val * _unit_factor(unit_str)
+        added.add(sym)
+    return added
+
+
 def detect_find_from_verb(question: str) -> Optional[str]:
     """Extract target variable from verb context ('calculate the force' → 'F')."""
     if _ANGLE_PHRASE_PAT.search(question):
@@ -231,9 +319,14 @@ def detect_find_from_verb(question: str) -> Optional[str]:
     return None
 
 
-def extract_given(question: str) -> dict[str, float]:
+def extract_given(question: str, return_phrasal: bool = False):
     """
     Extract {symbol: SI_value} from question text via regex.
+
+    When return_phrasal=True, returns (given, phrasal_keys) where phrasal_keys is
+    the set of symbols filled ONLY by the prose/phrasal pass (less reliable than
+    explicit `sym = value`) — callers use it to gate fallback. Default returns the
+    plain dict (backward-compatible with demo / existing callers).
     Handles: C = 100 μF, q1 = 6 × 10^-8 C, chained and negated-chain assignments,
     bare-power notation, expression values evaluated by SymPy (q = (1)/(3)×10^-6 C,
     F = 9*sqrt(3)×10^-27 N, √3), and a few geometry distances (AB, side, bisector).
@@ -331,6 +424,11 @@ def extract_given(question: str) -> dict[str, float]:
             factor = 0.01 if m.group(2).lower() == "cm" else 1.0
             given["d_perp"] = val * factor
 
+    # Phrasal value extraction (prose form: "impedance of 120 Ω", "current is
+    # 0.5 A") — runs AFTER explicit `sym = value` so deterministic assignments
+    # win; only fills symbols still missing. Unit-dimension gated (see above).
+    phrasal_keys = _extract_phrasal(question, given)
+
     # Voltage symbol normalization: a question may write V for hiệu điện thế
     # (foreign convention). The RAG DB uses U for hiệu điện thế and reserves V
     # for điện thế (V = k*q/r). Remap V→U unless điện-thế context is present.
@@ -344,4 +442,6 @@ def extract_given(question: str) -> dict[str, float]:
         if foreign in given:
             given.setdefault(canon, given.pop(foreign))
 
+    if return_phrasal:
+        return given, phrasal_keys
     return given

@@ -11,6 +11,7 @@ from pipeline.type1.type1_classifier import (
     ClassifiedQuestion,
     QuestionClassifier,   # kế thừa _extract_keywords()
 )
+import re
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
@@ -110,10 +111,13 @@ class PhysicsClassifier(QuestionClassifier):
         # resonate/resonates/resonating (động từ). Nhiều câu CH dùng VERB "resonate"
         # + "capacitor/inductor" bị kéo nhầm sang electrostatics nếu chỉ match danh từ.
         # (đo 2026-06-07: 90/290 CH misroute; route đúng → LC-tuning giải bằng formula_039.)
+        # `\bac\b` catches "AC" (lowercased "ac") as a STANDALONE word — the
+        # literal "a.c." misses it after .lower(). Word-boundary avoids the
+        # substring trap (capacitor/reactance/surface contain no bounded "ac").
         if any(kw in q_lower for kw in (
             "impedance", "reactance", "rlc", "alternating",
             "power factor", "resona", "a.c.",
-        )):
+        )) or re.search(r'\bac\b', q_lower):
             return "ac_circuits"
 
         # electromagnetic induction (DDT)
@@ -141,11 +145,25 @@ class PhysicsClassifier(QuestionClassifier):
         """
         q_lower = question.lower()
 
-        # 1. Yes/No cộng hưởng (CHLT) — ưu tiên cao nhất, cần routing riêng (không solve)
+        # 1. Yes/No cộng hưởng (CHLT) — routing riêng (không solve).
+        # Interrogative polar cues → luôn YES_NO.
         if any(kw in q_lower for kw in (
             "does the circuit", "is the circuit", "does it", "will it",
-            "experience resonance", "is there resonance", "resonance occur",
+            "is there resonance",
         )):
+            return PhysicsQuestionType.YES_NO
+        # Content cues ("resonance occur(s)", "experience resonance") cũng xuất hiện
+        # dạng KHẲNG ĐỊNH trong câu numeric ("resonance occurs at 50Hz ... find ZL"
+        # — CH103/107/179). Chỉ coi là polar yes/no khi câu KHÔNG có động-từ-tìm-số.
+        # Lưu ý: "determine/find IF/WHETHER resonance occurs" (CHLT002/003) VẪN polar →
+        # lookahead loại if/whether/out; "what is" và "find/determine the X" mới numeric.
+        _numeric_find = (
+            re.search(r'\b(find|calculate|determine|compute)\b\s+(?!if\b|whether\b|out\b)',
+                      q_lower)
+            or "what is" in q_lower
+        )
+        if (any(kw in q_lower for kw in ("experience resonance", "resonance occur"))
+                and not _numeric_find):
             return PhysicsQuestionType.YES_NO
 
         # 2. Sai số đo lường (THCB) — multi-answer nếu hỏi nhiều đại lượng
@@ -173,10 +191,16 @@ class PhysicsClassifier(QuestionClassifier):
         # 5. Vector tĩnh điện (LD/DT có hình học) — chỉ khi tín hiệu hình học mạnh.
         #    Cặp 2 điện tích đơn vẫn để ELECTROSTATIC (scalar solve); vector_solver
         #    vẫn là fallback của sympy_solver nên không sợ bỏ sót.
-        if domain == "electrostatics" and any(kw in q_lower for kw in (
-            "triangle", "vertices", "vertex", "equilateral",
-            "angle between", "perpendicular", "midpoint", "three charges",
-        )):
+        # `\bsquare\b` matches the geometry word but NOT "squared" (boundary after
+        # 'e' fails on the trailing 'd') — avoids false VECTOR on "r squared".
+        # "rectangle" has no risky substring, plain membership is safe.
+        if domain == "electrostatics" and (
+            any(kw in q_lower for kw in (
+                "triangle", "vertices", "vertex", "equilateral",
+                "angle between", "perpendicular", "midpoint", "three charges",
+                "rectangle",
+            )) or re.search(r'\bsquare\b', q_lower)
+        ):
             return PhysicsQuestionType.VECTOR
 
         # 6. Mạch RLC topology (CH)
