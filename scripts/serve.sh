@@ -24,9 +24,10 @@ export VLLM_BASE="http://127.0.0.1:${VLLM_PORT}"  # /v1/models proxy target (api
 # tmux is an apt package → wiped on pod restart; reinstall if missing.
 command -v tmux >/dev/null 2>&1 || { apt-get update && apt-get install -y tmux; }
 
-# Pin config to prod + the chosen vLLM port (LLM client reads api_base from here).
+# Pin config to prod + the chosen vLLM port + model_name (LLM client reads all from here).
 sed -i 's/active: dev/active: prod/' "$ROOT/configs/config.yaml"
 sed -i -E "s#(api_base: \"http://localhost:)80[0-9]{2}#\1${VLLM_PORT}#g" "$ROOT/configs/config.yaml"
+sed -i -E "s#(model_name: \")[^\"]+(\")#\1${MODEL}\2#g" "$ROOT/configs/config.yaml"
 
 # Restart cleanly (kill stale sessions so ports free up).
 tmux kill-session -t vllm 2>/dev/null || true
