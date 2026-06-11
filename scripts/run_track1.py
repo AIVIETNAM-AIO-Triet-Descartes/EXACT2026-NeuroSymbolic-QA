@@ -152,9 +152,10 @@ class NeuroSymbolicPipeline:
     def _ensure_llm(self):
         """Lazy load LLM model."""
         if self.llm is None and self.config.use_llm:
+            model_path = Path(self.config.model_path)
             self.llm = create_reasoner(
-                model_dir=".",
-                model_name=Path(self.config.model_path).name,
+                model_dir=str(model_path.parent),
+                model_name=model_path.name,
                 n_ctx=self.config.n_ctx,
                 n_gpu_layers=self.config.n_gpu_layers,
             )
