@@ -1,0 +1,2 @@
+https://w6x7x15q3s8nsb-8000.proxy.runpod.net/predict
+https://w6x7x15q3s8nsb-8000.proxy.runpod.net/v1/models
