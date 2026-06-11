@@ -10,9 +10,9 @@ Usage:
 """
 
 from fastapi import FastAPI, HTTPException
-from api.router import classify_query
-from api.schemas import QueryRequest, QueryResponse
+from api.schemas import UnifiedRequest, UnifiedResponse
 from api.logger import get_logger, log_pipeline_request
+from api.response_builder import build_response
 
 logger = get_logger(__name__)
 app = FastAPI(title="EXACT 2026 QA API", version="0.1.0")
@@ -22,7 +22,7 @@ app = FastAPI(title="EXACT 2026 QA API", version="0.1.0")
 # Track 2 pipeline
 # ══════════════════════════════════════════════════════════════
 
-def _run_type2_pipeline(request: QueryRequest) -> QueryResponse:
+def _run_type2_pipeline(request: UnifiedRequest) -> UnifiedResponse:
     """
     Sequential execution of Type 2 nodes (physics pipeline).
     Equivalent to LangGraph StateGraph without the orchestration overhead.
@@ -39,7 +39,9 @@ def _run_type2_pipeline(request: QueryRequest) -> QueryResponse:
 
     # Initial state
     state: PipelineState = {
-        "question": request.question,
+        "question": request.query,
+        "query_id": request.query_id,
+        "options": request.options or [],
         "premises": request.premises or [],
         "query_type": "type2",
         "fol_translation": None,
@@ -112,9 +114,10 @@ def _run_type2_pipeline(request: QueryRequest) -> QueryResponse:
     confidence = state.get("confidence", 1.0)
     solver_result = state.get("solver_result", {})
     solver_source = solver_result.get("source", "llm_fallback") if solver_result else "llm_fallback"
+    raw_unit = solver_result.get("unit") or ""
 
     log_pipeline_request(
-        question=request.question,
+        question=request.query,
         query_type="type2",
         answer=str(answer),
         confidence=confidence,
@@ -126,11 +129,14 @@ def _run_type2_pipeline(request: QueryRequest) -> QueryResponse:
         solver_source=solver_source
     )
 
-    return QueryResponse(
+    return build_response(
+        query_id=request.query_id,
+        query_type="type2",
         answer=answer,
         explanation=explanation,
-        cot=cot,
-        confidence=confidence,
+        raw_unit=raw_unit,
+        steps=cot,
+        premises_used=[]
     )
 
 
@@ -138,19 +144,23 @@ def _run_type2_pipeline(request: QueryRequest) -> QueryResponse:
 # Endpoints
 # ══════════════════════════════════════════════════════════════
 
-@app.post("/query", response_model=QueryResponse)
-async def handle_query(request: QueryRequest):
+@app.post("/predict", response_model=list[UnifiedResponse])
+async def handle_predict(request: UnifiedRequest):
     try:
-        query_type = classify_query(request.question, request.premises)
+        query_type = request.type
 
         if query_type == "type2":
-            return _run_type2_pipeline(request)
+            return [_run_type2_pipeline(request)]
 
-        # Type 1 — TODO: wire after Track 1 nodes are complete
-        return QueryResponse(
+        # Type 1
+        return [build_response(
+            query_id=request.query_id,
+            query_type="type1",
             answer="A",
-            explanation=f"[TYPE1 MOCK] Pipeline not yet connected.",
-        )
+            explanation="[TYPE1 MOCK] Pipeline not yet connected.",
+            steps=["[TYPE1 MOCK] Pipeline not yet connected."],
+            premises_used=[0] if request.premises else []
+        )]
 
     except Exception as e:
         logger.error(f"Pipeline error: {e}", exc_info=True)

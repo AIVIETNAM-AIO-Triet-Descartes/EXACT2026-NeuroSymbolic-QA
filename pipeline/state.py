@@ -79,6 +79,12 @@ class PipelineState(TypedDict):
     question: str
     """Câu hỏi gốc từ request (bắt buộc)."""
 
+    query_id: str
+    """Mã định danh câu hỏi (bắt buộc)."""
+
+    options: list[str]
+    """Các lựa chọn trắc nghiệm (cho Type 1, nếu có)."""
+
     premises: list[str]
     """
     Danh sách tiền đề ngôn ngữ tự nhiên (Natural Language).
