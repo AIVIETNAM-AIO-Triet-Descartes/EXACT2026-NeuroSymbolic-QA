@@ -1,96 +1,83 @@
-# =============================================================================
-# api/response_builder.py
-# Owner: Người 5 — Response Builder
-# Phụ thuộc: api/schemas.py (QueryResponse) — đã có sẵn, không cần chờ Người 1
-# =============================================================================
-# Schemas đã được mock sẵn bên dưới để Người 5 làm việc độc lập.
-# Khi Người 1 hoàn thiện schemas.py thật, chỉ cần xóa phần MOCK SCHEMAS
-# và bỏ comment dòng import thật.
-# =============================================================================
-
-# --- Import thật (dùng khi Người 1 xong) ---
-# from api.schemas import QueryResponse
-
-# --- MOCK SCHEMAS — Người 5 dùng tạm, không cần chờ Người 1 ---
-from typing import Optional, List
-from pydantic import BaseModel, Field
-from pipeline.state import SolverResult
+from typing import Optional, List, Literal
+from api.schemas import UnifiedResponse, ReasoningBlock
 
 
-class QueryResponse(BaseModel):
+def build_response(
+    query_id: str,
+    query_type: Literal["type1", "type2"],
+    answer: str,
+    explanation: str,
+    raw_unit: str = "",
+    steps: Optional[List[str]] = None,
+    premises_used: Optional[List[int]] = None
+) -> UnifiedResponse:
     """
-    Mock của QueryResponse — khớp với SYSTEM.md §6 API Schema.
-    Người 1 sẽ định nghĩa bản chính thức trong api/schemas.py.
+    Formats and packages the pipeline outputs into the official EXACT 2026 UnifiedResponse schema.
+    This also handles ASCII-fying unit strings.
     """
-    answer: str = Field(..., description="Đáp án cuối cùng của hệ thống")
-    explanation: str = Field(..., description="Lời giải thích đi kèm cho đáp án")
-    fol: Optional[str] = Field(None, description="Công thức FOL tương ứng dạng chuỗi (Type 1)")
-    cot: Optional[List[str]] = Field(None, description="Các bước suy luận Chain-of-Thought (Type 2)")
-    premises: Optional[List[str]] = Field(None, description="Danh sách tiền đề chứng minh")
-    confidence: Optional[float] = Field(None, description="Độ tin cậy từ 0.0 đến 1.0")
+    # 1. ASCII-fy the unit (supports Greek small letter mu 'μ' and micro sign 'µ')
+    unit_ascii = ""
+    if raw_unit:
+        unit_ascii = (
+            raw_unit.replace("Ω", "ohm")
+            .replace("μ", "u")
+            .replace("µ", "u")
+            .replace("°", "degree")
+        )
 
+    # 2. Build reasoning block if steps exist
+    reasoning = None
+    if steps:
+        reasoning_type = "fol" if query_type == "type1" else "cot"
+        reasoning = ReasoningBlock(type=reasoning_type, steps=steps)
 
-# --- END MOCK SCHEMAS ---
-
-
-def build_response(solver_result: SolverResult, explanation: str) -> QueryResponse:
-    """
-    Đóng gói SolverResult nội bộ của pipeline + văn bản giải thích thành QueryResponse API.
-    """
-    answer = solver_result.get("answer", "Error")
-    confidence = solver_result.get("confidence", 0.5)
-    source = solver_result.get("source")
-    
-    # Logic 1: fol = ", ".join(solver_result["fol"]) nếu có, else None
-    fol_str = None
-    if source == "z3" and solver_result.get("fol"):
-        fol_str = ", ".join(solver_result["fol"])
-        
-    # Logic 2: cot = solver_result["steps"] nếu source là "sympy", else None
-    cot_steps = None
-    if source == "sympy":
-        cot_steps = solver_result.get("steps")
-
-    # Explanation luôn được truyền thẳng, không để rỗng theo đúng Spec
-    return QueryResponse(
-        answer=answer,
-        explanation=explanation if explanation else "[No explanation provided]",
-        fol=fol_str,
-        cot=cot_steps,
-        premises=solver_result.get("fol") if source == "z3" else None,
-        confidence=confidence
+    return UnifiedResponse(
+        query_id=query_id,
+        answer=str(answer),
+        unit=unit_ascii,
+        explanation=explanation or f"The answer is {answer}.",
+        premises_used=premises_used or [],
+        reasoning=reasoning
     )
+
 
 if __name__ == "__main__":
     print("=================== BẮT ĐẦU KIỂM THỬ RESPONSE BUILDER ===================")
 
-    mock_type1 = SolverResult(
-        answer="A", unit=None,
-        steps=["∀x (A(x) → B(x))", "A(socrates)", "∴ B(socrates)"],
-        fol=["∀x (A(x) → B(x))", "A(socrates)"],
-        source="z3", confidence=1.0,
+    # Test Case 1: Type 1 (Logic)
+    res_type1 = build_response(
+        query_id="T1_123",
+        query_type="type1",
+        answer="A",
+        explanation="Logical proof path.",
+        steps=["∀x (A(x) -> B(x))", "A(socrates)", "∴ B(socrates)"],
+        premises_used=[0, 1]
     )
-    
-    mock_type2 = SolverResult(
-        answer="0.045", unit="J",
-        steps=["E = 0.5 * C * U^2", "E = 0.5 * 100e-6 * 30^2", "E = 0.045"],
-        fol=None, source="sympy", confidence=1.0,
+    assert res_type1.query_id == "T1_123"
+    assert res_type1.answer == "A"
+    assert res_type1.unit == ""
+    assert res_type1.premises_used == [0, 1]
+    assert res_type1.reasoning is not None
+    assert res_type1.reasoning.type == "fol"
+    assert len(res_type1.reasoning.steps) == 3
+    print("✅ Test `build_response` với Type 1: PASS")
+
+    # Test Case 2: Type 2 (Physics)
+    res_type2 = build_response(
+        query_id="T2_123",
+        query_type="type2",
+        answer="0.045",
+        explanation="Calculated using energy formula.",
+        raw_unit="μF",
+        steps=["E = 0.5 * C * U^2", "E = 0.045"],
+        premises_used=[]
     )
+    assert res_type2.query_id == "T2_123"
+    assert res_type2.answer == "0.045"
+    assert res_type2.unit == "uF"  # ASCII-fied
+    assert res_type2.premises_used == []
+    assert res_type2.reasoning is not None
+    assert res_type2.reasoning.type == "cot"
+    print("✅ Test `build_response` với Type 2: PASS")
 
-    # Chạy thử Nghiệm thu Case 1 (Type 1 - Logic)
-    response = build_response(mock_type1, "The conclusion follows from premise 1 and 2.")
-    assert response.answer == "A"
-    assert response.explanation != ""
-    assert response.fol == "∀x (A(x) → B(x)), A(socrates)"  # Kiểm tra chuỗi đã được gộp phẳng
-    assert response.cot is None
-    print("✅ Test `build_response` với Mock Type 1: PASS")
-
-    # Chạy thử Nghiệm thu Case 2 (Type 2 - Physics)
-    response_p2 = build_response(mock_type2, "Calculated using energy formula.")
-    assert response_p2.answer == "0.045"
-    assert response_p2.explanation != ""
-    assert response_p2.fol is None
-    assert response_p2.cot == ["E = 0.5 * C * U^2", "E = 0.5 * 100e-6 * 30^2", "E = 0.045"]  # Kiểm tra nạp mảng steps thành công
-    print("✅ Test `build_response` với Mock Type 2: PASS")
-    
     print("\n========================= KẾT THÚC KIỂM THỬ =========================")

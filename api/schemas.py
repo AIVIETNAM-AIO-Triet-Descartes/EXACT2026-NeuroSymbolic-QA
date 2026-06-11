@@ -1,16 +1,24 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal
 
 
-class QueryRequest(BaseModel):
-    question: str
-    premises: list[str] = []  # Empty list for Type 2 queries
+class UnifiedRequest(BaseModel):
+    query_id: str
+    type: Literal["type1", "type2"]
+    query: str
+    premises: list[str] = []
+    options: list[str] = []
 
 
-class QueryResponse(BaseModel):
+class ReasoningBlock(BaseModel):
+    type: Literal["fol", "cot", "proof"]
+    steps: list[str]
+
+
+class UnifiedResponse(BaseModel):
+    query_id: str
     answer: str
+    unit: str
     explanation: str
-    fol: Optional[str] = None
-    cot: Optional[list[str]] = None
-    premises: Optional[list[str]] = None
-    confidence: Optional[float] = None
+    premises_used: list[int]
+    reasoning: Optional[ReasoningBlock] = None
