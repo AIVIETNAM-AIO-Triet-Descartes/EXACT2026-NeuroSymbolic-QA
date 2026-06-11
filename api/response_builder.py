@@ -11,6 +11,9 @@
 # --- Import thật (dùng khi Người 1 xong) ---
 # from api.schemas import QueryResponse
 
+# --- Import hàm từ pipeline để xử lý FLAG C ---
+from pipeline.type2.units import ascii_unit
+
 # --- MOCK SCHEMAS — Người 5 dùng tạm, không cần chờ Người 1 ---
 from typing import Optional, List
 from pydantic import BaseModel, Field
@@ -28,6 +31,7 @@ class QueryResponse(BaseModel):
     cot: Optional[List[str]] = Field(None, description="Các bước suy luận Chain-of-Thought (Type 2)")
     premises: Optional[List[str]] = Field(None, description="Danh sách tiền đề chứng minh")
     confidence: Optional[float] = Field(None, description="Độ tin cậy từ 0.0 đến 1.0")
+    unit: Optional[str] = Field(None, description="Đơn vị vật lý đã được ASCII hóa (FLAG C)")
 
 
 # --- END MOCK SCHEMAS ---
@@ -51,6 +55,9 @@ def build_response(solver_result: SolverResult, explanation: str) -> QueryRespon
     if source == "sympy":
         cot_steps = solver_result.get("steps")
 
+    raw_unit = solver_result.get("unit")
+    ascii_unit_str = ascii_unit(raw_unit) if raw_unit else None
+
     # Explanation luôn được truyền thẳng, không để rỗng theo đúng Spec
     return QueryResponse(
         answer=answer,
@@ -58,11 +65,24 @@ def build_response(solver_result: SolverResult, explanation: str) -> QueryRespon
         fol=fol_str,
         cot=cot_steps,
         premises=solver_result.get("fol") if source == "z3" else None,
-        confidence=confidence
+        confidence=confidence,
+        unit=ascii_unit_str
     )
 
 if __name__ == "__main__":
     print("=================== BẮT ĐẦU KIỂM THỬ RESPONSE BUILDER ===================")
+
+    import sys
+    from types import ModuleType
+
+    if 'pipeline.type2.units' not in sys.modules:
+        mock_units_module = ModuleType('pipeline.type2.units')
+        def mock_ascii_unit(unit):
+            mapping = {"Ω": "ohm", "µF": "uF"}
+            return mapping.get(unit, unit)
+        mock_units_module.ascii_unit = mock_ascii_unit
+        sys.modules['pipeline.type2.units'] = mock_units_module
+        globals()["ascii_unit"] = mock_ascii_unit
 
     mock_type1 = SolverResult(
         answer="A", unit=None,
@@ -72,8 +92,8 @@ if __name__ == "__main__":
     )
     
     mock_type2 = SolverResult(
-        answer="0.045", unit="J",
-        steps=["E = 0.5 * C * U^2", "E = 0.5 * 100e-6 * 30^2", "E = 0.045"],
+        answer="10", unit="Ω",  # Thử nghiệm đơn vị Unicode Ω
+        steps=["R = U / I", "R = 20 / 2", "R = 10"],
         fol=None, source="sympy", confidence=1.0,
     )
 
@@ -81,16 +101,19 @@ if __name__ == "__main__":
     response = build_response(mock_type1, "The conclusion follows from premise 1 and 2.")
     assert response.answer == "A"
     assert response.explanation != ""
-    assert response.fol == "∀x (A(x) → B(x)), A(socrates)"  # Kiểm tra chuỗi đã được gộp phẳng
+    assert response.fol == "∀x (A(x) → B(x)), A(socrates)"
     assert response.cot is None
-    print("✅ Test `build_response` với Mock Type 1: PASS")
+    assert response.unit is None
+    print(" Test `build_response` với Mock Type 1: PASS")
+
 
     # Chạy thử Nghiệm thu Case 2 (Type 2 - Physics)
-    response_p2 = build_response(mock_type2, "Calculated using energy formula.")
-    assert response_p2.answer == "0.045"
+    response_p2 = build_response(mock_type2, "Calculated using Ohm's law.")
+    assert response_p2.answer == "10"
     assert response_p2.explanation != ""
     assert response_p2.fol is None
-    assert response_p2.cot == ["E = 0.5 * C * U^2", "E = 0.5 * 100e-6 * 30^2", "E = 0.045"]  # Kiểm tra nạp mảng steps thành công
-    print("✅ Test `build_response` với Mock Type 2: PASS")
+    assert response_p2.cot == ["R = U / I", "R = 20 / 2", "R = 10"]
+    assert response_p2.unit == "ohm"  # Kiểm tra đã convert Ω -> ohm thành công
+    print(" Test `build_response` với Mock Type 2 (FLAG C): PASS")
     
     print("\n========================= KẾT THÚC KIỂM THỬ =========================")
