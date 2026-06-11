@@ -1,0 +1,2395 @@
+[
+  {
+    "id": "formula_001",
+    "topic": "ohms_law",
+    "domain": "circuits",
+    "formula_natural": "Ohm's law relating voltage, current, and resistance",
+    "formula_sympy": "U = I * R",
+    "formula_latex": "V = IR",
+    "variables": {
+      "I": {
+        "description": "Electric current",
+        "unit": "A"
+      },
+      "R": {
+        "description": "Electrical resistance",
+        "unit": "ohm"
+      },
+      "U": {
+        "description": "Voltage or potential difference",
+        "unit": "V"
+      }
+    },
+    "unit_conversions": [
+      "mA → 1e-3 A",
+      "A → 1 A",
+      "kohm → 1e3 ohm",
+      "Mohm → 1e6 ohm",
+      "mV → 1e-3 V",
+      "kV → 1e3 V"
+    ],
+    "example_question": "A resistor of 5 kohm has a current of 2 mA flowing through it. Calculate the voltage across the resistor.",
+    "example_cot": "Step 1: Identify R = 5 kohm = 5000 ohm, I = 2 mA = 0.002 A.\nStep 2: Apply V = I * R.\nStep 3: V = 0.002 * 5000 = 10 V.",
+    "example_answer": "10",
+    "example_unit": "V",
+    "keywords": [
+      "Ohm's law",
+      "Ohm",
+      "ohm",
+      "resistance",
+      "voltage",
+      "current",
+      "resistor",
+      "potential difference",
+      "U=IR",
+      "U = IR",
+      "calculate voltage",
+      "find current",
+      "determine resistance",
+      "R",
+      "I",
+      "U"
+    ]
+  },
+  {
+    "id": "formula_002",
+    "topic": "series_resistance",
+    "domain": "circuits",
+    "formula_natural": "Total resistance of resistors connected in series",
+    "formula_sympy": "R_total = R1 + R2 + R3",
+    "formula_latex": "R_{total} = R_1 + R_2 + R_3",
+    "variables": {
+      "R_total": {
+        "description": "Equivalent total resistance",
+        "unit": "ohm"
+      },
+      "R1": {
+        "description": "Resistance of first resistor",
+        "unit": "ohm"
+      },
+      "R2": {
+        "description": "Resistance of second resistor",
+        "unit": "ohm"
+      },
+      "R3": {
+        "description": "Resistance of third resistor",
+        "unit": "ohm"
+      }
+    },
+    "unit_conversions": [
+      "kohm → 1e3 ohm",
+      "Mohm → 1e6 ohm"
+    ],
+    "example_question": "Three resistors with values 100 ohm, 200 ohm, and 300 ohm are connected in series. Find the total resistance.",
+    "example_cot": "Step 1: Identify R1 = 100 ohm, R2 = 200 ohm, R3 = 300 ohm.\nStep 2: Apply R_total = R1 + R2 + R3.\nStep 3: R_total = 100 + 200 + 300 = 600 ohm.",
+    "example_answer": "600",
+    "example_unit": "ohm",
+    "keywords": [
+      "series resistance",
+      "resistors in series",
+      "equivalent resistance",
+      "total resistance",
+      "series circuit",
+      "calculate total resistance",
+      "find equivalent resistance",
+      "R1",
+      "R2",
+      "R3",
+      "R_total"
+    ]
+  },
+  {
+    "id": "formula_003",
+    "topic": "parallel_resistance",
+    "domain": "circuits",
+    "formula_natural": "Equivalent resistance of two resistors connected in parallel",
+    "formula_sympy": "R_total = (R1 * R2) / (R1 + R2)",
+    "formula_latex": "R_{total} = \\frac{R_1 R_2}{R_1 + R_2}",
+    "variables": {
+      "R_total": {
+        "description": "Equivalent total parallel resistance",
+        "unit": "ohm"
+      },
+      "R1": {
+        "description": "Resistance of first parallel resistor",
+        "unit": "ohm"
+      },
+      "R2": {
+        "description": "Resistance of second parallel resistor",
+        "unit": "ohm"
+      }
+    },
+    "unit_conversions": [
+      "kohm → 1e3 ohm",
+      "Mohm → 1e6 ohm"
+    ],
+    "example_question": "Two resistors of 20 ohm and 30 ohm are connected in parallel. Calculate their equivalent resistance.",
+    "example_cot": "Step 1: Identify R1 = 20 ohm, R2 = 30 ohm.\nStep 2: Apply R_total = (R1 * R2) / (R1 + R2).\nStep 3: R_total = (20 * 30) / (20 + 30) = 600 / 50 = 12 ohm.",
+    "example_answer": "12",
+    "example_unit": "ohm",
+    "keywords": [
+      "parallel resistance",
+      "resistors in parallel",
+      "equivalent resistance",
+      "parallel circuit",
+      "total parallel resistance",
+      "calculate parallel resistance",
+      "find equivalent parallel",
+      "R1",
+      "R2",
+      "R_total"
+    ]
+  },
+  {
+    "id": "formula_004",
+    "topic": "power_vi",
+    "domain": "circuits",
+    "formula_natural": "Electric power using voltage and current",
+    "formula_sympy": "P = U * I",
+    "formula_latex": "P = VI",
+    "variables": {
+      "P": {
+        "description": "Electric power consumed or generated",
+        "unit": "W"
+      },
+      "I": {
+        "description": "Current flowing through the component",
+        "unit": "A"
+      },
+      "U": {
+        "description": "Voltage drop across the component",
+        "unit": "V"
+      }
+    },
+    "unit_conversions": [
+      "mW → 1e-3 W",
+      "kW → 1e3 W",
+      "MW → 1e6 W",
+      "mA → 1e-3 A",
+      "kV → 1e3 V"
+    ],
+    "example_question": "A device operates at a voltage of 12 V and draws a current of 2 A. Determine the power consumption.",
+    "example_cot": "Step 1: Identify V = 12 V, I = 2 A.\nStep 2: Apply P = V * I.\nStep 3: P = 12 * 2 = 24 W.",
+    "example_answer": "24",
+    "example_unit": "W",
+    "keywords": [
+      "electric power",
+      "power consumption",
+      "power dissipated",
+      "voltage and current",
+      "watt",
+      "calculate power",
+      "find power",
+      "determine wattage",
+      "P = VI",
+      "P=VI",
+      "P",
+      "U",
+      "I"
+    ]
+  },
+  {
+    "id": "formula_005",
+    "topic": "power_i2r",
+    "domain": "circuits",
+    "formula_natural": "Electric power dissipated in a resistor using current and resistance",
+    "formula_sympy": "P = I**2 * R",
+    "formula_latex": "P = I^2 R",
+    "variables": {
+      "P": {
+        "description": "Power dissipated as heat",
+        "unit": "W"
+      },
+      "I": {
+        "description": "Current through the resistor",
+        "unit": "A"
+      },
+      "R": {
+        "description": "Resistance value",
+        "unit": "ohm"
+      }
+    },
+    "unit_conversions": [
+      "mW → 1e-3 W",
+      "kW → 1e3 W",
+      "mA → 1e-3 A",
+      "kohm → 1e3 ohm"
+    ],
+    "example_question": "Calculate the power dissipated by a 10 ohm resistor when a current of 3 A flows through it.",
+    "example_cot": "Step 1: Identify R = 10 ohm, I = 3 A.\nStep 2: Apply P = I**2 * R.\nStep 3: P = (3**2) * 10 = 9 * 10 = 90 W.",
+    "example_answer": "90",
+    "example_unit": "W",
+    "keywords": [
+      "power dissipation",
+      "Joule heating",
+      "resistor power",
+      "current and resistance",
+      "calculate power heat",
+      "find heat dissipation",
+      "I**2 * R",
+      "P=I^2R",
+      "P",
+      "I",
+      "R"
+    ]
+  },
+  {
+    "id": "formula_006",
+    "topic": "power_v2r",
+    "domain": "circuits",
+    "formula_natural": "Electric power dissipated in a resistor using voltage and resistance",
+    "formula_sympy": "P = U**2 / R",
+    "formula_latex": "P = \\frac{V^2}{R}",
+    "variables": {
+      "P": {
+        "description": "Power dissipated",
+        "unit": "W"
+      },
+      "R": {
+        "description": "Resistance value",
+        "unit": "ohm"
+      },
+      "U": {
+        "description": "Voltage across the resistor",
+        "unit": "V"
+      }
+    },
+    "unit_conversions": [
+      "mW → 1e-3 W",
+      "kW → 1e3 W",
+      "kV → 1e3 V",
+      "kohm → 1e3 ohm"
+    ],
+    "example_question": "A 50 ohm resistor is connected across a 10 V battery. Find the power consumption.",
+    "example_cot": "Step 1: Identify R = 50 ohm, V = 10 V.\nStep 2: Apply P = V**2 / R.\nStep 3: P = (10**2) / 50 = 100 / 50 = 2 W.",
+    "example_answer": "2",
+    "example_unit": "W",
+    "keywords": [
+      "power using voltage",
+      "resistor power draw",
+      "voltage and resistance",
+      "calculate power from voltage",
+      "U**2 / R",
+      "P=U^2/R",
+      "P",
+      "U",
+      "R"
+    ]
+  },
+  {
+    "id": "formula_007",
+    "topic": "kvl",
+    "domain": "circuits",
+    "formula_natural": "Kirchhoff's Voltage Law for a single loop",
+    "formula_sympy": "U_source - U1 - U2 = 0",
+    "formula_latex": "V_{source} - V_1 - V_2 = 0",
+    "variables": {
+      "U_source": {
+        "description": "Source voltage or EMF",
+        "unit": "V"
+      },
+      "U1": {
+        "description": "Voltage drop across first component",
+        "unit": "V"
+      },
+      "U2": {
+        "description": "Voltage drop across second component",
+        "unit": "V"
+      }
+    },
+    "unit_conversions": [
+      "mV → 1e-3 V",
+      "kV → 1e3 V"
+    ],
+    "example_question": "In a single loop circuit, the source voltage is 12 V. If the voltage drop across the first resistor is 4 V, find the voltage drop across the second resistor.",
+    "example_cot": "Step 1: Identify V_source = 12 V, V1 = 4 V.\nStep 2: Apply KVL: V_source - V1 - V2 = 0.\nStep 3: 12 - 4 - V2 = 0 => V2 = 8 V.",
+    "example_answer": "8",
+    "example_unit": "V",
+    "keywords": [
+      "Kirchhoff's Voltage Law",
+      "KVL",
+      "loop rule",
+      "conservation of energy",
+      "voltage sum",
+      "loop equation",
+      "calculate voltage drop",
+      "find loop voltage",
+      "U_source",
+      "U1",
+      "U2"
+    ]
+  },
+  {
+    "id": "formula_008",
+    "topic": "kcl",
+    "domain": "circuits",
+    "formula_natural": "Kirchhoff's Current Law for a node",
+    "formula_sympy": "I_in - I_out1 - I_out2 = 0",
+    "formula_latex": "I_{in} = I_{out1} + I_{out2}",
+    "variables": {
+      "I_in": {
+        "description": "Total current entering the node",
+        "unit": "A"
+      },
+      "I_out1": {
+        "description": "First current leaving the node",
+        "unit": "A"
+      },
+      "I_out2": {
+        "description": "Second current leaving the node",
+        "unit": "A"
+      }
+    },
+    "unit_conversions": [
+      "mA → 1e-3 A",
+      "uA → 1e-6 A"
+    ],
+    "example_question": "A total current of 5 A enters a node. If 2 A leaves through one branch, how much current leaves through the second branch?",
+    "example_cot": "Step 1: Identify I_in = 5 A, I_out1 = 2 A.\nStep 2: Apply KCL: I_in - I_out1 - I_out2 = 0.\nStep 3: 5 - 2 - I_out2 = 0 => I_out2 = 3 A.",
+    "example_answer": "3",
+    "example_unit": "A",
+    "keywords": [
+      "Kirchhoff's Current Law",
+      "KCL",
+      "junction rule",
+      "node rule",
+      "conservation of charge",
+      "current entering leaving",
+      "calculate branch current",
+      "find node current",
+      "I_in",
+      "I_out"
+    ]
+  },
+  {
+    "id": "formula_009",
+    "topic": "voltage_divider",
+    "domain": "circuits",
+    "formula_natural": "Voltage divider rule for output voltage across the second resistor",
+    "formula_sympy": "U_out = U_in * R2 / (R1 + R2)",
+    "formula_latex": "V_{out} = V_{in} \\frac{R_2}{R_1 + R_2}",
+    "variables": {
+      "R1": {
+        "description": "Resistance of first resistor",
+        "unit": "ohm"
+      },
+      "R2": {
+        "description": "Resistance of second resistor",
+        "unit": "ohm"
+      },
+      "U_out": {
+        "description": "Output voltage across R2",
+        "unit": "V"
+      },
+      "U_in": {
+        "description": "Input source voltage",
+        "unit": "V"
+      }
+    },
+    "unit_conversions": [
+      "kV → 1e3 V",
+      "mV → 1e-3 V",
+      "kohm → 1e3 ohm"
+    ],
+    "example_question": "An input voltage of 10 V is applied to a series combination of R1 = 40 ohm and R2 = 60 ohm. Find the output voltage across R2.",
+    "example_cot": "Step 1: Identify V_in = 10 V, R1 = 40 ohm, R2 = 60 ohm.\nStep 2: Apply V_out = V_in * R2 / (R1 + R2).\nStep 3: V_out = 10 * 60 / (40 + 60) = 600 / 100 = 6 V.",
+    "example_answer": "6",
+    "example_unit": "V",
+    "keywords": [
+      "voltage divider",
+      "voltage splitting",
+      "attenuator",
+      "series voltage drop",
+      "calculate output voltage",
+      "find U_out",
+      "voltage divider formula",
+      "U_in",
+      "U_out",
+      "R1",
+      "R2"
+    ]
+  },
+  {
+    "id": "formula_010",
+    "topic": "current_divider",
+    "domain": "circuits",
+    "formula_natural": "Current divider rule for the first branch of two parallel resistors",
+    "formula_sympy": "I1 = I_total * R2 / (R1 + R2)",
+    "formula_latex": "I_1 = I_{total} \\frac{R_2}{R_1 + R_2}",
+    "variables": {
+      "I1": {
+        "description": "Current through branch 1 with resistor R1",
+        "unit": "A"
+      },
+      "I_total": {
+        "description": "Total entering current",
+        "unit": "A"
+      },
+      "R1": {
+        "description": "Resistance of branch 1",
+        "unit": "ohm"
+      },
+      "R2": {
+        "description": "Resistance of branch 2",
+        "unit": "ohm"
+      }
+    },
+    "unit_conversions": [
+      "mA → 1e-3 A",
+      "kohm → 1e3 ohm"
+    ],
+    "example_question": "A total current of 6 A enters a parallel combination of R1 = 10 ohm and R2 = 20 ohm. Calculate the current through the 10 ohm resistor.",
+    "example_cot": "Step 1: Identify I_total = 6 A, R1 = 10 ohm, R2 = 20 ohm.\nStep 2: Apply I1 = I_total * R2 / (R1 + R2).\nStep 3: I1 = 6 * 20 / (10 + 20) = 120 / 30 = 4 A.",
+    "example_answer": "4",
+    "example_unit": "A",
+    "keywords": [
+      "current divider",
+      "current splitting",
+      "parallel current branch",
+      "calculate branch current",
+      "find branch current",
+      "current divider formula",
+      "I_total",
+      "I1",
+      "R1",
+      "R2"
+    ]
+  },
+  {
+    "id": "formula_011",
+    "topic": "capacitor_charge",
+    "domain": "electrostatics",
+    "formula_natural": "Electric charge stored in a capacitor",
+    "formula_sympy": "Q = C * U",
+    "formula_latex": "Q = CV",
+    "variables": {
+      "Q": {
+        "description": "Stored electrical charge",
+        "unit": "C"
+      },
+      "C": {
+        "description": "Capacitance",
+        "unit": "F"
+      },
+      "U": {
+        "description": "Voltage across the capacitor",
+        "unit": "V"
+      }
+    },
+    "unit_conversions": [
+      "uF → 1e-6 F",
+      "nF → 1e-9 F",
+      "pF → 1e-12 F",
+      "uC → 1e-6 C",
+      "mC → 1e-3 C",
+      "mV → 1e-3 V"
+    ],
+    "example_question": "A 50 uF capacitor is connected to a 12 V source. Calculate the accumulated charge on the capacitor.",
+    "example_cot": "Step 1: Identify C = 50 uF = 5e-5 F, V = 12 V.\nStep 2: Apply Q = C * V.\nStep 3: Q = 5e-5 * 12 = 6e-4 C = 0.0006 C.",
+    "example_answer": "0.0006",
+    "example_unit": "C",
+    "keywords": [
+      "capacitor charge",
+      "charge stored",
+      "capacitance and voltage",
+      "Coulomb",
+      "find charge",
+      "calculate electric charge",
+      "Q=CV",
+      "Q = CV",
+      "Q",
+      "C",
+      "U"
+    ]
+  },
+  {
+    "id": "formula_012",
+    "topic": "capacitor_energy",
+    "domain": "electrostatics",
+    "formula_natural": "Energy stored in a capacitor",
+    "formula_sympy": "E = 0.5 * C * U**2",
+    "formula_latex": "E = \\frac{1}{2}CV^2",
+    "variables": {
+      "E": {
+        "description": "Stored electrostatic energy",
+        "unit": "J"
+      },
+      "C": {
+        "description": "Capacitance",
+        "unit": "F"
+      },
+      "U": {
+        "description": "Voltage across the capacitor",
+        "unit": "V"
+      }
+    },
+    "unit_conversions": [
+      "uF → 1e-6 F",
+      "nF → 1e-9 F",
+      "mF → 1e-3 F",
+      "mJ → 1e-3 J",
+      "uJ → 1e-6 J"
+    ],
+    "example_question": "Calculate the energy stored in capacitor C when C = 100 μF and V = 30 V.",
+    "example_cot": "Step 1: Identify C = 100 μF = 1e-4 F, V = 30 V.\nStep 2: Apply E = 0.5 * C * V**2.\nStep 3: E = 0.5 * 1e-4 * 30**2 = 0.5 * 1e-4 * 900 = 0.045 J.",
+    "example_answer": "0.045",
+    "example_unit": "J",
+    "keywords": [
+      "capacitor energy",
+      "energy stored",
+      "capacitance",
+      "voltage",
+      "stored energy",
+      "electrostatic energy",
+      "calculate stored energy",
+      "find capacitor energy",
+      "0.5 * C * U**2",
+      "E",
+      "C",
+      "U"
+    ]
+  },
+  {
+    "id": "formula_013",
+    "topic": "series_capacitance",
+    "domain": "electrostatics",
+    "formula_natural": "Equivalent capacitance of two capacitors connected in series",
+    "formula_sympy": "C_total = (C1 * C2) / (C1 + C2)",
+    "formula_latex": "C_{total} = \\frac{C_1 C_2}{C_1 + C_2}",
+    "variables": {
+      "C_total": {
+        "description": "Equivalent series capacitance",
+        "unit": "F"
+      },
+      "C1": {
+        "description": "Capacitance of first capacitor",
+        "unit": "F"
+      },
+      "C2": {
+        "description": "Capacitance of second capacitor",
+        "unit": "F"
+      }
+    },
+    "unit_conversions": [
+      "uF → 1e-6 F",
+      "nF → 1e-9 F",
+      "pF → 1e-12 F"
+    ],
+    "example_question": "Two capacitors of 3 uF and 6 uF are connected in series. What is their total equivalent capacitance?",
+    "example_cot": "Step 1: Identify C1 = 3 uF, C2 = 6 uF.\nStep 2: Apply C_total = (C1 * C2) / (C1 + C2).\nStep 3: C_total = (3 * 6) / (3 + 6) = 18 / 9 = 2 uF.",
+    "example_answer": "2",
+    "example_unit": "uF",
+    "keywords": [
+      "series capacitance",
+      "capacitors in series",
+      "equivalent capacitance series",
+      "calculate series capacitance",
+      "find total capacitance series",
+      "C1",
+      "C2",
+      "C_total"
+    ]
+  },
+  {
+    "id": "formula_014",
+    "topic": "parallel_capacitance",
+    "domain": "electrostatics",
+    "formula_natural": "Equivalent capacitance of capacitors connected in parallel",
+    "formula_sympy": "C_total = C1 + C2",
+    "formula_latex": "C_{total} = C_1 + C_2",
+    "variables": {
+      "C_total": {
+        "description": "Equivalent total parallel capacitance",
+        "unit": "F"
+      },
+      "C1": {
+        "description": "Capacitance of first capacitor",
+        "unit": "F"
+      },
+      "C2": {
+        "description": "Capacitance of second capacitor",
+        "unit": "F"
+      }
+    },
+    "unit_conversions": [
+      "uF → 1e-6 F",
+      "nF → 1e-9 F",
+      "pF → 1e-12 F"
+    ],
+    "example_question": "A 4 uF capacitor and a 6 uF capacitor are wired in parallel. Determine the total capacitance.",
+    "example_cot": "Step 1: Identify C1 = 4 uF, C2 = 6 uF.\nStep 2: Apply C_total = C1 + C2.\nStep 3: C_total = 4 + 6 = 10 uF.",
+    "example_answer": "10",
+    "example_unit": "uF",
+    "keywords": [
+      "parallel capacitance",
+      "capacitors in parallel",
+      "total capacitance parallel",
+      "calculate parallel capacitance",
+      "find total capacitance parallel",
+      "C1",
+      "C2",
+      "C_total"
+    ]
+  },
+  {
+    "id": "formula_015",
+    "topic": "electric_field_uniform",
+    "domain": "electrostatics",
+    "formula_natural": "Uniform electric field between parallel plates",
+    "formula_sympy": "E = U / d",
+    "formula_latex": "E = \\frac{V}{d}",
+    "variables": {
+      "E": {
+        "description": "Electric field strength",
+        "unit": "V/m"
+      },
+      "d": {
+        "description": "Distance separating the plates",
+        "unit": "m"
+      },
+      "U": {
+        "description": "Potential difference between plates",
+        "unit": "V"
+      }
+    },
+    "unit_conversions": [
+      "cm → 1e-2 m",
+      "mm → 1e-3 m",
+      "kV → 1e3 V"
+    ],
+    "example_question": "Two parallel plates are separated by a distance of 2 cm and have a potential difference of 100 V. Find the electric field strength.",
+    "example_cot": "Step 1: Identify V = 100 V, d = 2 cm = 0.02 m.\nStep 2: Apply E = V / d.\nStep 3: E = 100 / 0.02 = 5000 V/m.",
+    "example_answer": "5000",
+    "example_unit": "V/m",
+    "keywords": [
+      "electric field",
+      "uniform electric field",
+      "voltage and distance",
+      "parallel plates field",
+      "calculate electric field",
+      "find field strength",
+      "E = U/d",
+      "E",
+      "U",
+      "d"
+    ]
+  },
+  {
+    "id": "formula_016",
+    "topic": "coulombs_law",
+    "domain": "electrostatics",
+    "formula_natural": "Coulomb's law for electrostatic force between two point charges",
+    "formula_sympy": "F = k * q1 * q2 / r**2",
+    "formula_latex": "F = k \\frac{q_1 q_2}{r^2}",
+    "variables": {
+      "F": {
+        "description": "Electrostatic force of attraction or repulsion",
+        "unit": "N"
+      },
+      "k": {
+        "description": "Coulomb constant (8.99e9)",
+        "unit": "N*m**2/C**2"
+      },
+      "q1": {
+        "description": "Magnitude of first point charge",
+        "unit": "C"
+      },
+      "q2": {
+        "description": "Magnitude of second point charge",
+        "unit": "C"
+      },
+      "r": {
+        "description": "Separation distance between charges",
+        "unit": "m"
+      }
+    },
+    "unit_conversions": [
+      "uC → 1e-6 C",
+      "nC → 1e-9 C",
+      "cm → 1e-2 m",
+      "mm → 1e-3 m"
+    ],
+    "example_question": "Two charges of 2 uC and 3 uC are separated by 0.3 meters in a vacuum. Calculate the electrostatic force between them using k = 9e9.",
+    "example_cot": "Step 1: Identify q1 = 2e-6 C, q2 = 3e-6 C, r = 0.3 m, k = 9e9.\nStep 2: Apply F = k * q1 * q2 / r**2.\nStep 3: F = 9e9 * 2e-6 * 3e-6 / (0.3**2) = 0.054 / 0.09 = 0.6 N.",
+    "example_answer": "0.6",
+    "example_unit": "N",
+    "keywords": [
+      "Coulomb's law",
+      "electrostatic force",
+      "point charges",
+      "electric force",
+      "attraction force",
+      "repulsion force",
+      "calculate electrostatic force",
+      "find electric force",
+      "F",
+      "k",
+      "q1",
+      "q2",
+      "r"
+    ]
+  },
+  {
+    "id": "formula_017",
+    "topic": "electric_potential_energy",
+    "domain": "electrostatics",
+    "formula_natural": "Electric potential energy of a two point charge system",
+    "formula_sympy": "W = k * q1 * q2 / r",
+    "formula_latex": "U = k \\frac{q_1 q_2}{r}",
+    "variables": {
+      "k": {
+        "description": "Coulomb constant (8.99e9)",
+        "unit": "N*m**2/C**2"
+      },
+      "q1": {
+        "description": "Charge of particle 1",
+        "unit": "C"
+      },
+      "q2": {
+        "description": "Charge of particle 2",
+        "unit": "C"
+      },
+      "r": {
+        "description": "Distance between charges",
+        "unit": "m"
+      },
+      "W": {
+        "description": "Electric potential energy",
+        "unit": "J"
+      }
+    },
+    "unit_conversions": [
+      "uC → 1e-6 C",
+      "nC → 1e-9 C",
+      "cm → 1e-2 m",
+      "mJ → 1e-3 J"
+    ],
+    "example_question": "Find the electric potential energy of two point charges of 1 uC and 4 uC separated by a distance of 2 meters with k = 9e9.",
+    "example_cot": "Step 1: Identify q1 = 1e-6 C, q2 = 4e-6 C, r = 2 m, k = 9e9.\nStep 2: Apply U = k * q1 * q2 / r.\nStep 3: U = 9e9 * 1e-6 * 4e-6 / 2 = 0.036 / 2 = 0.018 J.",
+    "example_answer": "0.018",
+    "example_unit": "J",
+    "keywords": [
+      "electric potential energy",
+      "electrostatic potential energy",
+      "energy of charges",
+      "calculate potential energy",
+      "find charge energy",
+      "W",
+      "k",
+      "q1",
+      "q2",
+      "r"
+    ]
+  },
+  {
+    "id": "formula_018",
+    "topic": "capacitor_dielectric",
+    "domain": "electrostatics",
+    "formula_natural": "Capacitance of a parallel plate capacitor with a dielectric material",
+    "formula_sympy": "C = epsilon * A / d",
+    "formula_latex": "C = \\frac{\\epsilon A}{d}",
+    "variables": {
+      "C": {
+        "description": "Capacitance of the parallel plate capacitor",
+        "unit": "F"
+      },
+      "epsilon": {
+        "description": "Permittivity of the dielectric material",
+        "unit": "F/m"
+      },
+      "A": {
+        "description": "Overlap area of the plates",
+        "unit": "m**2"
+      },
+      "d": {
+        "description": "Distance between plates",
+        "unit": "m"
+      }
+    },
+    "unit_conversions": [
+      "cm2 → 1e-4 m2",
+      "mm → 1e-3 m",
+      "pF → 1e-12 F",
+      "uF → 1e-6 F"
+    ],
+    "example_question": "A capacitor has plate area of 0.02 m2 and plate separation of 0.001 m. If the permittivity epsilon is 4e-11 F/m, calculate the capacitance.",
+    "example_cot": "Step 1: Identify A = 0.02 m2, d = 0.001 m, epsilon = 4e-11 F/m.\nStep 2: Apply C = epsilon * A / d.\nStep 3: C = 4e-11 * 0.02 / 0.001 = 8e-13 / 0.001 = 8e-10 F.",
+    "example_answer": "8e-10",
+    "example_unit": "F",
+    "keywords": [
+      "dielectric capacitor",
+      "parallel plate capacitance",
+      "permittivity",
+      "plate area",
+      "plate separation",
+      "calculate capacitance plates",
+      "find capacitance area",
+      "C",
+      "epsilon",
+      "A",
+      "d"
+    ]
+  },
+  {
+    "id": "formula_019",
+    "topic": "electric_potential_point",
+    "domain": "electrostatics",
+    "formula_natural": "Electric potential due to a single point charge",
+    "formula_sympy": "V = k * q / r",
+    "formula_latex": "V = k \\frac{q}{r}",
+    "variables": {
+      "V": {
+        "description": "Electric potential",
+        "unit": "V"
+      },
+      "k": {
+        "description": "Coulomb constant (8.99e9)",
+        "unit": "N*m**2/C**2"
+      },
+      "q": {
+        "description": "Source point charge value",
+        "unit": "C"
+      },
+      "r": {
+        "description": "Distance from the point charge",
+        "unit": "m"
+      }
+    },
+    "unit_conversions": [
+      "uC → 1e-6 C",
+      "nC → 1e-9 C",
+      "cm → 1e-2 m",
+      "kV → 1e3 V"
+    ],
+    "example_question": "Calculate the electric potential at a distance of 0.5 meters from a point charge of 5 uC using k = 9e9.",
+    "example_cot": "Step 1: Identify q = 5e-6 C, r = 0.5 m, k = 9e9.\nStep 2: Apply V = k * q / r.\nStep 3: V = 9e9 * 5e-6 / 0.5 = 45000 / 0.5 = 90000 V.",
+    "example_answer": "90000",
+    "example_unit": "V",
+    "keywords": [
+      "electric potential",
+      "potential from point charge",
+      "voltage from charge",
+      "calculate electric potential",
+      "find point potential",
+      "V = kq/r",
+      "V",
+      "k",
+      "q",
+      "r"
+    ]
+  },
+  {
+    "id": "formula_020",
+    "topic": "electric_field_point",
+    "domain": "electrostatics",
+    "formula_natural": "Electric field intensity due to a single point charge",
+    "formula_sympy": "E = k * q / r**2",
+    "formula_latex": "E = k \\frac{q}{r^2}",
+    "variables": {
+      "E": {
+        "description": "Electric field strength",
+        "unit": "N/C"
+      },
+      "k": {
+        "description": "Coulomb constant (8.99e9)",
+        "unit": "N*m**2/C**2"
+      },
+      "q": {
+        "description": "Source point charge value",
+        "unit": "C"
+      },
+      "r": {
+        "description": "Distance from point charge",
+        "unit": "m"
+      }
+    },
+    "unit_conversions": [
+      "uC → 1e-6 C",
+      "nC → 1e-9 C",
+      "cm → 1e-2 m"
+    ],
+    "example_question": "Find the electric field strength at a point 3 meters away from a 2e-5 C point charge with k = 9e9.",
+    "example_cot": "Step 1: Identify q = 2e-5 C, r = 3 m, k = 9e9.\nStep 2: Apply E = k * q / r**2.\nStep 3: E = 9e9 * 2e-5 / (3**2) = 180000 / 9 = 20000 N/C.",
+    "example_answer": "20000",
+    "example_unit": "N/C",
+    "keywords": [
+      "electric field strength",
+      "point charge field",
+      "field intensity",
+      "calculate field from charge",
+      "find electric field intensity",
+      "E = kq/r^2",
+      "E",
+      "k",
+      "q",
+      "r"
+    ]
+  },
+  {
+    "id": "formula_021",
+    "topic": "magnetic_field_solenoid",
+    "domain": "electromagnetism",
+    "formula_natural": "Magnetic field inside a long solenoid",
+    "formula_sympy": "B = 4 * pi * 1e-7 * n * I",
+    "formula_latex": "B = \\mu_0 n I = 4\\pi \\times 10^{-7} \\n I",
+    "variables": {
+      "B": {
+        "description": "Magnetic field induction inside the solenoid",
+        "unit": "T"
+      },
+      "mu_0": {
+        "description": "Permeability of free space (4*pi*1e-7)",
+        "unit": "T*m/A"
+      },
+      "n": {
+        "description": "Number of turns per unit length (N/L)",
+        "unit": "1/m"
+      },
+      "I": {
+        "description": "Electric current intensity",
+        "unit": "A"
+      }
+    },
+    "unit_conversions": [
+      "mA → 1e-3 A",
+      "cm → 1e-2 m",
+      "mm → 1e-3 m",
+      "kA → 1e3 A",
+      "turns/cm → 100 turns/m"
+    ],
+    "example_question": "A solenoid has 2000 turns per meter (n = 2000). Find the magnetic field inside when a 3 A current flows through it.",
+    "example_cot": "Step 1: Identify n = 2000 m^-1, I = 3 A.\nStep 2: Apply B = 4 * pi * 10^-7 * n * I.\nStep 3: B = 4 * 3.14159265 * 10^-7 * 2000 * 3 = 0.00754 T.",
+    "example_answer": "0.00754",
+    "example_unit": "T",
+    "keywords": [
+      "B = mu_0*n*I",
+      "B = 4pi*10^-7*n*I",
+      "magnetic field solenoid",
+      "B field inside solenoid",
+      "calculate magnetic field",
+      "find B field solenoid",
+      "mu_0 n I",
+      "B",
+      "n",
+      "I"
+    ]
+  },
+  {
+    "id": "formula_022",
+    "topic": "magnetic_field_solenoid",
+    "domain": "electromagnetism",
+    "formula_natural": "Magnetic field inside a long solenoid using total turns and length",
+    "formula_sympy": "B = 4 * pi * 1e-7 * (N / L) * I",
+    "formula_latex": "B = \\mu_0 \\frac{N}{L} I = 4\\pi \\times 10^{-7} \\frac{N}{L} I",
+    "variables": {
+      "B": {
+        "description": "Magnetic field induction inside the solenoid",
+        "unit": "T"
+      },
+      "mu_0": {
+        "description": "Permeability of free space (4*pi*1e-7)",
+        "unit": "T*m/A"
+      },
+      "N": {
+        "description": "Total number of turns in the solenoid",
+        "unit": "turns"
+      },
+      "L": {
+        "description": "Length of the solenoid",
+        "unit": "m"
+      },
+      "I": {
+        "description": "Electric current intensity",
+        "unit": "A"
+      }
+    },
+    "unit_conversions": [
+      "mA → 1e-3 A",
+      "cm → 1e-2 m",
+      "mm → 1e-3 m",
+      "kA → 1e3 A"
+    ],
+    "example_question": "A solenoid has a total of 500 turns and is 0.5 meters long. Calculate the magnetic field inside when a current of 2 A flows through it.",
+    "example_cot": "Step 1: Identify N = 500, L = 0.5 m, I = 2 A.\nStep 2: Apply B = 4 * pi * 10^-7 * (N / L) * I.\nStep 3: B = 4 * 3.14159265 * 10^-7 * (500 / 0.5) * 2 = 0.00251 T.",
+    "example_answer": "0.00251",
+    "example_unit": "T",
+    "keywords": [
+      "B = mu_0*N/L*I",
+      "B = 4pi*10^-7*N/L*I",
+      "magnetic field solenoid",
+      "B field inside solenoid",
+      "calculate magnetic field",
+      "find B field solenoid",
+      "mu_0 N L I",
+      "B",
+      "N",
+      "L",
+      "I"
+    ]
+  },
+  {
+    "id": "formula_023",
+    "topic": "self_inductance_solenoid",
+    "domain": "electromagnetism",
+    "formula_natural": "Self-inductance of a long solenoid",
+    "formula_sympy": "L = mu_0 * N**2 * A / l",
+    "formula_latex": "L = \\mu_0 \\frac{N^2 A}{l}",
+    "variables": {
+      "L": {
+        "description": "Self-inductance of the solenoid",
+        "unit": "H"
+      },
+      "mu_0": {
+        "description": "Permeability of free space (4*pi*1e-7)",
+        "unit": "T*m/A"
+      },
+      "N": {
+        "description": "Total number of turns in the solenoid",
+        "unit": "turns"
+      },
+      "A": {
+        "description": "Cross-sectional area of the solenoid",
+        "unit": "m**2"
+      },
+      "l": {
+        "description": "Length of the solenoid",
+        "unit": "m"
+      }
+    },
+    "unit_conversions": [
+      "cm → 1e-2 m",
+      "cm**2 → 1e-4 m**2",
+      "mm**2 → 1e-6 m**2",
+      "mH → 1e-3 H"
+    ],
+    "example_question": "A solenoid with a length of 0.5 meters and a cross-sectional area of 0.01 square meters has 1000 turns. Calculate its self-inductance.",
+    "example_cot": "Step 1: Identify N = 1000, A = 0.01 m^2, l = 0.5 m.\nStep 2: Apply L = mu_0 * N**2 * A / l.\nStep 3: L = 4 * pi * 10^-7 * (1000**2) * 0.01 / 0.5 = 0.02513 H.",
+    "example_answer": "0.02513",
+    "example_unit": "H",
+    "keywords": [
+      "self-inductance",
+      "inductance of coil",
+      "inductance of solenoid",
+      "calculate inductance",
+      "find self-inductance",
+      "L = mu_0*N^2*A/L",
+      "L = 4pi*10^-7*N^2*A/l",
+      "L",
+      "mu_0",
+      "N",
+      "A",
+      "L"
+    ]
+  },
+  {
+    "id": "formula_024",
+    "topic": "magnetic_flux",
+    "domain": "electromagnetism",
+    "formula_natural": "Magnetic flux through a surface loop",
+    "formula_sympy": "Phi = B * A * cos(theta)",
+    "formula_latex": "\\Phi = B \\cdot A \\cdot \\cos(\\theta)",
+    "variables": {
+      "Phi": {
+        "description": "Magnetic flux through the surface area",
+        "unit": "Wb"
+      },
+      "B": {
+        "description": "Magnetic field induction (magenetic flux density)",
+        "unit": "T"
+      },
+      "A": {
+        "description": "Cross-sectional area of the loop surface",
+        "unit": "m**2"
+      },
+      "theta": {
+        "description": "Angle between the magnetic field lines and the normal to the surface",
+        "unit": "rad"
+      }
+    },
+    "unit_conversions": [
+      "mWb → 1e-3 Wb",
+      "cm**2 → 1e-4 m**2",
+      "mm**2 → 1e-6 m**2",
+      "deg → pi/180 rad"
+    ],
+    "example_question": "A loop with an area of 0.05 m**2 is placed in a uniform magnetic field of 0.4 T. Find the magnetic flux through the loop if the angle theta between the field and the normal is 0 radians.",
+    "example_cot": "Step 1: Identify B = 0.4 T, A = 0.05 m**2, theta = 0 rad.\nStep 2: Apply Phi = B * A * cos(theta).\nStep 3: Phi = 0.4 * 0.05 * cos(0) = 0.02 * 1 = 0.02 Wb.",
+    "example_answer": "0.02",
+    "example_unit": "Wb",
+    "keywords": [
+      "magnetic flux",
+      "flux through surface",
+      "flux through a loop",
+      "calculate magnetic flux",
+      "find magnetic flux",
+      "Phi = B*A*cos(theta)",
+      "Phi",
+      "B",
+      "A",
+      "theta"
+    ]
+  },
+  {
+    "id": "formula_025",
+    "topic": "magnetic_energy_inductor",
+    "domain": "electromagnetism",
+    "formula_natural": "Magnetic energy stored in an inductor",
+    "formula_sympy": "W_L = 0.5 * L * I**2",
+    "formula_latex": "W_L = \\frac{1}{2} L I^2",
+    "variables": {
+      "W_L": {
+        "description": "Magnetic field energy stored in the inductor",
+        "unit": "J"
+      },
+      "L": {
+        "description": "Self-inductance of the inductor",
+        "unit": "H"
+      },
+      "I": {
+        "description": "Electric current intensity passing through the inductor",
+        "unit": "A"
+      }
+    },
+    "unit_conversions": [
+      "mH → 1e-3 H",
+      "mA → 1e-3 A",
+      "mJ → 1e-3 J",
+      "mV → 1e-3 V",
+      "mWb → 1e-3 Wb",
+      "ms → 1e-3 s"
+    ],
+    "example_question": "An inductor with a self-inductance of 0.05 H carries a current of 4 A. Calculate the magnetic energy stored in its field.",
+    "example_cot": "Step 1: Identify L = 0.05 H, I = 4 A.\nStep 2: Apply W_L = 0.5 * L * I**2.\nStep 3: W_L = 0.5 * 0.05 * (4**2) = 0.025 * 16 = 0.4 J.",
+    "example_answer": "0.4",
+    "example_unit": "J",
+    "keywords": [
+      "magnetic energy",
+      "energy stored in inductor",
+      "calculate magnetic energy",
+      "find inductor energy",
+      "W_L = 1/2*L*I^2",
+      "W_L",
+      "L",
+      "I"
+    ]
+  },
+  {
+    "id": "formula_026",
+    "topic": "magnetic_energy_density",
+    "domain": "electromagnetism",
+    "formula_natural": "Magnetic energy density in a magnetic field",
+    "formula_sympy": "u_B = B**2 / (2 * mu_0)",
+    "formula_latex": "u_B = \\frac{B^2}{2 \\mu_0}",
+    "variables": {
+      "u_B": {
+        "description": "Magnetic energy density",
+        "unit": "J/m**3"
+      },
+      "B": {
+        "description": "Magnetic field induction (magnetic flux density)",
+        "unit": "T"
+      },
+      "mu_0": {
+        "description": "Permeability of free space (4*pi*1e-7)",
+        "unit": "T*m/A"
+      }
+    },
+    "unit_conversions": [
+      "mJ/m**3 → 1e-3 J/m**3",
+      "mT → 1e-3 T",
+      "uT → 1e-6 T",
+      "kJ/m**3 → 1e3 J/m**3"
+    ],
+    "example_question": "Find the magnetic energy density at a point where the magnetic field induction B is 2 T.",
+    "example_cot": "Step 1: Identify B = 2 T, mu_0 = 4 * pi * 10^-7 T*m/A.\nStep 2: Apply u_B = B**2 / (2 * mu_0).\nStep 3: u_B = (2)**2 / (2 * 4 * pi * 10^-7) = 4 / (8 * pi * 10^-7) ≈ 1.59 * 10^5 J/m**3.",
+    "example_answer": "1.59e5",
+    "example_unit": "J/m**3",
+    "keywords": [
+      "magnetic energy density",
+      "energy density in magnetic field",
+      "calculate magnetic energy density",
+      "find magnetic energy density",
+      "u_B = B^2/(2*mu_0)",
+      "u_B",
+      "B",
+      "mu_0"
+    ]
+  },
+  {
+    "id": "formula_027",
+    "topic": "inductive_reactance",
+    "domain": "ac_circuits",
+    "formula_natural": "Inductive reactance of an inductor",
+    "formula_sympy": "Z_L = 2 * pi * f * L",
+    "formula_latex": "Z_L = \\omega L = 2\\pi f L",
+    "variables": {
+      "Z_L": {
+        "description": "Inductive reactance",
+        "unit": "ohm"
+      },
+      "omega": {
+        "description": "Angular frequency of the alternating current",
+        "unit": "rad/s"
+      },
+      "f": {
+        "description": "Frequency of the alternating current",
+        "unit": "Hz"
+      },
+      "L": {
+        "description": "Self-inductance of the inductor",
+        "unit": "H"
+      }
+    },
+    "unit_conversions": [
+      "mA → 1e-3 A",
+      "cm/s → 1e-2 m/s",
+      "mm/s → 1e-3 m/s",
+      "kA → 1e3 A",
+      "deg → pi/180 rad",
+      "mH → 1e-3 H",
+      "kHz → 1e3 Hz",
+      "MHz → 1e6 Hz"
+    ],
+    "example_question": "An inductor with an inductance of 0.2 H is connected to an AC source with a frequency of 50 Hz. Calculate its inductive reactance.",
+    "example_cot": "Step 1: Identify L = 0.2 H, f = 50 Hz.\nStep 2: Apply Z_L = 2 * pi * f * L.\nStep 3: Z_L = 2 * 3.14159265 * 50 * 0.2 = 62.83 ohm.",
+    "example_answer": "62.83",
+    "example_unit": "ohm",
+    "keywords": [
+      "omega",
+      "inductive reactance",
+      "reactance of inductor",
+      "calculate inductive reactance",
+      "find inductive reactance",
+      "Z_L = 2*pi*f*L",
+      "Z_L = omega*L",
+      "Z_L",
+      "f",
+      "L"
+    ]
+  },
+  {
+    "id": "formula_028",
+    "topic": "capacitive_reactance",
+    "domain": "ac_circuits",
+    "formula_natural": "Capacitive reactance of a capacitor",
+    "formula_sympy": "Z_C = 1 / (2 * pi * f * C)",
+    "formula_latex": "Z_C = \\frac{1}{\\omega C} = \\frac{1}{2\\pi f C}",
+    "variables": {
+      "Z_C": {
+        "description": "Capacitive reactance",
+        "unit": "ohm"
+      },
+      "omega": {
+        "description": "Angular frequency of the alternating current",
+        "unit": "rad/s"
+      },
+      "f": {
+        "description": "Frequency of the alternating current",
+        "unit": "Hz"
+      },
+      "C": {
+        "description": "Capacitance of the capacitor",
+        "unit": "F"
+      }
+    },
+    "unit_conversions": [
+      "mA → 1e-3 A",
+      "cm/s → 1e-2 m/s",
+      "mm/s → 1e-3 m/s",
+      "kA → 1e3 A",
+      "deg → pi/180 rad",
+      "pF → 1e-12 F",
+      "nF → 1e-9 F",
+      "uF → 1e-6 F",
+      "kHz → 1e3 Hz",
+      "MHz → 1e6 Hz"
+    ],
+    "example_question": "A capacitor with a capacitance of 10 uF is connected to an AC source with a frequency of 60 Hz. Calculate its capacitive reactance.",
+    "example_cot": "Step 1: Identify C = 10e-6 F, f = 60 Hz.\nStep 2: Apply Z_C = 1 / (2 * pi * f * C).\nStep 3: Z_C = 1 / (2 * 3.14159265 * 60 * 10e-6) ≈ 265.26 ohm.",
+    "example_answer": "265.26",
+    "example_unit": "ohm",
+    "keywords": [
+      "Z_C = 1/(omega*C)",
+      "Z_C = 1/(2pi*f*C)",
+      "capacitive reactance",
+      "calculate dung kháng",
+      "Z_C",
+      "omega",
+      "f",
+      "C"
+    ]
+  },
+  {
+    "id": "formula_029",
+    "topic": "impedance_rlc_series",
+    "domain": "ac_circuits",
+    "formula_natural": "Impedance of a series RLC circuit",
+    "formula_sympy": "Z = sqrt(R**2 + (Z_L - Z_C)**2)",
+    "formula_latex": "Z = \\sqrt{R^2 + (Z_L - Z_C)^2}",
+    "variables": {
+      "Z": {
+        "description": "Total impedance of the series RLC circuit",
+        "unit": "ohm"
+      },
+      "R": {
+        "description": "Resistance in the circuit",
+        "unit": "ohm"
+      },
+      "Z_L": {
+        "description": "Inductive reactance",
+        "unit": "ohm"
+      },
+      "Z_C": {
+        "description": "Capacitive reactance",
+        "unit": "ohm"
+      }
+    },
+    "unit_conversions": [
+      "mA → 1e-3 A",
+      "cm/s → 1e-2 m/s",
+      "mm/s → 1e-3 m/s",
+      "kA → 1e3 A",
+      "deg → pi/180 rad",
+      "pF → 1e-12 F",
+      "nF → 1e-9 F",
+      "uF → 1e-6 F",
+      "mH → 1e-3 H",
+      "kHz → 1e3 Hz",
+      "MHz → 1e6 Hz"
+    ],
+    "example_question": "A series RLC circuit has a resistance of 30 ohms, an inductive reactance of 80 ohms, and a capacitive reactance of 40 ohms. Calculate the total impedance.",
+    "example_cot": "Step 1: Identify R = 30 ohms, Z_L = 80 ohms, Z_C = 40 ohms.\nStep 2: Apply Z = sqrt(R**2 + (Z_L - Z_C)**2).\nStep 3: Z = sqrt(30**2 + (80 - 40)**2) = sqrt(900 + 1600) = sqrt(2500) = 50 ohms.",
+    "example_answer": "50",
+    "example_unit": "ohm",
+    "keywords": [
+      "Z = sqrt(R^2 + (Z_L - Z_C)^2)",
+      "impedance",
+      "series RLC circuit",
+      "total impedance",
+      "Z",
+      "R",
+      "Z_L",
+      "Z_C"
+    ]
+  },
+  {
+    "id": "formula_030",
+    "topic": "root_mean_square_voltage",
+    "domain": "ac_circuits",
+    "formula_natural": "Root mean square voltage of an AC signal",
+    "formula_sympy": "U = U_peak / sqrt(2)",
+    "formula_latex": "U = \\frac{U_{\\text{peak}}}{\\sqrt{2}}",
+    "variables": {
+      "U": {
+        "description": "Root mean square voltage of the AC signal",
+        "unit": "V"
+      },
+      "U_peak": {
+        "description": "Peak voltage of the AC signal",
+        "unit": "V"
+      }
+    },
+    "unit_conversions": [
+      "mV → 1e-3 V",
+      "kV → 1e3 V"
+    ],
+    "example_question": "An AC signal has a peak voltage of 100 V. Calculate its RMS voltage.",
+    "example_cot": "Step 1: Identify U_peak = 100 V.\nStep 2: Apply U = U_peak / sqrt(2).\nStep 3: U = 100 / sqrt(2) = 70.71 V.",
+    "example_answer": "70.71",
+    "example_unit": "V",
+    "keywords": [
+      "root mean square voltage",
+      "AC signal",
+      "peak voltage",
+      "U",
+      "U_peak",
+      "RMS voltage",
+      "U = U_0/sqrt(2)"
+    ]
+  },
+  {
+    "id": "formula_031",
+    "topic": "root_mean_square_current",
+    "domain": "ac_circuits",
+    "formula_natural": "Root mean square current of an AC signal",
+    "formula_sympy": "I = I_peak / sqrt(2)",
+    "formula_latex": "I = \\frac{I_{\\text{peak}}}{\\sqrt{2}}",
+    "variables": {
+      "I": {
+        "description": "Root mean square current of the AC signal",
+        "unit": "A"
+      },
+      "I_peak": {
+        "description": "Peak current of the AC signal",
+        "unit": "A"
+      }
+    },
+    "unit_conversions": [
+      "mA → 1e-3 A",
+      "kA → 1e3 A"
+    ],
+    "example_question": "An AC signal has a peak current of 5 A. Calculate its RMS current.",
+    "example_cot": "Step 1: Identify I_peak = 5 A.\nStep 2: Apply I = I_peak / sqrt(2).\nStep 3: I = 5 / sqrt(2) = 3.54 A.",
+    "example_answer": "3.54",
+    "example_unit": "A",
+    "keywords": [
+      "root mean square current",
+      "AC signal",
+      "peak current",
+      "I",
+      "I_peak",
+      "RMS current",
+      "I = I_0/sqrt(2)"
+    ]
+  },
+  {
+    "id": "formula_032",
+    "topic": "power_factor",
+    "domain": "ac_circuits",
+    "formula_natural": "Power factor of an AC circuit",
+    "formula_sympy": "cos_phi  = R / Z",
+    "formula_latex": "\\cos(\\phi) = \\frac{R}{Z}",
+    "variables": {
+      "cos_phi": {
+        "description": "Power factor of the AC circuit",
+        "unit": "dimensionless"
+      },
+      "R": {
+        "description": "Resistance of the AC circuit",
+        "unit": "ohm"
+      },
+      "Z": {
+        "description": "Impedance of the AC circuit",
+        "unit": "ohm"
+      }
+    },
+    "unit_conversions": [
+      "kohm → 1e3 ohm"
+    ],
+    "example_question": "An RLC series circuit has R = 18 ohm and Z = 30 ohm. Calculate the power factor, cos(phi).",
+    "example_cot": "Step 1: Identify R = 18 ohms, Z = 30 ohms.\nStep 2: Apply cos_phi = R / Z.\nStep 3: cos_phi = 18 / 30 = 0.6.",
+    "example_answer": "0.6",
+    "example_unit": "dimensionless",
+    "keywords": [
+      "power factor",
+      "AC circuit",
+      "cos_phi",
+      "cos_phi = R/Z",
+      "RLC series circuit",
+      "R",
+      "Z"
+    ]
+  },
+  {
+    "id": "formula_033",
+    "topic": "ac_power_consumption_ui",
+    "domain": "ac_circuits",
+    "formula_natural": "Power consumption using voltage, current, and power factor",
+    "formula_sympy": "P = U * I * cos_phi",
+    "formula_latex": "P = U I \\cos(\\phi)",
+    "variables": {
+      "P": {
+        "description": "Real power consumed by the AC circuit",
+        "unit": "W"
+      },
+      "U": {
+        "description": "RMS voltage across the circuit",
+        "unit": "V"
+      },
+      "I": {
+        "description": "RMS current through the circuit",
+        "unit": "A"
+      },
+      "cos_phi": {
+        "description": "Power factor of the circuit",
+        "unit": "dimensionless"
+      }
+    },
+    "unit_conversions": [
+      "mW → 1e-3 W",
+      "kW → 1e3 W",
+      "mV → 1e-3 V",
+      "kV → 1e3 V",
+      "mA → 1e-3 A",
+      "kA → 1e3 A"
+    ],
+    "example_question": "An AC circuit has an RMS voltage of 220 V and an RMS current of 2 A. If the power factor cos(phi) is 0.8, calculate the power consumption.",
+    "example_cot": "Step 1: Identify U = 220 V, I = 2 A, cos_phi = 0.8.\nStep 2: Apply P = U * I * cos_phi.\nStep 3: P = 220 * 2 * 0.8 = 352 W.",
+    "example_answer": "352",
+    "example_unit": "W",
+    "keywords": [
+      "power consumption",
+      "AC circuit",
+      "RMS voltage",
+      "RMS current",
+      "power factor",
+      "P = U*I*cos_phi",
+      "P",
+      "U",
+      "I",
+      "cos_phi",
+      "P = U I cos(phi)"
+    ]
+  },
+  {
+    "id": "formula_034",
+    "topic": "ac_power_consumption_ir",
+    "domain": "ac_circuits",
+    "formula_natural": "AC power consumption using current and resistance",
+    "formula_sympy": "P = I**2 * R",
+    "formula_latex": "P = I^2 R",
+    "variables": {
+      "P": {
+        "description": "Real power consumed by the AC circuit",
+        "unit": "W"
+      },
+      "I": {
+        "description": "RMS current through the circuit",
+        "unit": "A"
+      },
+      "R": {
+        "description": "Resistance of the circuit",
+        "unit": "ohm"
+      }
+    },
+    "unit_conversions": [
+      "mW → 1e-3 W",
+      "kW → 1e3 W",
+      "mA → 1e-3 A",
+      "kA → 1e3 A",
+      "kohm → 1e3 ohm"
+    ],
+    "example_question": "An AC circuit has a resistance of 50 ohms and an RMS current of 3 A flows through it. Calculate the power consumption.",
+    "example_cot": "Step 1: Identify R = 50 ohms, I = 3 A.\nStep 2: Apply P = I**2 * R.\nStep 3: P = (3)**2 * 50 = 9 * 50 = 450 W.",
+    "example_answer": "450",
+    "example_unit": "W",
+    "keywords": [
+      "power consumption",
+      "AC circuit",
+      "RMS current",
+      "resistance",
+      "P = I^2*R",
+      "P",
+      "I",
+      "R"
+    ]
+  },
+  {
+    "id": "formula_035",
+    "topic": "electric_resonance",
+    "domain": "ac_circuits",
+    "formula_natural": "Electric resonance condition in an AC circuit",
+    "formula_sympy": "omega * L = 1 / (omega * C)",
+    "formula_latex": "Z_L = Z_C \\Rightarrow \\omega L = \\frac{1}{\\omega C}",
+    "variables": {
+      "omega": {
+        "description": "Angular frequency of the AC circuit",
+        "unit": "rad/s"
+      },
+      "L": {
+        "description": "Inductance of the circuit",
+        "unit": "H"
+      },
+      "C": {
+        "description": "Capacitance of the circuit",
+        "unit": "F"
+      }
+    },
+    "unit_conversions": [
+      "mH → 1e-3 H",
+      "uF → 1e-6 F",
+      "nF → 1e-9 F",
+      "rad/s → 1/(2*pi) Hz"
+    ],
+    "example_question": "A series RLC circuit enters resonance at an angular frequency of 100 rad/s. If the inductance L is 0.5 H, calculate the required capacitance C.",
+    "example_cot": "Step 1: Identify omega = 100 rad/s, L = 0.5 H.\nStep 2: Apply the resonance condition omega * L = 1 / (omega * C).\nStep 3: Solve for C: C = 1 / (omega^2 * L) = 1 / (100^2 * 0.5) = 1 / 5000 = 0.0002 F = 200 uF.",
+    "example_answer": "0.0002",
+    "example_unit": "F",
+    "keywords": [
+      "resonance",
+      "Z_L = Z_C",
+      "RLC circuit",
+      "angular frequency",
+      "inductance",
+      "capacitance"
+    ]
+  },
+  {
+    "id": "formula_036",
+    "topic": "quality_factor",
+    "domain": "ac_circuits",
+    "formula_natural": "Quality factor of a resonant circuit",
+    "formula_sympy": "Q = 1 / (R * sqrt(C / L))",
+    "formula_latex": "Q = \\frac{1}{R \\sqrt{\\frac{C}{L}}}}",
+    "variables": {
+      "Q": {
+        "description": "Quality factor of the circuit",
+        "unit": "dimensionless"
+      },
+      "R": {
+        "description": "Resistance of the circuit",
+        "unit": "ohm"
+      },
+      "L": {
+        "description": "Inductance of the circuit",
+        "unit": "H"
+      },
+      "C": {
+        "description": "Capacitance of the circuit",
+        "unit": "F"
+      }
+    },
+    "unit_conversions": [
+      "mH → 1e-3 H",
+      "uF → 1e-6 F",
+      "nF → 1e-9 F",
+      "pF → 1e-12 F"
+    ],
+    "example_question": "A series RLC circuit has a resistance of 10 ohms, an inductance of 0.1 H, and a capacitance of 10 uF. Calculate its quality factor Q.",
+    "example_cot": "Step 1: Identify R = 10 ohm, L = 0.1 H, C = 10e-6 F.\nStep 2: Apply Q = (1 / R) * sqrt(L / C).\nStep 3: Q = (1 / 10) * sqrt(0.1 / 10e-6) = 0.1 * sqrt(10000) = 0.1 * 100 = 10.0.",
+    "example_answer": "10.0",
+    "example_unit": "dimensionless",
+    "keywords": [
+      "quality factor",
+      "series RLC circuit",
+      "calculate quality factor",
+      "find quality factor",
+      "Q = 1/R*sqrt(L/C)",
+      "Q = 1/(R*sqrt(C/L))",
+      "Q",
+      "R",
+      "C"
+    ]
+  },
+  {
+    "id": "formula_037",
+    "topic": "natural_angular_frequency",
+    "domain": "ac_circuits",
+    "formula_natural": "Natural angular frequency of a resonant circuit",
+    "formula_sympy": "omega = 1 / sqrt(L * C)",
+    "formula_latex": "\\omega = \\frac{1}{\\sqrt{LC}}",
+    "variables": {
+      "omega": {
+        "description": "Natural angular frequency of the resonant circuit",
+        "unit": "rad/s"
+      },
+      "L": {
+        "description": "Inductance of the circuit",
+        "unit": "H"
+      },
+      "C": {
+        "description": "Capacitance of the circuit",
+        "unit": "F"
+      }
+    },
+    "unit_conversions": [
+      "kHz → 1e3 Hz",
+      "MHz → 1e6 Hz"
+    ],
+    "example_question": "An LC circuit has an inductance of 0.1 H and a capacitance of 10 uF. Calculate its natural angular frequency omega.",
+    "example_cot": "Step 1: Identify L = 0.1 H, C = 10e-6 F.\nStep 2: Apply omega = 1 / sqrt(L * C).\nStep 3: omega = 1 / sqrt(0.1 * 10e-6) = 1 / sqrt(1e-6) = 1 / 0.001 = 1000.0 rad/s.",
+    "example_answer": "1000.0",
+    "example_unit": "rad/s",
+    "keywords": [
+      "natural angular frequency",
+      "resonant circuit",
+      "calculate natural angular frequency",
+      "find natural angular frequency",
+      "omega = 1/sqrt(LC)",
+      "omega",
+      "L",
+      "C"
+    ]
+  },
+  {
+    "id": "formula_038",
+    "topic": "natural_period",
+    "domain": "ac_circuits",
+    "formula_natural": "Natural period of a resonant circuit",
+    "formula_sympy": "T = 2 * pi * sqrt(L * C)",
+    "formula_latex": "T = 2\\pi \\sqrt{LC}",
+    "variables": {
+      "T": {
+        "description": "Natural period of the resonant circuit",
+        "unit": "s"
+      },
+      "L": {
+        "description": "Inductance of the circuit",
+        "unit": "H"
+      },
+      "C": {
+        "description": "Capacitance of the circuit",
+        "unit": "F"
+      }
+    },
+    "unit_conversions": [
+      "mH → 1e-3 H",
+      "uF → 1e-6 F",
+      "nF → 1e-9 F",
+      "ms → 1e-3 s",
+      "us → 1e-6 s"
+    ],
+    "example_question": "Calculate the natural period T of an LC circuit with an inductance of 2 mH and a capacitance of 2 uF.",
+    "example_cot": "Step 1: Identify L = 2e-3 H, C = 2e-6 F.\nStep 2: Apply T = 2 * pi * sqrt(L * C).\nStep 3: T = 2 * 3.14159265 * sqrt(2e-3 * 2e-6) = 6.2831853 * sqrt(4e-9) = 6.2831853 * 6.324555e-5 = 0.0003974 s.",
+    "example_answer": "0.0003974",
+    "example_unit": "s",
+    "keywords": [
+      "natural period",
+      "calculate natural period",
+      "find natural period",
+      "T = 2*pi*sqrt(LC)",
+      "T",
+      "L",
+      "C"
+    ]
+  },
+  {
+    "id": "formula_039",
+    "topic": "natural_frequency",
+    "domain": "ac_circuits",
+    "formula_natural": "Natural frequency of a resonant circuit",
+    "formula_sympy": "f = 1 / (2 * pi * sqrt(L * C))",
+    "formula_latex": "f = \\frac{1}{2\\pi \\sqrt{LC}}",
+    "variables": {
+      "f": {
+        "description": "Natural frequency of the resonant circuit",
+        "unit": "Hz"
+      },
+      "L": {
+        "description": "Inductance of the circuit",
+        "unit": "H"
+      },
+      "C": {
+        "description": "Capacitance of the circuit",
+        "unit": "F"
+      }
+    },
+    "unit_conversions": [
+      "mH → 1e-3 H",
+      "uF → 1e-6 F",
+      "nF → 1e-9 F",
+      "kHz → 1e3 Hz",
+      "MHz → 1e6 Hz"
+    ],
+    "example_question": "Find the natural frequency f of an LC circuit where L = 0.5 H and C = 2 uF.",
+    "example_cot": "Step 1: Identify L = 0.5 H, C = 2e-6 F.\nStep 2: Apply f = 1 / (2 * pi * sqrt(L * C)).\nStep 3: f = 1 / (2 * 3.14159265 * sqrt(0.5 * 2e-6)) = 1 / (6.2831853 * sqrt(1e-6)) = 1 / (6.2831853 * 0.001) = 1 / 0.006283185 = 159.15 Hz.",
+    "example_answer": "159.15",
+    "example_unit": "Hz",
+    "keywords": [
+      "natural frequency",
+      "resonant circuit",
+      "calculate natural frequency",
+      "find natural frequency",
+      "f = 1/(2*pi*sqrt(LC))",
+      "f",
+      "L",
+      "C"
+    ]
+  },
+  {
+    "id": "formula_040",
+    "topic": "total_electromagnetic_energy_u0",
+    "domain": "ac_circuits",
+    "formula_natural": "Total electromagnetic energy in an LC circuit",
+    "formula_sympy": "W = 0.5 * C * (U_0**2)",
+    "formula_latex": "W = \\frac{1}{2} C U_0^2 ",
+    "variables": {
+      "W": {
+        "description": "Total electromagnetic energy in the LC circuit",
+        "unit": "J"
+      },
+      "C": {
+        "description": "Capacitance of the circuit",
+        "unit": "F"
+      },
+      "U_0": {
+        "description": "Maximum voltage across the capacitor",
+        "unit": "V"
+      }
+    },
+    "unit_conversions": [
+      "uF → 1e-6 F",
+      "nF → 1e-9 F",
+      "pF → 1e-12 F",
+      "mJ → 1e-3 J",
+      "uJ → 1e-6 J"
+    ],
+    "example_question": "An LC circuit has a capacitance of 10 uF and a peak voltage across the capacitor of 6 V. Calculate the total electromagnetic energy stored in the circuit.",
+    "example_cot": "Step 1: Identify C = 10e-6 F, U_0 = 6 V.\nStep 2: Apply W = 0.5 * C * (U_0**2).\nStep 3: W = 0.5 * 10e-6 * (6**2) = 0.5 * 10e-6 * 36 = 0.00018 J.",
+    "example_answer": "0.00018",
+    "example_unit": "J",
+    "keywords": [
+      "total electromagnetic energy",
+      "series RLC circuit",
+      "W = 1/2*C*U_0^2",
+      "calculate total electromagnetic energy",
+      "find total electromagnetic energy",
+      "W = 0.5*C*U_0^2",
+      "W",
+      "C",
+      "U_0"
+    ]
+  },
+  {
+    "id": "formula_041",
+    "topic": "total_electromagnetic_energy_i0",
+    "domain": "ac_circuits",
+    "formula_natural": "Total electromagnetic energy in an LC circuit using peak current",
+    "formula_sympy": "W = 0.5 * L * (I_0**2)",
+    "formula_latex": "W = \\frac{1}{2} L I_0^2 ",
+    "variables": {
+      "W": {
+        "description": "Total electromagnetic energy in the LC circuit",
+        "unit": "J"
+      },
+      "L": {
+        "description": "Inductance of the circuit",
+        "unit": "H"
+      },
+      "I_0": {
+        "description": "Maximum current through the inductor",
+        "unit": "A"
+      }
+    },
+    "unit_conversions": [
+      "mH → 1e-3 H",
+      "uH → 1e-6 H",
+      "nH → 1e-9 H",
+      "mA → 1e-3 A",
+      "uA → 1e-6 A"
+    ],
+    "example_question": "An LC circuit has an inductance of 2 mH. If the peak current flowing through the inductor is 0.5 A, find the total electromagnetic energy of the circuit.",
+    "example_cot": "Step 1: Identify L = 2e-3 H, I_0 = 0.5 A.\nStep 2: Apply W = 0.5 * L * (I_0**2).\nStep 3: W = 0.5 * 2e-3 * (0.5**2) = 0.5 * 2e-3 * 0.25 = 0.00025 J.",
+    "example_answer": "0.00025",
+    "example_unit": "J",
+    "keywords": [
+      "total electromagnetic energy",
+      "series RLC circuit",
+      "W = 1/2*L*I_0^2",
+      "calculate total electromagnetic energy",
+      "find total electromagnetic energy",
+      "W = 0.5*L*I_0^2",
+      "W",
+      "L",
+      "I_0"
+    ]
+  },
+  {
+    "id": "formula_042",
+    "topic": "instantaneous_electromagnetic_energy",
+    "domain": "ac_circuits",
+    "formula_natural": "Total instantaneous electromagnetic energy in an LC circuit",
+    "formula_sympy": "W = W_C + W_L",
+    "formula_latex": "W = W_C + W_L",
+    "variables": {
+      "W": {
+        "description": "Total instantaneous electromagnetic energy in the LC circuit",
+        "unit": "J"
+      },
+      "W_C": {
+        "description": "Instantaneous electromagnetic energy stored in the capacitor",
+        "unit": "J"
+      },
+      "W_L": {
+        "description": "Instantaneous electromagnetic energy stored in the inductor",
+        "unit": "J"
+      }
+    },
+    "unit_conversions": [
+      "mJ → 1e-3 J",
+      "uJ → 1e-6 J"
+    ],
+    "example_question": "At a certain instant, an LC circuit has an electric energy of 2e-5 J in the capacitor and a magnetic energy of 3e-5 J in the inductor. Calculate the total electromagnetic energy of the circuit.",
+    "example_cot": "Step 1: Identify W_C = 2e-5 J, W_L = 3e-5 J.\nStep 2: Apply energy conservation: W = W_C + W_L.\nStep 3: W = 2e-5 + 3e-5 = 5e-5 J.",
+    "example_answer": "0.00005",
+    "example_unit": "J",
+    "keywords": [
+      "total electromagnetic energy",
+      "instantaneous electromagnetic energy",
+      "W = W_C + W_L",
+      "calculate total electromagnetic energy",
+      "find total electromagnetic energy",
+      "W",
+      "W_C",
+      "W_L"
+    ]
+  },
+  {
+    "id": "formula_043",
+    "topic": "electric_field_infinite_wire",
+    "domain": "electrostatics",
+    "formula_natural": "Electric field of an infinite line charge",
+    "formula_sympy": "E = 2 * 8.99e9 * lambda_charge / r",
+    "formula_latex": "E = \\frac{\\lambda}{2\\pi\\epsilon_0 r}",
+    "variables": {
+      "E": {
+        "description": "Electric field at a distance r from the wire",
+        "unit": "V/m"
+      },
+      "lambda_charge": {
+        "description": "Linear charge density of the wire",
+        "unit": "C/m"
+      },
+      "epsilon_0": {
+        "description": "Permittivity of free space",
+        "unit": "F/m"
+      },
+      "r": {
+        "description": "Distance from the wire",
+        "unit": "m"
+      }
+    },
+    "unit_conversions": [
+      "cm → 1e-2 m",
+      "mm → 1e-3 m",
+      "uC/m → 1e-6 C/m",
+      "nC/m → 1e-9 C/m"
+    ],
+    "example_question": "An infinitely long straight wire has a linear charge density of 3e-9 C/m. Calculate the electric field strength at a distance of 0.05 meters from the wire.",
+    "example_cot": "Step 1: Identify lambda_charge = 3e-9 C/m, r = 0.05 m, and use 2*k = 2 * 8.99e9 = 1.798e10.\nStep 2: Apply E = 2 * k * lambda_charge / r.\nStep 3: E = 1.798e10 * 3e-9 / 0.05 = 53.94 / 0.05 = 1078.8 V/m.",
+    "example_answer": "1078.8",
+    "example_unit": "V/m",
+    "keywords": [
+      "electric field",
+      "infinite line charge",
+      "E = lambda/(2*pi*epsilon_0*r)",
+      "calculate electric field",
+      "find electric field",
+      "E",
+      "lambda_charge",
+      "epsilon_0",
+      "r"
+    ]
+  },
+  {
+    "id": "formula_044",
+    "topic": "electric_field_finite_sheet",
+    "domain": "electrostatics",
+    "formula_natural": "Electric field of a finite sheet of charge",
+    "formula_sympy": "E = 2 * pi * 8.99e9 * sigma",
+    "formula_latex": "E = \\frac{\\sigma}{2\\epsilon_0}",
+    "variables": {
+      "E": {
+        "description": "Electric field at the midpoint of the sheet",
+        "unit": "V/m"
+      },
+      "sigma": {
+        "description": "Surface charge density of the sheet",
+        "unit": "C/m^2"
+      },
+      "epsilon_0": {
+        "description": "Permittivity of free space",
+        "unit": "F/m"
+      }
+    },
+    "unit_conversions": [
+      "cm → 1e-2 m",
+      "mm → 1e-3 m",
+      "uC/m^2 → 1e-6 C/m^2",
+      "nC/m^2 → 1e-9 C/m^2"
+    ],
+    "example_question": "An infinite insulating plane sheet has a uniform surface charge density of 4e-9 C/m**2. Calculate the electric field strength generated by this sheet",
+    "example_cot": "Step 1: Identify sigma = 4e-9 C/m**2, and use 2 * pi * k = 2 * 3.14159265 * 8.99e9 = 5.6487e10.\nStep 2: Apply E = 2 * pi * k * sigma.\nStep 3: E = 5.6487e10 * 4e-9 = 225.95 V/m.",
+    "example_answer": "225.95",
+    "example_unit": "V/m",
+    "keywords": [
+      "electric field",
+      "infinite sheet charge",
+      "E = sigma/(2*epsilon_0)",
+      "surface charge density",
+      "calculate electric field sheet",
+      "E",
+      "sigma",
+      "epsilon_0"
+    ]
+  },
+  {
+    "id": "formula_045",
+    "topic": "electric_field_conducting_plates",
+    "domain": "electrostatics",
+    "formula_natural": "Electric field between two parallel plates",
+    "formula_sympy": "E = 4 * pi * 8.99e9 * sigma",
+    "formula_latex": "E = \\frac{\\sigma}{\\epsilon_0}",
+    "variables": {
+      "E": {
+        "description": "Electric field between the plates",
+        "unit": "V/m"
+      },
+      "sigma": {
+        "description": "Surface charge density of the plates",
+        "unit": "C/m**2"
+      },
+      "epsilon_0": {
+        "description": "Permittivity of free space",
+        "unit": "F/m"
+      }
+    },
+    "unit_conversions": [
+      "uC/m**2 → 1e-6 C/m**2",
+      "nC/m**2 → 1e-9 C/m**2"
+    ],
+    "example_question": "Two parallel conducting plates have a surface charge density of 5e-9 C/m**2. Calculate the electric field strength between them.",
+    "example_cot": "Step 1: Identify sigma = 5e-9 C/m**2, and use 4 * pi * k = 4 * 3.14159265 * 8.99e9 = 1.1297e11.\nStep 2: Apply E = 4 * pi * k * sigma.\nStep 3: E = 1.1297e11 * 5e-9 = 564.87 V/m.",
+    "example_answer": "564.87",
+    "example_unit": "V/m",
+    "keywords": [
+      "electric field",
+      "conducting plates",
+      "capacitor field",
+      "E = sigma/epsilon_0",
+      "surface charge density",
+      "calculate electric field capacitor",
+      "E",
+      "sigma",
+      "epsilon_0"
+    ]
+  },
+  {
+    "id": "formula_046",
+    "topic": "electric_field_charged_ring",
+    "domain": "electrostatics",
+    "formula_natural": "Electric field on the axis of a uniformly charged ring",
+    "formula_sympy": "E = 8.99e9 * q * z / (R**2 + z**2)**1.5",
+    "formula_latex": "E = \\frac{k q z}{(R^2 + z^2)^{3/2}}",
+    "variables": {
+      "E": {
+        "description": "Electric field at a distance z from the center of the ring",
+        "unit": "V/m"
+      },
+      "q": {
+        "description": "Total charge on the ring",
+        "unit": "C"
+      },
+      "z": {
+        "description": "Distance from the center of the ring along its axis",
+        "unit": "m"
+      },
+      "R": {
+        "description": "Radius of the ring",
+        "unit": "m"
+      }
+    },
+    "unit_conversions": [
+      "cm → 1e-2 m",
+      "mm → 1e-3 m",
+      "uC → 1e-6 C",
+      "nC → 1e-9 C"
+    ],
+    "example_question": "A thin circular ring of radius 0.04 meters carries a total uniform charge of 2e-9 C. Calculate the electric field strength on the axis of the ring at a distance of 0.03 meters from its center.",
+    "example_cot": "Step 1: Identify R = 0.04 m, q = 2e-9 C, z = 0.03 m, and k = 8.99e9.\nStep 2: Apply E = k * q * z / (R**2 + z**2)**1.5.\nStep 3: E = 8.99e9 * 2e-9 * 0.03 / (0.04**2 + 0.03**2)**1.5 = 0.5394 / (0.0016 + 0.0009)**1.5 = 0.5394 / (0.0025)**1.5 = 0.5394 / 0.000125 = 4315.2 V/m.",
+    "example_answer": "4315.2",
+    "example_unit": "V/m",
+    "keywords": [
+      "electric field",
+      "charged ring",
+      "E = kqz/(R^2+z^2)^1.5",
+      "calculate electric field charged ring",
+      "find electric field charged ring",
+      "E",
+      "q",
+      "z",
+      "R"
+    ]
+  },
+  {
+    "id": "formula_047",
+    "topic": "electric_field_charged_disk",
+    "domain": "electrostatics",
+    "formula_natural": "Electric field on the axis of a uniformly charged disk",
+    "formula_sympy": "E = 2 * pi * 8.99e9 * sigma * (1 - z / sqrt(R**2 + z**2))",
+    "formula_latex": "E = \\frac{\\sigma}{2\\epsilon_0} \\left(1 - \\frac{z}{\\sqrt{R^2 + z^2}}\\right)",
+    "variables": {
+      "E": {
+        "description": "Electric field at a distance z from the center of the disk",
+        "unit": "V/m"
+      },
+      "sigma": {
+        "description": "Surface charge density of the disk",
+        "unit": "C/m**2"
+      },
+      "z": {
+        "description": "Distance from the center of the disk along its axis",
+        "unit": "m"
+      },
+      "R": {
+        "description": "Radius of the disk",
+        "unit": "m"
+      }
+    },
+    "unit_conversions": [
+      "cm → 1e-2 m",
+      "mm → 1e-3 m",
+      "uC/m**2 → 1e-6 C/m**2",
+      "nC/m**2 → 1e-9 C/m**2"
+    ],
+    "example_question": "A disk of radius 0.4 meters has a surface charge density of 5e-9 C/m**2. Find the electric field at a point on its axis 0.3 meters from the center.",
+    "example_cot": "Step 1: Identify R = 0.4 m, sigma = 5e-9 C/m**2, z = 0.3 m, and 2*pi*k = 2 * 3.14159265 * 8.99e9 = 5.6487e10.\nStep 2: Apply E = 2 * pi * k * sigma * (1 - z / sqrt(R**2 + z**2)).\nStep 3: E = 5.6487e10 * 5e-9 * (1 - 0.3 / sqrt(0.4**2 + 0.3**2)) = 282.435 * (1 - 0.3 / 0.5) = 282.435 * 0.4 = 112.97 V/m.",
+    "example_answer": "112.97",
+    "example_unit": "V/m",
+    "keywords": [
+      "electric field",
+      "charged disk",
+      "E = sigma/2epsilon_0",
+      "E = sigma/(2*epsilon_0)*(1-z/sqrt(R^2+z^2))",
+      "calculate electric field charged disk",
+      "find electric field charged disk",
+      "E",
+      "sigma",
+      "z",
+      "R"
+    ]
+  },
+  {
+    "id": "formula_048",
+    "topic": "vector_addition_parallelogram",
+    "domain": "electrostatics",
+    "formula_natural": "Vector addition using the parallelogram rule",
+    "formula_sympy": "R = sqrt(F_1**2 + F_2**2 + 2*F_1*F_2*cos(theta))",
+    "formula_latex": "R = \\sqrt{F_1^2 + F_2^2 + 2 F_1 F_2\\cos(\\theta)}",
+    "variables": {
+      "R": {
+        "description": "Resultant vector magnitude",
+        "unit": "dimensionless"
+      },
+      "F_1": {
+        "description": "Magnitude of first vector",
+        "unit": "dimensionless"
+      },
+      "F_2": {
+        "description": "Magnitude of second vector",
+        "unit": "dimensionless"
+      },
+      "theta": {
+        "description": "Angle between the two vectors",
+        "unit": "radians"
+      }
+    },
+    "unit_conversions": [
+      "deg → pi/180 rad"
+    ],
+    "example_question": "Two electrostatic forces F_1 = 30 N and F_2 = 40 N act at a point. If the angle theta between them is 1.04719755 radians (60 degrees), calculate the magnitude of the resultant force R.",
+    "example_cot": "Step 1: Identify F_1 = 30 N, F_2 = 40 N, and theta = 1.04719755 radians.\nStep 2: Convert theta to radians: theta = 60 * pi / 180 = pi / 3.\nStep 3: Apply R = sqrt(F_1**2 + F_2**2 + 2*F_1*F_2*cos(theta)).\nStep 4: R = sqrt(30**2 + 40**2 + 2*30*40*cos(pi/3)) = sqrt(900 + 1600 + 2400*0.5) = sqrt(900 + 1600 + 1200) = sqrt(3700) ≈ 60.83 N.",
+    "example_answer": "60.83",
+    "example_unit": "N",
+    "keywords": [
+      "vector addition",
+      "parallelogram rule",
+      "resultant vector",
+      "calculate resultant vector",
+      "find resultant vector",
+      "R",
+      "F_1",
+      "F_2",
+      "theta"
+    ]
+  },
+  {
+    "id": "formula_049",
+    "topic": "electric_force_newton_law",
+    "domain": "electrostatics",
+    "formula_natural": "Electric force and Newton second law for a moving charge",
+    "formula_sympy": "q * E = m * a",
+    "formula_latex": "F = qE = ma",
+    "variables": {
+      "F": {
+        "description": "Electric force acting on the charge",
+        "unit": "N"
+      },
+      "q": {
+        "description": "Total charge on the sphere",
+        "unit": "C"
+      },
+      "r": {
+        "description": "Distance from the center of the sphere",
+        "unit": "m"
+      },
+      "E": {
+        "description": "Electric field strength at the point",
+        "unit": "V/m"
+      },
+      "m": {
+        "description": "Mass of the charge",
+        "unit": "kg"
+      },
+      "a": {
+        "description": "Acceleration of the charge",
+        "unit": "m/s**2"
+      }
+    },
+    "unit_conversions": [
+      "uC → 1e-6 C",
+      "nC → 1e-9 C",
+      "g → 1e-3 kg",
+      "mg → 1e-6 kg"
+    ],
+    "example_question": "An electron with a mass of 9.1e-31 kg and a charge of 1.6e-19 C is placed in a uniform electric field of 2000 V/m. Calculate its acceleration.",
+    "example_cot": "Step 1: Identify q = 1.6e-19 C, E = 2000 V/m, and m = 9.1e-31 kg.\nStep 2: Apply F = q * E and F = m * a.\nStep 3: Equate the two expressions: q * E = m * a.\nStep 4: Solve for a: a = (q * E) / m = (1.6e-19 * 2000) / (9.1e-31) ≈ 3.52e14 m/s**2.",
+    "example_answer": "3.5165e14",
+    "example_unit": "m/s**2",
+    "keywords": [
+      "F = qE",
+      "F = ma",
+      "electric acceleration",
+      "electron motion",
+      "calculate acceleration charge",
+      "F",
+      "q",
+      "E",
+      "m",
+      "a"
+    ]
+  },
+  {
+    "id": "formula_050",
+    "topic": "absolute_error_measurement",
+    "domain": "measurement",
+    "formula_natural": "Absolute error in measurement",
+    "formula_sympy": "delta_A = A_max - A_bar",
+    "formula_latex": "A = \\bar{A} \\pm \\Delta A",
+    "variables": {
+      "delta_x": {
+        "description": "Absolute error in the measurement",
+        "unit": "dimensionless"
+      },
+      "A_bar": {
+        "description": "Mean value (average value) of the measurements",
+        "unit": "dimensionless"
+      }
+    },
+    "unit_conversions": [],
+    "example_question": "A student measures the length of a rod 3 times and gets a mean value of 1.25 meters with an absolute error of 0.02 meters. Express the measurement result.",
+    "example_cot": "Step 1: Identify A_bar = 1.25 m, delta_A = 0.02 m.\nStep 2: Apply the format A = A_bar +/- delta_A.\nStep 3: The result is written as 1.25 +/- 0.02 m.",
+    "example_answer": "1.25 +/- 0.02",
+    "example_unit": "m",
+    "keywords": [
+      "A = A_bar +/- delta_A",
+      "absolute error",
+      "measurement error",
+      "calculate absolute error",
+      "find absolute error",
+      "Delta A",
+      "A_bar"
+    ]
+  },
+  {
+    "id": "formula_051",
+    "topic": "relative_error_measurement",
+    "domain": "measurement",
+    "formula_natural": "Relative error in measurement",
+    "formula_sympy": "delta = (A_max - A_bar) / A_bar * 100",
+    "formula_latex": "\\delta = \\frac{\\Delta A}{\\bar{A}} \\times 100\\%",
+    "variables": {
+      "delta": {
+        "description": "Relative error in percentage",
+        "unit": "%"
+      },
+      "Delta A": {
+        "description": "Absolute error in the measurement",
+        "unit": "dimensionless"
+      },
+      "A_bar": {
+        "description": "Mean value (average value) of the measurements",
+        "unit": "dimensionless"
+      }
+    },
+    "unit_conversions": [],
+    "example_question": "A student measures the length of a rod 3 times and gets a mean value of 1.25 meters with an absolute error of 0.02 meters. Calculate the relative error in percentage.",
+    "example_cot": "Step 1: Identify Delta A = 0.02 m, A_bar = 1.25 m.\nStep 2: Apply delta = (Delta A / A_bar) * 100%.\nStep 3: delta = (0.02 / 1.25) * 100% = 0.016 * 100% = 1.6%.",
+    "example_answer": "1.6",
+    "example_unit": "%",
+    "keywords": [
+      "relative error",
+      "measurement error",
+      "calculate relative error",
+      "find relative error",
+      "delta = Delta A / A_bar * 100%",
+      "delta",
+      "Delta A",
+      "A_bar"
+    ]
+  },
+  {
+    "id": "formula_052",
+    "topic": "capacitor_energy_charge",
+    "domain": "electrostatics",
+    "formula_natural": "Energy stored in a capacitor in terms of its charge",
+    "formula_sympy": "W = Q**2 / (2 * C)",
+    "formula_latex": "W = \\frac{Q^2}{2C}",
+    "variables": {
+      "W": {
+        "description": "Stored electrostatic energy",
+        "unit": "J"
+      },
+      "Q": {
+        "description": "Charge on the capacitor",
+        "unit": "C"
+      },
+      "C": {
+        "description": "Capacitance",
+        "unit": "F"
+      }
+    },
+    "unit_conversions": [
+      "uF → 1e-6 F",
+      "nF → 1e-9 F",
+      "uC → 1e-6 C",
+      "nC → 1e-9 C",
+      "mJ → 1e-3 J"
+    ],
+    "example_question": "A capacitor of C = 100 μF holds a charge of Q = 6e-4 C. Calculate the energy stored.",
+    "example_cot": "Step 1: Identify Q = 6e-4 C, C = 100 μF = 1e-4 F.\nStep 2: Apply W = Q**2 / (2 * C).\nStep 3: W = (6e-4)**2 / (2 * 1e-4) = 3.6e-7 / 2e-4 = 1.8e-3 J.",
+    "example_answer": "0.0018",
+    "example_unit": "J",
+    "keywords": [
+      "capacitor energy from charge",
+      "energy stored charge",
+      "W = Q^2/(2C)",
+      "energy in terms of charge",
+      "calculate stored energy",
+      "W",
+      "Q",
+      "C"
+    ]
+  },
+  {
+    "id": "formula_053",
+    "topic": "self_inductance_solenoid_volume",
+    "domain": "electromagnetism",
+    "formula_natural": "Self-inductance of a solenoid using turns-per-length and volume",
+    "formula_sympy": "L = 4 * pi * 1e-7 * n**2 * V",
+    "formula_latex": "L = \\mu_0 n^2 V",
+    "variables": {
+      "L": {
+        "description": "Self-inductance of the solenoid",
+        "unit": "H"
+      },
+      "n": {
+        "description": "Number of turns per unit length",
+        "unit": "1/m"
+      },
+      "V": {
+        "description": "Volume of the solenoid core",
+        "unit": "m**3"
+      }
+    },
+    "unit_conversions": [
+      "cm**3 → 1e-6 m**3",
+      "mH → 1e-3 H"
+    ],
+    "example_question": "A solenoid has n = 2000 turns per metre and a core volume of V = 5e-4 m^3. Calculate its self-inductance.",
+    "example_cot": "Step 1: Identify n = 2000 turns/m, V = 5e-4 m^3.\nStep 2: Apply L = mu_0 * n**2 * V with mu_0 = 4*pi*1e-7.\nStep 3: L = 4*pi*1e-7 * (2000**2) * 5e-4 = 1.2566e-6 * 4e6 * 5e-4 = 2.513e-3 H.",
+    "example_answer": "0.002513",
+    "example_unit": "H",
+    "keywords": [
+      "solenoid inductance volume",
+      "inductance turns per length",
+      "L = mu_0*n^2*V",
+      "inductance from volume",
+      "self-inductance",
+      "calculate inductance",
+      "L",
+      "n",
+      "V"
+    ]
+  }
+]

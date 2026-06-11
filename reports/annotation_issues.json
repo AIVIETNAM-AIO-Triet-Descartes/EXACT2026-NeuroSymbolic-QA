@@ -1,0 +1,309 @@
+{
+  "total_issues": 37,
+  "summary": {
+    "FOL_SYNTAX_SUSPECT": 19,
+    "sev_medium": 21,
+    "FOL_NL_COUNT_MISMATCH": 11,
+    "sev_high": 16,
+    "DUPLICATE_PREMISE": 2,
+    "DUPLICATE_RECORD": 5
+  },
+  "issues": [
+    {
+      "record_id": "type1_record_20",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[5]",
+      "detail": "FOL: 'ForAll(s, (∃m1, ∃m2, ∃m3, m1 ≠ m2 ∧ m2 ≠ m3 ∧ m1 ≠ m3 ∧ grade(s,m1) > 8.5 ∧ grad...' — Số dấu '(' (6) ≠ số dấu ')' (7)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_20",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[8]",
+      "detail": "FOL: 'ForAll(s, (∃m1, ∃m2, ∃m3, m1 ≠ m2 ∧ m2 ≠ m3 ∧ m1 ≠ m3 ∧ pass(s,m1) ∧ pass(s,m2) ...' — Số dấu '(' (9) ≠ số dấu ')' (10)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_26",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[7]",
+      "detail": "FOL: 'ForAll(ABC, right_triangle(ABC) → (median(hypotenuse) = 0.5*hypotenuse)))...' — Số dấu '(' (4) ≠ số dấu ')' (5)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_29",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[2]",
+      "detail": "FOL: 'ForAll(s, ForAll(c, ¬submit_capstone(s,c) → take_exam(s,c))))...' — Số dấu '(' (4) ≠ số dấu ')' (5)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_29",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[3]",
+      "detail": "FOL: 'ForAll(c, require_exam(c) → (secure_system(c) ∨ external_proctor(c))))...' — Số dấu '(' (5) ≠ số dấu ')' (6)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_29",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[4]",
+      "detail": "FOL: 'ForAll(s, ForAll(c, (downtime(s,c) > 5) → ¬master_content(s,c))))...' — Số dấu '(' (5) ≠ số dấu ')' (6)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_29",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[5]",
+      "detail": "FOL: 'ForAll(s, (pass_count(s) ≥ 6) → digital_certificate(s)))...' — Số dấu '(' (4) ≠ số dấu ')' (5)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_29",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[6]",
+      "detail": "FOL: 'ForAll(s, ForAll(c, (live_sessions(s,c) = 100) → ¬take_exam(s,c))))...' — Số dấu '(' (5) ≠ số dấu ')' (6)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_29",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[8]",
+      "detail": "FOL: 'ForAll(s, ForAll(c, ((downtime(s,c) < 5) ∧ submit_capstone(s,c) ∧ high_stakes(c)...' — Số dấu '(' (8) ≠ số dấu ')' (9)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_29",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[9]",
+      "detail": "FOL: 'ForAll(s, (complete_modules(s,c1) ∧ complete_modules(s,c2) ∧ complete_modules(s,...' — Số dấu '(' (19) ≠ số dấu ')' (20)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_29",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[10]",
+      "detail": "FOL: 'ForAll(c, secure_system(c) ∧ crash_during_exam(c) → reschedule_exam(c)))...' — Số dấu '(' (4) ≠ số dấu ')' (5)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_29",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[11]",
+      "detail": "FOL: 'ForAll(s, ForAll(c, (¬master_content(s,c) ∧ submit_capstone(s,c)) → (¬accept_cap...' — Số dấu '(' (8) ≠ số dấu ')' (9)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_34",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 27 items, premises-FOL có 25 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "type1_record_57",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 12 items, premises-FOL có 14 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "type1_record_129",
+      "issue_type": "DUPLICATE_PREMISE",
+      "description": "Có premises giống nhau hoàn toàn trong cùng 1 record",
+      "field": "premises-NL[10]",
+      "detail": "Premise trùng lặp: 'If a Python project is easy to maintain, then it is well-tested.'",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_146",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 10 items, premises-FOL có 11 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "type1_record_157",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[15]",
+      "detail": "FOL: '(ForAll(x, ¬StudiesFromOfficialGuide(x) → ¬AttendsIELTSClass(x))) → (Exists(x, S...' — Số dấu '(' (10) ≠ số dấu ')' (11)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_188",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[2]",
+      "detail": "FOL: '(∀x (E(x) → A(x))) → ∀x (¬E(x) → ¬A(x)))...' — Số dấu '(' (7) ≠ số dấu ')' (8)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_188",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[4]",
+      "detail": "FOL: '∀x (A(x) → E(x)))...' — Số dấu '(' (3) ≠ số dấu ')' (4)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_208",
+      "issue_type": "DUPLICATE_PREMISE",
+      "description": "Có premises giống nhau hoàn toàn trong cùng 1 record",
+      "field": "premises-NL[14]",
+      "detail": "Premise trùng lặp: 'If a student meets the requirements, then they engage in training.'",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_304",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[5]",
+      "detail": "FOL: '((ForAll(x, (StudiesConsistently(x) → UnderstandsSubject(x))) → ForAll(x, Enroll...' — Số dấu '(' (8) ≠ số dấu ')' (7)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_305",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[7]",
+      "detail": "FOL: '((ForAll(x, (ReferenceSection(x) → ¬Borrowable(x))) → Exists(x, Available(x)))...' — Số dấu '(' (8) ≠ số dấu ')' (7)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_306",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[9]",
+      "detail": "FOL: '((ForAll(x, (¬AttendLectures(x) → ¬UnderstandDefinitions(x))) → ForAll(x, Master...' — Số dấu '(' (8) ≠ số dấu ')' (7)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_309",
+      "issue_type": "FOL_SYNTAX_SUSPECT",
+      "description": "FOL có thể sai cú pháp (thiếu dấu ngoặc, ký tự lạ)",
+      "field": "premises-FOL[15]",
+      "detail": "FOL: '((ForAll(x, (WellStructured(x) → Optimized(x))) → ForAll(x, (PythonScript(x) → (...' — Số dấu '(' (12) ≠ số dấu ')' (11)",
+      "severity": "medium"
+    },
+    {
+      "record_id": "type1_record_334",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 15 items, premises-FOL có 17 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "type1_record_376",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 13 items, premises-FOL có 22 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "type1_record_377",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 13 items, premises-FOL có 17 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "type1_record_378",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 13 items, premises-FOL có 16 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "type1_record_379",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 13 items, premises-FOL có 19 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "type1_record_380",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 12 items, premises-FOL có 17 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "type1_record_381",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 13 items, premises-FOL có 14 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "type1_record_382",
+      "issue_type": "FOL_NL_COUNT_MISMATCH",
+      "description": "premises-NL và premises-FOL không cùng số lượng",
+      "field": "premises-FOL",
+      "detail": "premises-NL có 13 items, premises-FOL có 14 items",
+      "severity": "high"
+    },
+    {
+      "record_id": "record_9",
+      "issue_type": "DUPLICATE_RECORD",
+      "description": "Record trùng lặp hoàn toàn với record khác",
+      "field": "questions",
+      "detail": "Trùng với record 'record_8': 'Based on the premises, what can we conclude about the curriculum?\nA. It enhances'",
+      "severity": "high"
+    },
+    {
+      "record_id": "record_25",
+      "issue_type": "DUPLICATE_RECORD",
+      "description": "Record trùng lặp hoàn toàn với record khác",
+      "field": "questions",
+      "detail": "Trùng với record 'record_24': 'Based on the learning science principles, which statement is correct?\nA. Spaced '",
+      "severity": "high"
+    },
+    {
+      "record_id": "record_161",
+      "issue_type": "DUPLICATE_RECORD",
+      "description": "Record trùng lặp hoàn toàn với record khác",
+      "field": "questions",
+      "detail": "Trùng với record 'record_160': 'Do all students understand the material? Do all students review regularly?'",
+      "severity": "high"
+    },
+    {
+      "record_id": "record_183",
+      "issue_type": "DUPLICATE_RECORD",
+      "description": "Record trùng lặp hoàn toàn với record khác",
+      "field": "questions",
+      "detail": "Trùng với record 'record_182': 'Based on the above premises, which statement can be inferred?\nA. If all students'",
+      "severity": "high"
+    },
+    {
+      "record_id": "record_395",
+      "issue_type": "DUPLICATE_RECORD",
+      "description": "Record trùng lặp hoàn toàn với record khác",
+      "field": "questions",
+      "detail": "Trùng với record 'record_394': 'Do all students receive a recommendation? Which activities do all students perfo'",
+      "severity": "high"
+    }
+  ]
+}
