@@ -16,9 +16,11 @@ Inference does **not** load model weights in-process. Instead the code calls a *
 
 Reasoning: the competition committee can inspect the `GET /v1/models` endpoint to confirm which model is loaded. vLLM loads real HF weights, so `model_id` comes from the model's `config.json` and is verifiable. (A previous `llama-cpp-python` GGUF setup returned a self-assigned, non-verifiable model name and has been removed.)
 
-- All LLM access goes through `llm/llm_reasoner.py` (`LLMReasoner` + `create_reasoner()` factory). `llm/__init__.py` exposes `get_shared_reasoner()` — a config-driven singleton.
-- vLLM is Linux-only; on this Windows machine it must run under **WSL2** with the CUDA Toolkit installed. See `docs/handoff.md` §4 (P1) for the exact setup steps.
+- All LLM access goes through `llm/llm_reasoner.py` (`LLMReasoner`, an **OpenAI client** to the vLLM server). `llm/__init__.py` exposes `get_shared_reasoner()` — a **config-driven singleton** (reads `llm.profiles[active]` from `configs/config.yaml`) + `llm_server_available()` (real `/v1/models` health-check). `create_reasoner()` is now a deprecated shim → `get_shared_reasoner()`.
+- **Switching backend = flip one line** `llm.active: dev → prod` in `configs/config.yaml`. All LLM calls (both tracks) go through the one singleton → no code change. Track-2 physics LLM helpers: `parse_physics_question` / `solve_physics_cot` / `explain_physics`; Track-1: `solve_with_cot` / `generate_z3_code` / `generate_explanation`.
+- **Production: deployed on RunPod** (Linux GPU, network volume) — see `docs/deployment_plan.md` + `docs/restart_runbook.md`. vLLM runs internal (`:8002`, behind FastAPI which proxies `/v1/models`); FastAPI public on `:8000`. Start everything with `bash scripts/serve.sh`. (Local Windows dev needs WSL2 + CUDA for a local vLLM; or just run no-LLM.)
 - The pipeline runs **without** the LLM (SymPy + vector solver only); `--use-llm` enables LLM augmentation/fallback/explanation.
+- Current served model: **Qwen/Qwen2.5-7B-Instruct** (verified). DeepSeek-R1-0528-Qwen3-8B was trialed and **rejected** (always-reasoning → token-budget starvation on structured parse + >60s/query risk).
 
 ## Setup
 
@@ -46,12 +48,15 @@ python scripts/run_track1.py --input data.json --output output/predictions.json 
 # Rebuild FAISS formula index after editing data/rag/physics_formulas.json
 python scripts/build_faiss_index.py
 
-# Tests
+# Tests (91 pass)
 .venv\Scripts\python -m pytest tests/ -v
 .venv\Scripts\python -m pytest tests/test_type2.py -v
+
+# Production serve (RunPod / Linux GPU): vLLM (tmux, :8002 internal) + uvicorn (tmux, :8000 public)
+bash scripts/serve.sh                       # MODEL/VLLM_PORT/VLLM_EXTRA env-overridable; sets config active=prod
 ```
 
-vLLM server must be running (in WSL2) before any `--use-llm` run; verify with `curl http://localhost:8000/v1/models`.
+For `--use-llm`, a vLLM server must be reachable at `llm.profiles[active].api_base` (prod: internal `:8002`). Local Windows dev: run vLLM under WSL2 (or use no-LLM). Deploy/restart/failover details: `docs/restart_runbook.md`.
 
 ## Architecture
 
@@ -87,7 +92,7 @@ Request → PhysicsClassifier → PhysicsParser → FormulaRAG (FAISS) → SymPy
 ```
 api/
 ├── main.py            # FastAPI /predict (type1 CoT + sequential Type 2 pipeline), /v1/models proxy, /health
-├── schemas.py         # QueryRequest / QueryResponse Pydantic models
+├── schemas.py         # UnifiedRequest / UnifiedResponse / ReasoningBlock (official /predict schema)
 ├── router.py          # Type 1/2 classifier
 ├── response_builder.py
 └── logger.py          # JSON log formatter
@@ -116,7 +121,8 @@ llm/
 scripts/
 ├── demo_type2.py      # primary Type 2 demo + accuracy eval (regex extraction, LLM hooks)
 ├── run_track1.py      # Type 1 batch runner (Logic Tree + LLM CoT + LLM-Z3) → predictions JSON
-└── build_faiss_index.py
+├── build_faiss_index.py
+└── serve.sh           # production serve (RunPod): vLLM :8002 internal + uvicorn :8000 public, tmux
 configs/config.yaml    # vLLM endpoint + pipeline/api/logging config
 data/
 ├── train/             # Physics_Problems_Text_Only.csv, Logic_Based_Educational_Queries.json
