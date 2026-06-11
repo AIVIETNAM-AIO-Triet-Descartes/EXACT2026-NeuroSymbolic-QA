@@ -7,7 +7,7 @@ Tài liệu này hướng dẫn chi tiết cách thiết lập môi trường, c
 ## 📋 Mục lục
 1. [Giới thiệu Track 1](#1-giới-thiệu-track-1)
 2. [Cài đặt môi trường](#2-cài-đặt-môi-trường)
-3. [Chuẩn bị Mô hình Qwen GGUF](#3-chuẩn-bị-mô-hình-qwen-gguf)
+3. [Khởi chạy Inference Server (vLLM / llama.cpp)](#3-khởi-chạy-inference-server-vllm--llamacpp)
 4. [Chạy Pipeline Offline (Batch Runner)](#4-chạy-pipeline-offline-batch-runner)
 5. [Chạy trên Google Colab (Google Drive Cache)](#5-chạy-trên-google-colab-google-drive-cache)
 6. [Định dạng dữ liệu đầu ra](#6-định-dạng-dữ-liệu-đầu-ra)
@@ -52,29 +52,51 @@ CMAKE_ARGS="-GGpuDast=ON" pip install llama-cpp-python --force-reinstall --no-ca
 
 ---
 
-## 3. Chuẩn bị Mô hình Qwen GGUF
+## 3. Khởi chạy Inference Server (vLLM / llama.cpp)
 
-Chúng ta sử dụng mô hình Qwen 2.5 7B Instruct định dạng GGUF (chia nhỏ làm 2 part).
+Hệ thống Neuro-Symbolic QA được thiết kế theo kiến trúc **Client-Server**. Mọi cuộc gọi LLM trong pipeline sẽ gửi request HTTP qua API tương thích OpenAI (không nạp trọng số mô hình trực tiếp trong tiến trình Python).
 
-1. Tải 2 part mô hình từ HuggingFace hoặc Drive dự án:
-   * `qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf`
-   * `qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf`
-2. Đặt cả 2 file mô hình này vào **thư mục gốc** của dự án hoặc lưu ở một thư mục cache riêng (ví dụ: Google Drive).
+Bạn cần khởi chạy **Inference Server** trước khi chạy pipeline bằng một trong hai cách:
+
+### Phương án A: Dành cho Production (Sử dụng `vLLM` - Khuyên dùng)
+Yêu cầu GPU ≥24GB VRAM (như RunPod). Phương án này sử dụng mô hình gốc (Safetensors) tải từ HuggingFace và hỗ trợ cơ chế PagedAttention tối ưu hiệu năng.
+
+1. Khởi chạy vLLM server:
+   ```bash
+   vllm serve Qwen/Qwen2.5-7B-Instruct --host 127.0.0.1 --port 8001 --dtype float16
+   ```
+2. Trong file [configs/config.yaml](file:///home/nquocdat06/code/EXACT2026-NeuroSymbolic-QA/configs/config.yaml), thiết lập profile hoạt động sang `prod`:
+   ```yaml
+   llm:
+     active: prod
+   ```
+*(Hoặc bạn có thể chạy script tiện ích `bash scripts/serve.sh` để tự động hóa toàn bộ việc cấu hình và chạy ngầm vLLM + FastAPI bằng `tmux`)*.
+
+### Phương án B: Dành cho Development / Colab (Sử dụng GGUF qua `llama-cpp-python` / `llama-server`)
+Phù hợp chạy trên GPU cá nhân (8GB VRAM) hoặc Google Colab (T4 GPU). Phương án này sử dụng các file mô hình phân mảnh GGUF (`qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf` và part 2).
+
+1. Khởi chạy server chạy ngầm ở cổng 8000:
+   ```bash
+   python3 -m llama_cpp.server --model ./qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf --port 8000 --n_gpu_layers -1 --n_ctx 2048 --alias Qwen/Qwen2.5-7B-Instruct
+   ```
+2. Trong file [configs/config.yaml](file:///home/nquocdat06/code/EXACT2026-NeuroSymbolic-QA/configs/config.yaml), thiết lập profile hoạt động sang `dev` (mặc định):
+   ```yaml
+   llm:
+     active: dev
+   ```
 
 ---
 
 ## 4. Chạy Pipeline Offline (Batch Runner)
 
-Dùng script `scripts/run_track1.py` để chạy đánh giá hàng loạt trên tập dataset logic.
+Sau khi khởi động Inference Server thành công ở cổng tương ứng, dùng script `scripts/run_track1.py` để chạy đánh giá hàng loạt trên tập dữ liệu.
 
 ### Cú pháp cơ bản:
 ```bash
 python scripts/run_track1.py \
     --input Logic_Based_Educational_Queries.json \
     --output output/predictions_test.json \
-    --model ./qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf \
     --max-samples 5 \
-    --gpu-layers -1 \
     --evaluate
 ```
 
@@ -83,15 +105,14 @@ python scripts/run_track1.py \
 | :--- | :--- | :--- |
 | `--input`, `-i` | Đường dẫn tới file dataset logic đầu vào dạng JSON. | `Logic_Based_Educational_Queries.json` |
 | `--output`, `-o` | Đường dẫn lưu file kết quả dự đoán dạng JSON. | `output/predictions.json` |
-| `--model`, `-m` | Đường dẫn đến file mô hình GGUF (part 1). Hỗ trợ cả đường dẫn tương đối và đường dẫn tuyệt đối (Drive). | `./qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf` |
 | `--max-samples`, `-n` | Giới hạn số lượng mẫu (sample) cần chạy thử nghiệm. | `None` (chạy toàn bộ) |
 | `--start-sample` | Chỉ số mẫu bắt đầu chạy (0-indexed). | `0` |
 | `--end-sample` | Chỉ số mẫu kết thúc chạy (exclusive). | `None` |
 | `--no-llm` | Tắt LLM (chỉ sử dụng Z3 + Logic Tree). Chạy không cần GPU. | `False` |
 | `--no-z3` | Tắt bộ giải Z3 (chỉ dùng Logic Tree + LLM). | `False` |
-| `--gpu-layers` | Số lượng layers LLM offload lên GPU (`-1` là offload toàn bộ layers). | `-1` |
 | `--evaluate` | So sánh kết quả dự đoán với ground truth và in bảng đánh giá độ chính xác (Accuracy). | `False` |
 | `--log-level` | Mức độ log hiển thị ra console (`DEBUG`, `INFO`, `WARNING`, `ERROR`). | `INFO` |
+| `--model`, `-m` | *(Deprecated)* Tham số này được giữ lại để tương thích ngược. Trình kết nối sẽ tự động lấy cấu hình server từ `configs/config.yaml`. | `./qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf` |
 
 ### Các ví dụ chạy cụ thể:
 
@@ -108,7 +129,7 @@ python scripts/run_track1.py \
       --evaluate
   ```
 
-* **Chạy ở chế độ Ký hiệu (Symbolic-Only - Không cần GPU):**
+* **Chạy ở chế độ Ký hiệu (Symbolic-Only - Không cần GPU và không cần bật Server):**
   ```bash
   python scripts/run_track1.py --no-llm --evaluate
   ```
@@ -117,22 +138,14 @@ python scripts/run_track1.py \
 
 ## 5. Chạy trên Google Colab (Google Drive Cache)
 
-Nếu chạy trên Google Colab, bạn không cần tự compile `llama-cpp-python` hay tải model về máy, mà hãy tận dụng notebook `run_track1_colab.ipynb` được tối ưu hóa như sau:
+Nếu chạy trên Google Colab, bạn hãy tận dụng notebook `run_track1_colab.ipynb` được thiết lập tối ưu sẵn các cell để tự động hóa quá trình:
 
-1. **Mount Drive:** Chạy cell mount Google Drive để liên kết thư mục chứa file cache của bạn.
-2. **Cài đặt thư viện nhanh:** Notebook sẽ tự động cài dependencies và cài đặt `llama-cpp-python` từ file wheel có sẵn trên Drive:
-   ```bash
-   !pip install /content/drive/MyDrive/Colab_Cache/llama_cpp_python-0.3.23-py3-none-linux_x86_64.whl
-   ```
-3. **Cấu hình Model:** Có 2 phương án chạy:
-   * **Cách 1 (Khuyên dùng):** Sao chép model từ Drive vào local Colab (`/content/`) để suy luận nhanh nhất:
-     ```bash
-     !cp /content/drive/MyDrive/Colab_Cache/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf .
-     ```
-   * **Cách 2 (Đọc trực tiếp từ Drive):** Trỏ trực tiếp đường dẫn mô hình vào Drive để bỏ qua bước copy (không tốn ổ đĩa và thời gian copy):
-     ```bash
-     --model /content/drive/MyDrive/Colab_Cache/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf
-     ```
+1. **Mount Drive và cài dependencies:** Cài đặt nhanh dependencies và nạp file wheel `llama-cpp-python` có sẵn từ thư mục `Colab_Cache` trên Google Drive.
+2. **Sao chép Model:** Di chuyển 2 file mô hình GGUF từ Drive sang bộ nhớ Colab để tăng tốc độ nạp mô hình.
+3. **Khởi chạy Server chạy ngầm:**
+   * Notebook cung cấp sẵn cell chạy ngầm `nohup python3 -m llama_cpp.server ...` trên cổng `8000` (sử dụng file GGUF local vừa copy).
+   * Hoặc cung cấp tùy chọn chạy `vLLM` tự tải mô hình từ HuggingFace qua GPU T4.
+4. **Chạy pipeline:** Gọi script chạy kiểm thử hoặc chạy đánh giá toàn bộ dataset.
 
 ---
 

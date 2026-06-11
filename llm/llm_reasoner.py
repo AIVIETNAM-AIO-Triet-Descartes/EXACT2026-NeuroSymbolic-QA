@@ -230,6 +230,7 @@ class LLMReasoner:
             'answer': answer,
             'explanation': response,
             'method': 'llm_cot',
+            'premises_used': self._extract_premises_used(response),
         }
 
     def generate_z3_code(
@@ -314,6 +315,34 @@ class LLMReasoner:
     # ══════════════════════════════════════════════════════════
     # Private Helpers
     # ══════════════════════════════════════════════════════════
+
+    def _extract_premises_used(self, response: str) -> List[int]:
+        """
+        Trích xuất danh sách index premises 0-based từ phản hồi của LLM CoT.
+        Ví dụ: "PREMISES USED: [0, 2]" -> [0, 2]
+        """
+        if not response:
+            return []
+
+        match = re.search(r'(?i)PREMISES\s*USED:\s*\[(.*?)\]', response)
+        if not match:
+            return []
+
+        indices_str = match.group(1).strip()
+        if not indices_str:
+            return []
+
+        try:
+            # Tách bằng dấu phẩy, khoảng trắng hoặc chấm phẩy và lọc các chữ số
+            indices = [
+                int(x.strip())
+                for x in re.split(r'[,;\s]+', indices_str)
+                if x.strip().isdigit()
+            ]
+            return indices
+        except Exception as e:
+            logger.warning(f"Failed to parse premises_used from string '{indices_str}': {e}")
+            return []
 
     def _extract_answer(self, response: str) -> Optional[str]:
         """

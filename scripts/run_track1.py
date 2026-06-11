@@ -308,6 +308,12 @@ class NeuroSymbolicPipeline:
                 q_result.method = 'llm_cot_override'
                 q_result.confidence = 0.6
                 q_result.explanation = "Conflict detected. Overrode Logic Tree with CoT:\n" + cot_result.get('explanation', '')
+                
+                # Convert CoT's 0-based premises to 1-based
+                cot_premises = cot_result.get('premises_used') or []
+                q_result.premises_used = [idx + 1 for idx in cot_premises]
+                if not q_result.premises_used:
+                    q_result.premises_used = (tree_result or {}).get('premises_used') or []
                 self.stats['llm_solved'] += 1
                 return q_result
         elif cot_ans:
@@ -315,6 +321,10 @@ class NeuroSymbolicPipeline:
             q_result.method = 'llm_cot'
             q_result.confidence = 0.8
             q_result.explanation = cot_result.get('explanation', '')
+            
+            # Convert CoT's 0-based premises to 1-based
+            cot_premises = cot_result.get('premises_used') or []
+            q_result.premises_used = [idx + 1 for idx in cot_premises]
             self.stats['llm_solved'] += 1
             return q_result
         elif tree_ans:

@@ -80,6 +80,7 @@ STEP-BY-STEP REASONING:
   - Rule: "If optimized, then fast" (Optimized -> Fast) from Premise 1.
   - Contrapositive: (~Fast -> ~Optimized). Applying with our fact: ~Optimized.
   - This matches Option A. (Uses 2 premises)
+PREMISES USED: [0, 1]
 ANSWER: A
 
 FEW-SHOT EXAMPLE 2 (Fewest Premises):
@@ -95,6 +96,7 @@ STEP-BY-STEP REASONING:
   - Option A: Rain -> Wet (Premise 1) + It rains (Premise 3) = 2 premises.
   - Option B: Rain -> Wet -> Grow (Premises 1, 2) + It rains (Premise 3) = 3 premises.
   - Both are logically valid, but A uses fewer premises.
+PREMISES USED: [0, 2]
 ANSWER: A
 
 FEW-SHOT EXAMPLE 3 (Insufficient Information → Unknown):
@@ -112,6 +114,7 @@ STEP-BY-STEP REASONING:
   - WAIT: Option C is valid. But if the question has NO concrete ground facts and the rules are only conditional (if-then), we must check if ANY option is provably true. If none of the options can be proven true or false from the premises alone, answer Unknown.
   - Here, Option C IS derivable. So the answer is C.
   - NOTE: If NONE of the options were derivable, the answer would be "Unknown".
+PREMISES USED: [0, 1]
 ANSWER: C
 ---
 
@@ -132,7 +135,8 @@ STEP-BY-STEP REASONING:
    - An option that only restates a conditional rule (if-then) WITHOUT a matching ground fact is NOT provable.
    - If the premises contain NO ground facts (only rules), and all options require ground facts, answer "Unknown".
 
-You MUST output your final answer in EXACTLY this format on the last line:
+You MUST output the 0-based indices of the premises you actually used to derive the answer (first premise is index 0, second premise is index 1, etc.) and your final answer in EXACTLY this format on the last two lines:
+PREMISES USED: [comma-separated 0-based indices, e.g., [0, 2] or [] if answer is Unknown]
 ANSWER: [A, B, C, D, or Unknown]"""
 
 COT_YESNO_PROMPT = """Determine whether the following statement logically follows from the premises.
@@ -161,6 +165,7 @@ STEP-BY-STEP REASONING:
   3. passes_exam -> graduates (Premise 3) ✓
   4. graduates -> gets_a_job ← NO SUCH PREMISE EXISTS! Chain is BROKEN.
   Since the chain from studying to getting a job is INCOMPLETE (missing the last link), the statement is NOT supported.
+PREMISES USED: [0, 1, 2]
 ANSWER: No
 
 FEW-SHOT EXAMPLE (Insufficient Information → Unknown):
@@ -173,6 +178,7 @@ STEP-BY-STEP REASONING:
   2. But there is NO fact stating "it rains" or "the ground is wet".
   3. Without a ground fact to trigger the chain, we CANNOT determine if flowers bloom.
   4. The statement is neither provably true nor provably false.
+PREMISES USED: []
 ANSWER: Unknown
 ---
 
@@ -192,7 +198,8 @@ STEP-BY-STEP REASONING:
    - If ANY condition is missing, unstated, or contradicted → "No".
    - If the premises contain NO ground facts and the statement requires specific instances (not just conditional rules), answer "Unknown".
 
-You MUST output your final answer in EXACTLY this format on the last line:
+You MUST output the 0-based indices of the premises you actually used to derive the answer (first premise is index 0, second premise is index 1, etc.) and your final answer in EXACTLY this format on the last two lines:
+PREMISES USED: [comma-separated 0-based indices, e.g., [0, 2] or [] if answer is Unknown]
 ANSWER: [Yes, No, or Unknown]"""
 
 # ══════════════════════════════════════════════════════════════

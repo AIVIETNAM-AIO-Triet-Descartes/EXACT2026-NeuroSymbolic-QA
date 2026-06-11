@@ -169,6 +169,7 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
         full_q = full_q + "\n" + "\n".join(request.options)
 
     answer, explanation, steps = "", "", []
+    premises_used = []
     from llm import llm_server_available
     if llm_server_available():
         try:
@@ -179,6 +180,7 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
             answer = (res.get("answer") or "").strip()
             explanation = (res.get("explanation") or "").strip()
             steps = [explanation] if explanation else []
+            premises_used = res.get("premises_used") or []
         except Exception as e:
             logger.error(f"[TYPE1] CoT failed: {e}")
     else:
@@ -202,7 +204,7 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
         explanation=explanation,
         raw_unit="",
         steps=steps,
-        premises_used=[],   # TODO #2: real premise indices used in the proof
+        premises_used=premises_used,
     )
 
 
