@@ -41,7 +41,8 @@ from pipeline.type1.logic_tree import LogicTree
 from pipeline.type1.z3_solver import (
     Z3Translator, EntailmentChecker, execute_z3_code,
 )
-from llm.llm_reasoner import LLMReasoner, create_reasoner
+from llm.llm_reasoner import LLMReasoner
+from llm import get_shared_reasoner
 
 
 # ══════════════════════════════════════════════════════════════
@@ -150,15 +151,9 @@ class NeuroSymbolicPipeline:
         }
 
     def _ensure_llm(self):
-        """Lazy load LLM model."""
+        """Lazy-get the config-driven shared reasoner (vLLM/llama.cpp per config)."""
         if self.llm is None and self.config.use_llm:
-            model_path = Path(self.config.model_path)
-            self.llm = create_reasoner(
-                model_dir=str(model_path.parent),
-                model_name=model_path.name,
-                n_ctx=self.config.n_ctx,
-                n_gpu_layers=self.config.n_gpu_layers,
-            )
+            self.llm = get_shared_reasoner()
 
     # ── Main Entry Point ─────────────────────────────────────
 
@@ -304,6 +299,7 @@ class NeuroSymbolicPipeline:
                 q_result.method = 'hybrid_consensus'
                 q_result.confidence = 1.0
                 q_result.explanation = "Consensus Reached (Logic Tree & CoT agreed):\n" + cot_result.get('explanation', '')
+                q_result.premises_used = (tree_result or {}).get('premises_used') or []
                 self.stats['llm_solved'] += 1
                 return q_result
             else:
@@ -326,6 +322,7 @@ class NeuroSymbolicPipeline:
             q_result.method = 'logic_tree'
             q_result.confidence = 0.7
             q_result.explanation = "Derived exclusively by Logic Tree."
+            q_result.premises_used = (tree_result or {}).get('premises_used') or []
             self.stats['logic_tree_solved'] += 1
             return q_result
 
@@ -337,6 +334,7 @@ class NeuroSymbolicPipeline:
                 q_result.method = 'llm_z3'
                 q_result.confidence = 0.6
                 q_result.explanation = "Derived by Z3."
+                q_result.premises_used = (z3_result or {}).get('premises_used') or []
                 self.stats['z3_solved'] += 1
                 return q_result
                 

@@ -40,8 +40,8 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 .venv\Scripts\python scripts/demo_type2.py --limit 100            # SymPy + vector solver only
 .venv\Scripts\python scripts/demo_type2.py --limit 100 --use-llm  # + LLM augment/fallback/explain
 
-# Batch runner over a dataset → predictions JSON
-python scripts/run_pipeline.py --input data.json --output output/predictions.json [--no-llm]
+# Type 1 batch runner over the logic dataset → predictions JSON
+python scripts/run_track1.py --input data.json --output output/predictions.json [--no-llm]
 
 # Rebuild FAISS formula index after editing data/rag/physics_formulas.json
 python scripts/build_faiss_index.py
@@ -61,7 +61,7 @@ Two processing pipelines selected by a **Type Router** (`api/router.py`). Nodes 
 ```
 Request → NL→FOL Parser (LLM) → Z3 Solver (deterministic) → Explainer (LLM) → Response
 ```
-Z3 provides deterministic correctness; LLM only handles NL↔FOL translation and explanation. **Status: not wired.** `pipeline/type1/{nl_to_fol,z3_solver,explainer}.py` are empty stubs; `api/main.py` returns a mock answer for Type 1. The Z3 codegen/refinement logic currently lives in `llm/llm_reasoner.py` (`generate_z3_code`, `refine_z3_code`, `_clean_code`) and `scripts/run_pipeline.py` imports the type1 modules defensively.
+Z3 provides deterministic correctness; LLM handles CoT reasoning, Z3 codegen, and explanation. **Status: wired into `/predict`** via `api/main.py::_run_type1_pipeline` — but the live request carries only NL premises (no `premises-FOL`, see `docs/SYSTEM.md`), so the symbolic LogicTree/Z3 path is unavailable there and it runs LLM `solve_with_cot` over the NL premises; `premises_used` is currently `[]` (TODO: have the CoT report used premise indices, or add an NL→FOL step — `premises_used` is 50% of the Type 1 score). The full symbolic consensus (Logic Tree + LLM CoT + LLM-Z3 fallback) runs **offline via `scripts/run_track1.py`** over the dataset's `premises-FOL`, emitting a `{idx, answers, explanation}` batch format. NL→FOL translation modules were removed (dataset ships `premises-FOL` offline); explanation comes inline from `solve_with_cot`. Z3 codegen/refinement lives in `llm/llm_reasoner.py` (`generate_z3_code`, `refine_z3_code`).
 
 **Type 2 — Physics** (`Physics_Problems_Text_Only.csv`, ~1352 problems, 8 prefixes — see `docs/track2_reference.md`) — **fully implemented**:
 ```
@@ -86,18 +86,19 @@ Request → PhysicsClassifier → PhysicsParser → FormulaRAG (FAISS) → SymPy
 
 ```
 api/
-├── main.py            # FastAPI /query (+ sequential Type 2 pipeline) and /health
+├── main.py            # FastAPI /predict (type1 CoT + sequential Type 2 pipeline), /v1/models proxy, /health
 ├── schemas.py         # QueryRequest / QueryResponse Pydantic models
 ├── router.py          # Type 1/2 classifier
 ├── response_builder.py
 └── logger.py          # JSON log formatter
 pipeline/
 ├── state.py           # PipelineState + SolverResult TypedDicts (shared contract)
-├── type1/
-│   ├── type1_classifier.py  # QuestionClassifier / QuestionType (implemented)
-│   ├── nl_to_fol.py         # EMPTY stub
-│   ├── z3_solver.py         # EMPTY stub
-│   └── explainer.py         # EMPTY stub
+├── type1/                  # /predict type1 = LLM CoT (api/main.py); full symbolic consensus offline via scripts/run_track1.py
+│   ├── fol_normalizer.py       # FOL notation normalizer (used by run_track1)
+│   ├── question_classifier.py  # QuestionClassifier / QuestionType (used by run_track1)
+│   ├── type1_classifier.py     # alternate classifier (legacy, not used by run_track1)
+│   ├── logic_tree.py           # forward-chaining proof DAG
+│   └── z3_solver.py            # Z3 translator + execute_z3_code sandbox (implemented)
 └── type2/                   # all implemented
     ├── type2_classifier.py  # PhysicsClassifier / PhysicsQuestionType
     ├── physics_parser.py
@@ -114,7 +115,7 @@ llm/
 └── loader.py
 scripts/
 ├── demo_type2.py      # primary Type 2 demo + accuracy eval (regex extraction, LLM hooks)
-├── run_pipeline.py    # batch runner over a dataset → predictions JSON
+├── run_track1.py      # Type 1 batch runner (Logic Tree + LLM CoT + LLM-Z3) → predictions JSON
 └── build_faiss_index.py
 configs/config.yaml    # vLLM endpoint + pipeline/api/logging config
 data/

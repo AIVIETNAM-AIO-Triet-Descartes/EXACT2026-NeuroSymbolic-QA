@@ -1,9 +1,10 @@
 """
 API Server - EXACT 2026 Neuro-Symbolic QA System.
 
-FastAPI app expose 2 endpoints:
-    POST /query  — nhận question + premises, trả answer + explanation
-    GET  /health — health check
+FastAPI app expose:
+    POST /predict    — official endpoint, both types (route by `type`), List[UnifiedResponse]
+    GET  /v1/models  — proxy to internal vLLM (committee model verification)
+    GET  /health     — health check
 
 Usage:
     uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
@@ -148,6 +149,64 @@ def _run_type2_pipeline(request: UnifiedRequest) -> UnifiedResponse:
 
 
 # ══════════════════════════════════════════════════════════════
+# Track 1 pipeline (Logic) — single-query
+# ══════════════════════════════════════════════════════════════
+
+def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
+    """
+    Single-query Type 1 solve via LLM Chain-of-Thought over the NL premises.
+
+    The live request carries only NL premises (no premises-FOL — see docs/SYSTEM.md),
+    so the symbolic LogicTree/Z3 path (which needs FOL) is unavailable here; we run
+    `solve_with_cot` on the NL premises. `premises_used` is left empty for now —
+    TODO #2: have the CoT report the used premise indices (or add an NL→FOL step to
+    recover them from the proof trace) so the 50%-weighted premises_used scores.
+    Never raises — falls back to "Unknown" when the LLM server is down.
+    """
+    q_type = "mcq" if request.options else "yes_no"
+    full_q = request.query
+    if request.options:
+        full_q = full_q + "\n" + "\n".join(request.options)
+
+    answer, explanation, steps = "", "", []
+    from llm import llm_server_available
+    if llm_server_available():
+        try:
+            from llm import get_shared_reasoner
+            res = get_shared_reasoner().solve_with_cot(
+                request.premises or [], [], full_q, q_type, None,
+            ) or {}
+            answer = (res.get("answer") or "").strip()
+            explanation = (res.get("explanation") or "").strip()
+            steps = [explanation] if explanation else []
+        except Exception as e:
+            logger.error(f"[TYPE1] CoT failed: {e}")
+    else:
+        logger.debug("[TYPE1] LLM server DOWN — returning Unknown")
+
+    if not answer:
+        answer = "Unknown"
+        explanation = explanation or "Type 1 reasoning unavailable (LLM server down)."
+
+    log_pipeline_request(
+        question=request.query, query_type="type1", answer=str(answer),
+        confidence=0.0, has_fol=False, has_cot=bool(steps), fol_retries=0,
+        fallback_triggered=(answer == "Unknown"), z3_timeout=False,
+        solver_source="llm_cot",
+    )
+
+    return build_response(
+        query_id=request.query_id,
+        query_type="type1",
+        answer=answer,
+        explanation=explanation,
+        raw_unit="",
+        steps=steps,
+        premises_used=[],   # TODO #2: real premise indices used in the proof
+    )
+
+
+# ══════════════════════════════════════════════════════════════
 # Endpoints
 # ══════════════════════════════════════════════════════════════
 
@@ -159,15 +218,7 @@ async def handle_predict(request: UnifiedRequest):
         if query_type == "type2":
             return [_run_type2_pipeline(request)]
 
-        # Type 1
-        return [build_response(
-            query_id=request.query_id,
-            query_type="type1",
-            answer="A",
-            explanation="[TYPE1 MOCK] Pipeline not yet connected.",
-            steps=["[TYPE1 MOCK] Pipeline not yet connected."],
-            premises_used=[0] if request.premises else []
-        )]
+        return [_run_type1_pipeline(request)]
 
     except Exception as e:
         logger.error(f"Pipeline error: {e}", exc_info=True)

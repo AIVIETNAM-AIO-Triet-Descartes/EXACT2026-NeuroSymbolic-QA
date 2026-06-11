@@ -13,6 +13,7 @@ References:
 
 import re
 import os
+import json
 from typing import Optional, Dict, List
 from loguru import logger
 
@@ -25,79 +26,60 @@ from llm.prompt_templates import (
     Z3_CODE_GENERATION_PROMPT,
     Z3_REFINEMENT_PROMPT,
     ANSWER_EXTRACT_PATTERNS,
+    SYSTEM_PROMPT_PHYSICS,
+    PHYSICS_PARSE_PROMPT,
+    PHYSICS_COT_PROMPT,
+    PHYSICS_EXPLAIN_PROMPT,
 )
 
 
 class LLMReasoner:
     """
-    LLM Reasoning Engine sử dụng Qwen 2.5 7B Instruct (GGUF).
+    LLM Reasoning Engine — talks to an OpenAI-compatible server (vLLM in prod,
+    llama.cpp in dev) over HTTP via the `openai` client. Does NOT load weights
+    in-process: `model_name` must match the server's real /v1/models id, which
+    the competition committee can inspect to verify the ≤8B open model.
 
-    Architecture:
-        - Model loaded via llama-cpp-python for efficient GPU inference
-        - Low temperature (0.1) for deterministic logical output
-        - Structured prompts enforce consistent output format
+    Switching backend is config-only (`llm.active` in configs/config.yaml) —
+    build instances through `from llm import get_shared_reasoner`.
 
     Attributes:
-        model_path: Đường dẫn đến file GGUF.
-        n_ctx: Context window size.
-        n_gpu_layers: Số layer offload lên GPU.
+        api_base:   OpenAI-compatible base URL (e.g. http://localhost:8001/v1).
+        model_name: Served model id (must match GET /v1/models).
+        temperature / max_tokens: default sampling params.
     """
 
     def __init__(
         self,
-        model_path: str,
-        n_ctx: int = 4096,
-        n_gpu_layers: int = -1,
+        api_base: str = "http://localhost:8000/v1",
+        model_name: str = "Qwen/Qwen2.5-7B-Instruct",
+        api_key: str = "not-needed",
         temperature: float = 0.1,
-        verbose: bool = False,
+        max_tokens: int = 1024,
+        **_legacy,   # tolerate/ignore old llama.cpp kwargs (model_path, n_ctx, ...)
     ):
-        """
-        Khởi tạo LLM Reasoner.
-
-        Args:
-            model_path: Đường dẫn file .gguf model.
-            n_ctx: Kích thước context window.
-            n_gpu_layers: Số layer GPU (-1 = tất cả).
-            temperature: Nhiệt độ sampling.
-            verbose: Hiển thị log từ llama.cpp.
-        """
-        self.model_path = model_path
-        self.n_ctx = n_ctx
-        self.n_gpu_layers = n_gpu_layers
+        self.api_base = api_base
+        self.model_name = model_name
+        self.api_key = api_key
         self.temperature = temperature
-        self.llm = None
+        self.max_tokens = max_tokens
+        self._client = None  # lazy-init OpenAI client
 
-        # Lazy loading - only load model when first needed
-        self._model_loaded = False
-        self._verbose = verbose
+    def _get_client(self):
+        """Lazy-init the OpenAI client pointed at the local inference server."""
+        if self._client is None:
+            from openai import OpenAI
+            self._client = OpenAI(base_url=self.api_base, api_key=self.api_key)
+        return self._client
 
-    def _ensure_model_loaded(self):
-        """Lazy load model on first use."""
-        if self._model_loaded:
-            return
-
+    def check_server(self) -> bool:
+        """Return True if the inference server answers GET /v1/models."""
         try:
-            from llama_cpp import Llama
-
-            logger.info(f"Loading LLM model from {self.model_path}...")
-            self.llm = Llama(
-                model_path=self.model_path,
-                n_ctx=self.n_ctx,
-                n_gpu_layers=self.n_gpu_layers,
-                verbose=self._verbose,
-            )
-            self._model_loaded = True
-            logger.info("LLM model loaded successfully.")
-
-        except ImportError:
-            logger.error(
-                "llama-cpp-python not installed. "
-                "Install with: pip install llama-cpp-python"
-            )
-            raise
+            self._get_client().models.list()
+            return True
         except Exception as e:
-            logger.error(f"Failed to load LLM model: {e}")
-            raise
+            logger.warning(f"LLM server not reachable at {self.api_base}: {e}")
+            return False
 
     def _chat(
         self,
@@ -107,32 +89,23 @@ class LLMReasoner:
         temperature: Optional[float] = None,
     ) -> str:
         """
-        Gửi chat completion request đến model.
+        Gửi chat completion request đến inference server (OpenAI-compatible).
 
-        Args:
-            system_prompt: System message.
-            user_prompt: User message.
-            max_tokens: Giới hạn output tokens.
-            temperature: Override temperature.
-
-        Returns:
-            Generated text response.
+        Returns "" khi lỗi / không kết nối được (KHÔNG raise — caller tự fallback).
         """
-        self._ensure_model_loaded()
-
-        temp = temperature or self.temperature
+        temp = self.temperature if temperature is None else temperature
 
         try:
-            output = self.llm.create_chat_completion(
+            resp = self._get_client().chat.completions.create(
+                model=self.model_name,
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=temp,
                 max_tokens=max_tokens,
-                stop=["\n\n\n"],  # Prevent excessive output
             )
-            return output['choices'][0]['message']['content'].strip()
+            return (resp.choices[0].message.content or "").strip()
 
         except Exception as e:
             logger.error(f"LLM chat completion failed: {e}")
@@ -527,35 +500,118 @@ class LLMReasoner:
 
         return code
 
+    # ══════════════════════════════════════════════════════════
+    # Track 2 — Physics (parse / CoT-solve / explain)
+    # ══════════════════════════════════════════════════════════
+
+    def parse_physics_question(self, question: str) -> Dict:
+        """
+        Extract {given, find, domain, formulas} from a physics question.
+
+        LLM output parsed with json.loads (NEVER eval). Returns {} on failure so
+        the regex pre-pass keeps its deterministic result (the caller merges with
+        regex winning). Used by physics_parser_node / demo augment.
+        """
+        prompt = PHYSICS_PARSE_PROMPT.format(question=question)
+        raw = self._chat(SYSTEM_PROMPT_PHYSICS, prompt, max_tokens=512)
+        data = self._extract_json(raw)
+        if not isinstance(data, dict):
+            return {}
+        data.setdefault("given", {})
+        data.setdefault("find", "")
+        data.setdefault("domain", "")
+        data.setdefault("formulas", [])
+        return data
+
+    def solve_physics_cot(
+        self,
+        question: str,
+        given: Optional[Dict] = None,
+        find: str = "",
+        formulas: Optional[List] = None,
+    ) -> Dict:
+        """
+        Numeric Chain-of-Thought fallback when SymPy/vector solvers fail.
+
+        Returns a dict shaped like sympy_result: {answer, unit, steps, source}.
+        Parses the final 'ANSWER: <number> <unit>' line. source='llm_cot' so the
+        caller assigns the lower fallback confidence.
+        """
+        prompt = PHYSICS_COT_PROMPT.format(
+            question=question,
+            given=given or {},
+            find=find or "",
+            formulas=formulas or [],
+        )
+        raw = self._chat(SYSTEM_PROMPT_PHYSICS, prompt, max_tokens=1024)
+        answer, unit = self._extract_physics_answer(raw)
+        return {
+            "answer": answer,
+            "unit": unit,
+            "steps": [raw] if raw else [],
+            "source": "llm_cot",
+        }
+
+    def explain_physics(
+        self,
+        question: str,
+        answer: str,
+        unit: str = "",
+        steps: Optional[List[str]] = None,
+    ) -> str:
+        """Generate a short NL explanation for an already-solved physics problem."""
+        steps_text = "\n".join(f"  - {s}" for s in (steps or []))
+        prompt = PHYSICS_EXPLAIN_PROMPT.format(
+            question=question, answer=answer, unit=unit or "", steps=steps_text,
+        )
+        text = self._chat(SYSTEM_PROMPT_PHYSICS, prompt, max_tokens=256)
+        return text or (f"The answer is {answer} {unit}".strip() + ".")
+
+    @staticmethod
+    def _extract_json(raw: str) -> Optional[dict]:
+        """First JSON object in an LLM response (tolerates ```fences``` / prose)."""
+        if not raw:
+            return None
+        text = raw.strip()
+        fence = re.search(r'```(?:json)?\s*(.*?)```', text, re.DOTALL)
+        if fence:
+            text = fence.group(1).strip()
+        if not text.startswith("{"):
+            m = re.search(r'\{.*\}', text, re.DOTALL)
+            if m:
+                text = m.group(0)
+        try:
+            return json.loads(text)
+        except Exception:
+            return None
+
+    @staticmethod
+    def _extract_physics_answer(raw: str):
+        """Parse 'ANSWER: <value> <unit>' → (answer, unit); ("","") if absent."""
+        if not raw:
+            return "", ""
+        m = re.search(r'(?i)ANSWER:\s*(.+)', raw)
+        if not m:
+            return "", ""
+        tail = m.group(1).strip().strip("*").strip()
+        nm = re.match(r'(-?[\d.]+(?:[eE][-+]?\d+)?)\s*(.*)$', tail)
+        if nm:
+            return nm.group(1), nm.group(2).strip().strip(".")
+        return tail, ""
+
 
 # ══════════════════════════════════════════════════════════════
 # Factory Function
 # ══════════════════════════════════════════════════════════════
 
-def create_reasoner(
-    model_dir: str = ".",
-    model_name: str = "qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf",
-    **kwargs,
-) -> LLMReasoner:
+def create_reasoner(*_args, **_kwargs) -> LLMReasoner:
     """
-    Factory function để tạo LLMReasoner với cấu hình mặc định.
+    DEPRECATED — use `from llm import get_shared_reasoner` instead.
 
-    Args:
-        model_dir: Thư mục chứa model file.
-        model_name: Tên file GGUF.
-        **kwargs: Override parameters.
-
-    Returns:
-        LLMReasoner instance.
+    Thin shim kept for backward compatibility: returns the config-driven shared
+    singleton so any legacy caller still talks to the configured backend
+    (vLLM/llama.cpp) rather than building a stale GGUF reasoner. All positional/
+    keyword args are ignored.
     """
-    model_path = os.path.join(model_dir, model_name)
-
-    defaults = {
-        'n_ctx': 4096,
-        'n_gpu_layers': -1,
-        'temperature': 0.1,
-        'verbose': False,
-    }
-    defaults.update(kwargs)
-
-    return LLMReasoner(model_path=model_path, **defaults)
+    from llm import get_shared_reasoner
+    return get_shared_reasoner()
