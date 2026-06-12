@@ -389,13 +389,61 @@ Requirements:
 - Keep the symbol convention: U=voltage, Z_L/Z_C/Z for inductive/capacitive reactance/impedance.
 - Output ONLY one Python code block, no prose.
 
-Example:
+For MULTI-CHARGE force or ELECTRIC-FIELD problems, ALWAYS work in 2D coordinates — do NOT guess that the answer is zero by "symmetry" unless you have verified it with the component sums:
+1. Read the geometry and place EVERY charge at an explicit (x, y) (triangle: (0,0),(a,0),(a/2, a*sqrt(3)/2); square; collinear: along x-axis; bisector point: (AB/2, d_perp)).
+2. For the target (charge for a force, point for a field), sum contributions as VECTORS:
+   - magnitude: force k*abs(qi*qt)/r**2 ; field k*abs(qi)/r**2
+   - direction along the line source→target; LIKE signs push the target AWAY (use +unit vector), OPPOSITE signs pull it TOWARD the source (−unit vector).
+   - accumulate fx += sign*mag*dx/r, fy += sign*mag*dy/r
+3. answer = math.hypot(fx, fy).
+
+Example (scalar):
 ```python
 import sympy as sp
 C, Q = 5e-6, 20e-6          # capacitance (F), charge (C)
 answer = float(Q**2 / (2 * C))
 unit = "J"
 ```
+
+Example (vector — net force on q3 at a triangle vertex):
+```python
+import math
+k = 9e9
+a = 0.1
+q1, q2, q3 = 1e-6, 1e-6, -2e-6
+P = {{1: (0.0, 0.0), 2: (a, 0.0), 3: (a/2, a*math.sqrt(3)/2)}}   # vertex positions
+fx = fy = 0.0
+for i, qi in [(1, q1), (2, q2)]:
+    dx, dy = P[3][0]-P[i][0], P[3][1]-P[i][1]
+    r = math.hypot(dx, dy)
+    mag = k*abs(qi*q3)/r**2
+    sign = 1.0 if qi*q3 > 0 else -1.0     # like→away, opposite→toward
+    fx += sign*mag*dx/r
+    fy += sign*mag*dy/r
+answer = math.hypot(fx, fy)
+unit = "N"
+```
+
+Code:"""
+
+# Self-repair: the previous PAL code failed (syntax / runtime / no `answer`).
+# Feed the error back so the model fixes it — one retry before falling to CoT.
+PHYSICS_PAL_REFINE_PROMPT = """Your previous Python code for this physics problem FAILED.
+Error: {error}
+
+Previous code:
+```python
+{code}
+```
+
+Problem:
+{question}
+Known values (SI): {given}
+Find: {find}
+
+Fix the bug (check imports, variable names, the geometry/coordinate setup, and that
+`answer` is assigned a finite float). Output ONLY one corrected Python code block that
+sets `answer` (float, SI) and `unit` (ASCII str). No prose.
 
 Code:"""
 

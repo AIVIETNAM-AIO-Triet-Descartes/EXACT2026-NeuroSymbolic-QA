@@ -257,16 +257,31 @@ def _run_pal_code(code: str) -> Optional[dict]:
     return {"answer": answer_str, "unit": str(g.get("unit") or "")}
 
 
-def execute_generated_code(code: str, timeout: int = 5) -> Optional[dict]:
+def execute_generated_code(code: str, timeout: int = 5, return_error: bool = False):
     """Run LLM-generated PAL code in a sandbox. Returns {answer, unit} or None on
-    rejected/failed/timed-out code. NEVER raises."""
+    rejected/failed/timed-out code. NEVER raises. With return_error=True returns
+    (result, error_str) so the caller can drive a self-repair retry."""
+    def _ret(res, err):
+        return (res, err) if return_error else res
+
     if not code or len(code) > 4000:
-        return None
+        return _ret(None, "empty or oversized code")
     low = code.lower()
     if any(tok in low for tok in _PAL_FORBIDDEN):
         logger.warning("[PAL] rejected generated code (forbidden token)")
+        return _ret(None, "forbidden token (sandbox policy)")
+
+    result = _run_with_timeout(_run_pal_code, (code,), timeout)
+    if result is not None:
+        return _ret(result, None)
+    if not return_error:
         return None
-    return _run_with_timeout(_run_pal_code, (code,), timeout)
+    # Re-run once (no timeout guard) just to capture the exception text for repair.
+    try:
+        r = _run_pal_code(code)
+        return _ret(r, None if r else "code ran but set no `answer`")
+    except Exception as e:
+        return _ret(None, f"{type(e).__name__}: {e}")
 
 
 def _llm_fallback_chain(state: dict, parsed: dict) -> Optional[dict]:
@@ -287,7 +302,16 @@ def _llm_fallback_chain(state: dict, parsed: dict) -> Optional[dict]:
 
         # 1. PAL — LLM writes code, sandbox executes (preferred).
         code = reasoner.generate_sympy_code(question, given, find, formulas)
-        pal = execute_generated_code(code, timeout=5)
+        pal, err = execute_generated_code(code, timeout=5, return_error=True)
+        if not (pal and pal.get("answer") not in (None, "")):
+            # 1b. Self-repair: feed the error back for ONE fix attempt.
+            code2 = reasoner.refine_sympy_code(code, err or "", question, given, find)
+            if code2 and code2 != code:
+                pal2 = execute_generated_code(code2, timeout=5)
+                if pal2 and pal2.get("answer") not in (None, ""):
+                    logger.info("[PAL] solved via self-repaired code")
+                    return {"answer": pal2["answer"], "unit": pal2.get("unit", ""),
+                            "steps": [code2], "source": "llm_pal"}
         if pal and pal.get("answer") not in (None, ""):
             logger.info("[PAL] solved via generated code")
             return {"answer": pal["answer"], "unit": pal.get("unit", ""),

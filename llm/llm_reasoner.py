@@ -30,6 +30,7 @@ from llm.prompt_templates import (
     PHYSICS_PARSE_PROMPT,
     PHYSICS_COT_PROMPT,
     PHYSICS_PAL_PROMPT,
+    PHYSICS_PAL_REFINE_PROMPT,
     PHYSICS_EXPLAIN_PROMPT,
 )
 
@@ -575,6 +576,27 @@ class LLMReasoner:
             given=given or {},
             find=find or "",
             formulas=formulas or [],
+        )
+        raw = self._chat(SYSTEM_PROMPT_PHYSICS, prompt, max_tokens=512)
+        return self._strip_code_fences(raw)
+
+    def refine_sympy_code(
+        self,
+        code: str,
+        error: str,
+        question: str,
+        given: Optional[Dict] = None,
+        find: str = "",
+    ) -> str:
+        """Self-repair: feed the failed PAL code + its error back to the LLM for one
+        fix attempt. Returns the corrected code string ("" on failure). Mirrors the
+        Track-1 `refine_z3_code` loop."""
+        prompt = PHYSICS_PAL_REFINE_PROMPT.format(
+            error=(error or "no `answer` produced")[:300],
+            code=code,
+            question=question,
+            given=given or {},
+            find=find or "",
         )
         raw = self._chat(SYSTEM_PROMPT_PHYSICS, prompt, max_tokens=512)
         return self._strip_code_fences(raw)
