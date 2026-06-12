@@ -596,9 +596,156 @@ def execute_z3_code(code: str, timeout_sec: int = 30) -> Optional[str]:
     sys.stdout = buffer = io.StringIO()
 
     try:
-        # We need to allow standard imports like 'from z3 import *'
-        # So we pass a normal dictionary for globals
-        exec_globals = {}
+        import z3
+        
+        # Predefined Entity sort and common variables
+        Entity = z3.DeclareSort('Entity')
+        x = z3.Const('x', Entity)
+        y = z3.Const('y', Entity)
+        z = z3.Const('z', Entity)
+
+        class TrackingSolver:
+            def __init__(self, *args, **kwargs):
+                self._solver = z3.Solver(*args, **kwargs)
+                self._labels = {}
+                self._counter = 1
+
+            def add(self, *args):
+                for arg in args:
+                    label_name = f"p_{self._counter}"
+                    label = z3.Bool(label_name)
+                    self._labels[label_name] = self._counter
+                    self._counter += 1
+                    self._solver.assert_and_track(arg, label)
+
+            def check(self, *args):
+                return self._solver.check(*args)
+
+            def push(self):
+                self._solver.push()
+
+            def pop(self):
+                self._solver.pop()
+
+            def model(self):
+                return self._solver.model()
+
+            def unsat_core(self):
+                return self._solver.unsat_core()
+
+        def solve_yes_no(solver, goal):
+            # Check Yes (Goal is entailed)
+            solver.push()
+            solver.add(z3.Not(goal))
+            res_yes = solver.check()
+            if res_yes == z3.unsat:
+                print("Yes")
+                try:
+                    core = solver.unsat_core()
+                    used = []
+                    for item in core:
+                        name = str(item)
+                        if name.startswith('p_'):
+                            idx = int(name.split('_')[1])
+                            used.append(idx)
+                    # Filter out the goal label (which was added last, so it has the highest index)
+                    last_label_idx = solver._counter - 1
+                    used = [i for i in used if i < last_label_idx]
+                    print(f"PREMISES USED: {sorted(used)}")
+                except Exception:
+                    pass
+                solver.pop()
+                return
+            solver.pop()
+
+            # Check No (Negation of Goal is entailed)
+            solver.push()
+            solver.add(goal)
+            res_no = solver.check()
+            if res_no == z3.unsat:
+                print("No")
+                try:
+                    core = solver.unsat_core()
+                    used = []
+                    for item in core:
+                        name = str(item)
+                        if name.startswith('p_'):
+                            idx = int(name.split('_')[1])
+                            used.append(idx)
+                    last_label_idx = solver._counter - 1
+                    used = [i for i in used if i < last_label_idx]
+                    print(f"PREMISES USED: {sorted(used)}")
+                except Exception:
+                    pass
+                solver.pop()
+                return
+            solver.pop()
+            print("Unknown")
+
+        def solve_mcq(solver, options_dict):
+            entailed = []
+            cores = {}
+            for key, expr in options_dict.items():
+                if expr is None:
+                    continue
+                solver.push()
+                solver.add(z3.Not(expr))
+                res = solver.check()
+                if res == z3.unsat:
+                    entailed.append(key)
+                    try:
+                        core = solver.unsat_core()
+                        used = []
+                        for item in core:
+                            name = str(item)
+                            if name.startswith('p_'):
+                                idx = int(name.split('_')[1])
+                                used.append(idx)
+                        last_label_idx = solver._counter - 1
+                        used = [i for i in used if i < last_label_idx]
+                        cores[key] = sorted(used)
+                    except Exception:
+                        pass
+                solver.pop()
+
+            if len(entailed) == 1:
+                ans = entailed[0]
+                print(ans)
+                if ans in cores:
+                    print(f"PREMISES USED: {cores[ans]}")
+            elif len(entailed) > 1:
+                ans = entailed[0]
+                print(ans)
+                if ans in cores:
+                    print(f"PREMISES USED: {cores[ans]}")
+            else:
+                none_key = None
+                for key, expr in options_dict.items():
+                    if expr is None:
+                        none_key = key
+                        break
+                if none_key:
+                    print(none_key)
+                else:
+                    print("Unknown")
+
+        # Prepare globals
+        exec_globals = {
+            'z3': z3,
+            'Entity': Entity,
+            'x': x,
+            'y': y,
+            'z': z,
+            'Solver': TrackingSolver,
+            'solve_yes_no': solve_yes_no,
+            'solve_mcq': solve_mcq,
+        }
+        # Populate with standard z3 functions
+        for name in dir(z3):
+            if not name.startswith('_') and name != 'Solver':
+                exec_globals[name] = getattr(z3, name)
+
+        # Run code
         exec(code, exec_globals)
         output = buffer.getvalue().strip()
         return output
