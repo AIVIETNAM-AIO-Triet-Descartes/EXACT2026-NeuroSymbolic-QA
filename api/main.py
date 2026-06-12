@@ -236,7 +236,6 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                     z3_ans = 'Unknown'
                                     
                             # Parse premises used from Z3
-                            import re
                             p_match = re.search(r'PREMISES USED:\s*\[([^\]]*)\]', output)
                             z3_premises_used = []
                             if p_match:
