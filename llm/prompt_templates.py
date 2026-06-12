@@ -324,3 +324,58 @@ ANSWER_EXTRACT_PATTERNS = [
     r'(?i)\b(Yes|No|Unknown)\s*[,.]?\s*$',
     r'^([A-D])\s*[.\)]',
 ]
+
+
+# ══════════════════════════════════════════════════════════════
+# Track 2 — Physics prompts (used by LLMReasoner physics methods)
+# ══════════════════════════════════════════════════════════════
+
+SYSTEM_PROMPT_PHYSICS = (
+    "You are a careful physics assistant. You extract data and reason step by "
+    "step, but you NEVER guess numbers — you report exactly what the problem "
+    "states. Keep symbol conventions: U = potential difference (voltage), "
+    "V = electric potential, Z_L = inductive reactance, Z_C = capacitive "
+    "reactance, Z = impedance."
+)
+
+# Extraction → strict JSON (parsed with json.loads, never eval).
+PHYSICS_PARSE_PROMPT = """Extract the structured data from this physics problem.
+
+Problem:
+{question}
+
+Return ONLY a JSON object (no prose, no code fences) with this exact shape:
+{{"given": {{"<symbol>": <number in SI units>}}, "find": "<symbol to solve for>", "domain": "<one of: electrostatics, circuits, ac_circuits, electromagnetism, measurement>", "formulas": ["<relevant formula as 'LHS = RHS'>"]}}
+
+Rules:
+- "given" values MUST be plain numbers already converted to SI (e.g. "100 uF" -> 1e-4). If a value is an expression like sqrt(3)*1e-6, evaluate it to a float.
+- Use the symbol convention: U=voltage, Z_L/Z_C/Z for reactance/impedance.
+- Omit a key if unknown; never invent values not stated in the problem.
+
+JSON:"""
+
+# Chain-of-Thought numeric solver. Ends with a single machine-parseable line.
+PHYSICS_COT_PROMPT = """Solve this physics problem step by step.
+
+Problem:
+{question}
+
+Known values: {given}
+Find: {find}
+Candidate formulas: {formulas}
+
+Work through the calculation explicitly. On the FINAL line, output exactly:
+ANSWER: <number> <unit>
+where <unit> is ASCII (ohm, uF, nC, V/m, A, W, J, ...) and <number> is the numeric value only.
+
+Solution:"""
+
+# Short NL explanation for an already-solved problem.
+PHYSICS_EXPLAIN_PROMPT = """Write a concise 2-3 sentence explanation for this solved physics problem.
+
+Problem: {question}
+Final answer: {answer} {unit}
+Computation steps:
+{steps}
+
+Explain which physical principle / formula applies and how the steps reach the answer. Do not restate the full calculation; focus on the reasoning. Explanation:"""

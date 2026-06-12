@@ -17,11 +17,13 @@ llm:
       api_base: "http://localhost:8000/v1"
       model_name: "Qwen/Qwen2.5-7B-Instruct"   # = --alias trên llama-server
 
-    # Prod: vLLM phục vụ FP16 safetensors (VPS Linux, GPU >=16GB).
-    #   vllm serve Qwen/Qwen2.5-7B-Instruct --port 8000 --host 0.0.0.0
-    #   model_name PHẢI khớp model_id thật (verify qua GET /v1/models cho committee).
+    # Prod: vLLM phục vụ FP16 safetensors (VPS Linux, GPU >=24GB).
+    #   vllm serve Qwen/Qwen2.5-7B-Instruct --host 127.0.0.1 --port 8001 --dtype float16
+    #   vLLM nghe 8001 NỘI BỘ; FastAPI (api.port=8000) public + proxy /v1/models.
+    #   model_name PHẢI khớp model_id thật (committee verify qua GET /v1/models).
+    #   Khi deploy: đổi active: dev → prod (xem docs/deployment_plan.md §3).
     prod:
-      api_base: "http://localhost:8000/v1"      # đổi thành http://<vps-ip>:8000/v1
+      api_base: "http://localhost:8001/v1"      # vLLM nội bộ — KHÔNG đụng cổng 8000 của FastAPI
       model_name: "Qwen/Qwen2.5-7B-Instruct"
 
 pipeline:

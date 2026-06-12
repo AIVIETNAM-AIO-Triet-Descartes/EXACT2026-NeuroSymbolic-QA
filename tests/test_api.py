@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from api.main import app
-from api.schemas import QueryRequest
+from api.schemas import UnifiedRequest
 
 
 client = TestClient(app)
@@ -21,14 +21,18 @@ def resolve_logic_data_path() -> Path:
 LOGIC_DATA_PATH = resolve_logic_data_path()
 
 
-def load_first_logic_sample():
+def load_first_logic_payload() -> dict:
+	"""Build an official /predict UnifiedRequest payload from the first logic record."""
 	with LOGIC_DATA_PATH.open("r", encoding="utf-8") as handle:
 		records = json.load(handle)
 
 	first_record = records[0]
 	return {
-		"question": first_record["questions"][0],
+		"query_id": "T1_1",
+		"type": "type1",
+		"query": first_record["questions"][0],
 		"premises": first_record["premises-NL"],
+		"options": [],
 	}
 
 
@@ -39,28 +43,55 @@ def test_health_endpoint_returns_ok():
 	assert response.json() == {"status": "ok"}
 
 
-def test_query_rejects_missing_question_field():
-	response = client.post("/query", json={"premises": []})
+def test_predict_rejects_missing_required_fields():
+	# query_id / type / query are mandatory in UnifiedRequest → 422 on omission.
+	response = client.post("/predict", json={"premises": []})
 
 	assert response.status_code == 422
 
 
-def test_query_request_model_accepts_valid_payload():
-	payload = load_first_logic_sample()
+def test_unified_request_accepts_valid_payload():
+	payload = load_first_logic_payload()
 
-	request = QueryRequest(**payload)
+	request = UnifiedRequest(**payload)
 
-	assert request.question == payload["question"]
+	assert request.query_id == "T1_1"
+	assert request.type == "type1"
+	assert request.query == payload["query"]
 	assert request.premises == payload["premises"]
 
 
-def test_query_returns_mock_response_for_valid_payload():
-	payload = load_first_logic_sample()
+def test_predict_returns_list_for_type1():
+	payload = load_first_logic_payload()
 
-	response = client.post("/query", json=payload)
+	response = client.post("/predict", json=payload)
 
 	assert response.status_code == 200
 	body = response.json()
-	assert isinstance(body["answer"], str) and body["answer"]
-	assert isinstance(body["explanation"], str) and body["explanation"]
+	# Official schema: response is a LIST, one object per query, query_id echoed.
+	assert isinstance(body, list) and len(body) == 1
+	item = body[0]
+	assert item["query_id"] == "T1_1"
+	assert isinstance(item["answer"], str) and item["answer"]
+	assert isinstance(item["explanation"], str) and item["explanation"]
 
+
+def test_predict_type2_returns_ascii_unit():
+	payload = {
+		"query_id": "T2_1",
+		"type": "type2",
+		"query": "Two resistors R1 = 4 ohm and R2 = 6 ohm in parallel across U = 12 V. Find the total current.",
+		"premises": [],
+		"options": [],
+	}
+
+	response = client.post("/predict", json=payload)
+
+	assert response.status_code == 200
+	body = response.json()
+	assert isinstance(body, list) and len(body) == 1
+	item = body[0]
+	assert item["query_id"] == "T2_1"
+	assert isinstance(item["answer"], str)
+	# Unit field must be ASCII per Submission Guide §4 (no Ω / μ glyphs).
+	assert "Ω" not in item["unit"] and "μ" not in item["unit"]

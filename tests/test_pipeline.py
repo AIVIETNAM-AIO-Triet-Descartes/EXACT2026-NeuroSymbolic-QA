@@ -294,14 +294,14 @@ def test_with_dataset_sample():
     # Load a sample
     dataset_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "Logic_Based_Educational_Queries.json"
+        "data", "train", "Logic_Based_Educational_Queries.json"
     )
 
     if not os.path.exists(dataset_path):
         print("  ⚠️ Dataset not found, skipping")
         return
 
-    with open(dataset_path, 'r') as f:
+    with open(dataset_path, 'r', encoding='utf-8') as f:
         dataset = json.load(f)
 
     sample = dataset[3]  # Sample #4 (John's fellowship)

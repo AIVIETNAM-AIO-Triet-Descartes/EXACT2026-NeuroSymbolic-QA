@@ -59,6 +59,14 @@ class SolverResult(TypedDict):
     - 0.3 → LLM generation error, answer = "Unable to determine"
     """
 
+    premises_used: Optional[list[int]]
+    """
+    Index (0-based) các premises đã dùng để chứng minh — Type 1 (chấm 50% điểm).
+    - Track 1 (Z3/Logic Tree): list int, ví dụ [0, 2] (map từ proof trace / unsat core).
+    - Track 2 (SymPy/vector): không áp dụng → None. build_response tự bọc None→[].
+    Khai Optional để Track 2 (không set key này) vẫn hợp lệ TypedDict.
+    """
+
 
 class PipelineState(TypedDict):
     """
@@ -78,6 +86,12 @@ class PipelineState(TypedDict):
 
     question: str
     """Câu hỏi gốc từ request (bắt buộc)."""
+
+    query_id: str
+    """Mã định danh câu hỏi (bắt buộc)."""
+
+    options: list[str]
+    """Các lựa chọn trắc nghiệm (cho Type 1, nếu có)."""
 
     premises: list[str]
     """

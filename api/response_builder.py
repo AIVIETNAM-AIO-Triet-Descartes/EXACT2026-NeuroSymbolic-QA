@@ -1,3 +1,4 @@
+
 # =============================================================================
 # api/response_builder.py
 # Owner: Người 5 — Response Builder
@@ -20,11 +21,21 @@ from pydantic import BaseModel, Field
 from pipeline.state import SolverResult
 
 
-class QueryResponse(BaseModel):
+
+def build_response(
+    query_id: str,
+    query_type: Literal["type1", "type2"],
+    answer: str,
+    explanation: str,
+    raw_unit: str = "",
+    steps: Optional[List[str]] = None,
+    premises_used: Optional[List[int]] = None
+) -> UnifiedResponse:
     """
-    Mock của QueryResponse — khớp với SYSTEM.md §6 API Schema.
-    Người 1 sẽ định nghĩa bản chính thức trong api/schemas.py.
+    Formats and packages the pipeline outputs into the official EXACT 2026 UnifiedResponse schema.
+    This also handles ASCII-fying unit strings.
     """
+
     answer: str = Field(..., description="Đáp án cuối cùng của hệ thống")
     explanation: str = Field(..., description="Lời giải thích đi kèm cho đáp án")
     fol: Optional[str] = Field(None, description="Công thức FOL tương ứng dạng chuỗi (Type 1)")
@@ -33,8 +44,13 @@ class QueryResponse(BaseModel):
     confidence: Optional[float] = Field(None, description="Độ tin cậy từ 0.0 đến 1.0")
     unit: Optional[str] = Field(None, description="Đơn vị vật lý đã được ASCII hóa (FLAG C)")
 
+    # 2. Build reasoning block if steps exist
+    reasoning = None
+    if steps:
+        reasoning_type = "fol" if query_type == "type1" else "cot"
+        reasoning = ReasoningBlock(type=reasoning_type, steps=steps)
 
-# --- END MOCK SCHEMAS ---
+
 
 
 def build_response(solver_result: SolverResult, explanation: str) -> QueryResponse:
@@ -67,10 +83,13 @@ def build_response(solver_result: SolverResult, explanation: str) -> QueryRespon
         premises=solver_result.get("fol") if source == "z3" else None,
         confidence=confidence,
         unit=ascii_unit_str
+
     )
+
 
 if __name__ == "__main__":
     print("=================== BẮT ĐẦU KIỂM THỬ RESPONSE BUILDER ===================")
+
 
     import sys
     from types import ModuleType
@@ -95,7 +114,15 @@ if __name__ == "__main__":
         answer="10", unit="Ω",  # Thử nghiệm đơn vị Unicode Ω
         steps=["R = U / I", "R = 20 / 2", "R = 10"],
         fol=None, source="sympy", confidence=1.0,
+
     )
+    assert res_type2.query_id == "T2_123"
+    assert res_type2.answer == "0.045"
+    assert res_type2.unit == "uF"  # ASCII-fied
+    assert res_type2.premises_used == []
+    assert res_type2.reasoning is not None
+    assert res_type2.reasoning.type == "cot"
+    print("✅ Test `build_response` với Type 2: PASS")
 
     # Chạy thử Nghiệm thu Case 1 (Type 1 - Logic)
     response = build_response(mock_type1, "The conclusion follows from premise 1 and 2.")
@@ -116,4 +143,5 @@ if __name__ == "__main__":
     assert response_p2.unit == "ohm"  # Kiểm tra đã convert Ω -> ohm thành công
     print(" Test `build_response` với Mock Type 2 (FLAG C): PASS")
     
+
     print("\n========================= KẾT THÚC KIỂM THỬ =========================")
