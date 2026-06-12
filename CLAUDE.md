@@ -26,7 +26,7 @@ Reasoning: the competition committee can inspect the `GET /v1/models` endpoint t
 
 ```bash
 python -m venv .venv
-source .venv/Scripts/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -39,18 +39,27 @@ Key deps: `fastapi uvicorn z3-solver sympy openai sentence-transformers faiss-cp
 uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Type 2 physics demo + evaluation (primary dev loop)
-.venv\Scripts\python scripts/demo_type2.py --limit 100            # SymPy + vector solver only
-.venv\Scripts\python scripts/demo_type2.py --limit 100 --use-llm  # + LLM augment/fallback/explain
+# Linux:   python scripts/demo_type2.py --limit 100
+# Windows: .venv\Scripts\python scripts/demo_type2.py --limit 100
+python scripts/demo_type2.py --limit 100            # SymPy + vector solver only
+python scripts/demo_type2.py --limit 100 --use-llm  # + LLM augment/fallback/explain
 
 # Type 1 batch runner over the logic dataset → predictions JSON
 python scripts/run_track1.py --input data.json --output output/predictions.json [--no-llm]
 
+# Evaluation scripts
+python scripts/evaluate.py            # full pipeline eval
+python scripts/evaluate_classifier.py
+python scripts/evaluate_rag.py
+
 # Rebuild FAISS formula index after editing data/rag/physics_formulas.json
 python scripts/build_faiss_index.py
 
-# Tests (91 pass)
-.venv\Scripts\python -m pytest tests/ -v
-.venv\Scripts\python -m pytest tests/test_type2.py -v
+# Tests
+# Linux:   python -m pytest tests/ -v
+# Windows: .venv\Scripts\python -m pytest tests/ -v
+python -m pytest tests/ -v
+python -m pytest tests/test_type2.py -v
 
 # Production serve (RunPod / Linux GPU): vLLM (tmux, :8002 internal) + uvicorn (tmux, :8000 public)
 bash scripts/serve.sh                       # MODEL/VLLM_PORT/VLLM_EXTRA env-overridable; sets config active=prod
@@ -121,26 +130,38 @@ llm/
 scripts/
 ├── demo_type2.py      # primary Type 2 demo + accuracy eval (regex extraction, LLM hooks)
 ├── run_track1.py      # Type 1 batch runner (Logic Tree + LLM CoT + LLM-Z3) → predictions JSON
+├── evaluate.py        # full pipeline evaluation
+├── evaluate_classifier.py
+├── evaluate_rag.py
 ├── build_faiss_index.py
+├── aws_proxy.py       # RunPod → AWS proxy registration helper
 └── serve.sh           # production serve (RunPod): vLLM :8002 internal + uvicorn :8000 public, tmux
 configs/config.yaml    # vLLM endpoint + pipeline/api/logging config
 data/
-├── train/             # Physics_Problems_Text_Only.csv, Logic_Based_Educational_Queries.json
+├── train/             # Logic_Based_Educational_Queries.json
+├── physics/           # Physics_Problems_Text_Only.csv
 ├── rag/               # physics_formulas.json (formula DB)
-├── formula_index/     # FAISS index.faiss + metadata.pkl
-└── eval/              # (empty)
+└── formula_index/     # FAISS index.faiss + metadata.pkl
 docs/
-├── handoff.md         # session handoff — read FIRST when resuming
-├── TODO.md            # worklist + weakness tracker (gộp)
 ├── SYSTEM.md          # full architecture + competition spec (gộp CONTEXT)
-├── track2_reference.md # data analysis + formula format + gaps + impl plan (gộp 4 file)
-├── proposals.md       # PAL code-gen fallback + formula_rag review (gộp)
-├── run_demo_llm_local.md, exact2026_pipeline.mermaid
-└── teammates/         # task-handoff cho teammate khác (handoff_teammate2, teammate2-log)
+├── official_spec_gaps.md  # API contract gaps — read before touching api/
+├── restart_runbook.md # RunPod failover procedure
+├── deployment_plan.md
+├── improvement1206.md
+├── formula_sources.md
+├── run_demo_llm_local.md
+├── docs_vytriet/      # session-specific docs (read FIRST when resuming)
+│   ├── handoff.md         # session handoff
+│   ├── TODO.md            # worklist + weakness tracker
+│   ├── track2_reference.md # data analysis + formula format + gaps + impl plan
+│   ├── proposals.md       # PAL code-gen fallback + formula_rag review
+│   └── exact2026_pipeline.mermaid
+├── plan10-110626/     # task breakdown for Jun 10-11 sprint
+└── teammates/         # task-handoff cho teammate khác
 tests/                 # test_type2.py, test_pipeline.py substantive; type1 minimal
 ```
 
-**Implementation status**: Type 2 physics pipeline complete and evaluable (demo ~78% on the vector-solver subset). Type 1 logic pipeline is scaffolded but not wired (empty solver stubs, mock API response). vLLM server not yet set up locally (needs WSL2 + CUDA Toolkit). See `docs/handoff.md` for the prioritized next steps (P1 vLLM setup → P2 LLM test → P3 expand formulas → P4 CHLT Yes/No solver → P5 DT routing → P6 commit).
+**Implementation status**: Type 2 physics pipeline complete and evaluable (demo ~78% on the vector-solver subset). Type 1 logic pipeline wired: `api/main.py::_run_type1_pipeline` runs LLM CoT (`solve_with_cot`) then attempts Z3 verification + override for short queries (≤7 premises). vLLM server not yet set up locally (needs WSL2 + CUDA Toolkit). See `docs/docs_vytriet/handoff.md` for prioritized next steps.
 
 ## API Schema — OFFICIAL (Submission Guide §3–4)
 
@@ -208,7 +229,7 @@ llm:
       api_base: "http://localhost:8000/v1"
       model_name: "Qwen/Qwen2.5-7B-Instruct"   # = llama-server --alias
     prod:                     # vLLM, FP16 safetensors, VPS Linux
-      api_base: "http://localhost:8000/v1"      # → http://<vps-ip>:8000/v1
+      api_base: "http://localhost:8001/v1"      # patched to :8002 by serve.sh (RunPod nginx holds :8001)
       model_name: "Qwen/Qwen2.5-7B-Instruct"   # must match real /v1/models id
 
 pipeline:
