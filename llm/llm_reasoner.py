@@ -475,10 +475,11 @@ class LLMReasoner:
 
         # 4. Auto-declare missing variables and fix strings in predicates
         ignore_words = {'from', 'z3', 'import', 's', 'Solver', 'Entity', 'DeclareSort', 
-                        'Const', 'Function', 'BoolSort', 'ForAll', 'Exists', 'Implies', 
+                        'Const', 'Function', 'BoolSort', 'IntSort', 'RealSort', 'ForAll', 'Exists', 'Implies', 
                         'And', 'Or', 'Not', 'unsat', 'sat', 'print', 'if', 'else', 
                         'push', 'pop', 'check', 'results', 'append', 'entailed', 'for', 'in',
-                        'True', 'False', 'x', 'y', 'z', 'a', 'b', 'c', 'd'}
+                        'True', 'False', 'None', 'solve_yes_no', 'solve_mcq',
+                        'x', 'y', 'z', 'a', 'b', 'c', 'd'}
         ignore_strings = {'Yes', 'No', 'A', 'B', 'C', 'D', 'Entity'}
         
         defined_vars = set(re.findall(r'\b([A-Za-z_][A-Za-z0-9_]*)\s*=', code))
