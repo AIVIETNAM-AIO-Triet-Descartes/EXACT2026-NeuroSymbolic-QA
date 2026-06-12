@@ -14,7 +14,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-ROOT="${ROOT:-/workspace/exact2026}"
+ROOT="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 VLLM_PORT="${VLLM_PORT:-8002}"
 API_PORT="${API_PORT:-8000}"
 MODEL="${MODEL:-Qwen/Qwen2.5-7B-Instruct}"
@@ -23,7 +23,13 @@ MODEL="${MODEL:-Qwen/Qwen2.5-7B-Instruct}"
 # so <think> blocks land in reasoning_content and message.content stays clean for
 # our answer extractors. Leave empty for a plain instruct model (Qwen2.5-7B).
 VLLM_EXTRA="${VLLM_EXTRA:-}"
-export HF_HOME="${HF_HOME:-/workspace/hf}"      # model cache on the persistent volume
+
+if [ -d "/workspace" ]; then
+    export HF_HOME="${HF_HOME:-/workspace/hf}"      # model cache on the persistent volume
+else
+    export HF_HOME="${HF_HOME:-$HOME/.cache/huggingface}"
+fi
+
 export VLLM_BASE="http://127.0.0.1:${VLLM_PORT}"  # /v1/models proxy target (api/main.py)
 
 # tmux is an apt package → wiped on pod restart; reinstall if missing.
@@ -38,13 +44,20 @@ sed -i -E "s#(model_name: \")[^\"]+(\")#\1${MODEL}\2#g" "$ROOT/configs/config.ya
 tmux kill-session -t vllm 2>/dev/null || true
 tmux kill-session -t api  2>/dev/null || true
 
+# Detect venv vs .venv directory
+if [ -d "${ROOT}/venv" ]; then
+    VENV_DIR="venv"
+else
+    VENV_DIR=".venv"
+fi
+
 tmux new -d -s vllm \
-  "export HF_HOME='${HF_HOME}'; source '${ROOT}/.venv/bin/activate'; \
+  "export HF_HOME='${HF_HOME}'; source '${ROOT}/${VENV_DIR}/bin/activate'; \
    vllm serve '${MODEL}' --host 127.0.0.1 --port ${VLLM_PORT} \
    --dtype auto --gpu-memory-utilization 0.9 ${VLLM_EXTRA}"
 
 tmux new -d -s api \
-  "cd '${ROOT}'; source '${ROOT}/.venv/bin/activate'; \
+  "cd '${ROOT}'; source '${ROOT}/${VENV_DIR}/bin/activate'; \
    export VLLM_BASE='${VLLM_BASE}'; \
    uvicorn api.main:app --host 0.0.0.0 --port ${API_PORT}"
 
@@ -57,7 +70,7 @@ if [ -n "$PROXY_IP" ] && [ -n "$RUNPOD_PUBLIC_URL" ]; then
     echo "Registering dynamic RunPod URL ($RUNPOD_PUBLIC_URL) with AWS Proxy ($PROXY_IP)..."
     (
         sleep 10
-        curl -s -X POST "http://${PROXY_IP}:8000/register_pod" \
+        curl -s -X POST "http://${PROXY_IP}:9000/register_pod" \
              -H "Content-Type: application/json" \
              -d "{\"url\": \"${RUNPOD_PUBLIC_URL}\", \"secret\": \"${PROXY_SECRET}\"}"
         echo "AWS Proxy registration completed."
