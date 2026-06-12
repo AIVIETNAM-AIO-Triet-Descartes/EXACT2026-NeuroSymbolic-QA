@@ -111,6 +111,35 @@ def _ensure_faiss_loaded(index_dir: str = "data/formula_index") -> None:
 # Hybrid retrieval
 # ══════════════════════════════════════════════════════════════
 
+def _formula_symbols(formula_sympy: str) -> set:
+    """All identifier symbols in a formula (LHS + RHS), minus SymPy builtins."""
+    if "=" not in formula_sympy:
+        return set()
+    toks = re.findall(r'[A-Za-z_]\w*', formula_sympy)
+    return {t for t in toks if t not in _MATH_FNS}
+
+
+def _rerank_by_solvability(
+    candidates: list[dict], find: str, given_keys: set
+) -> Optional[dict]:
+    """Among same-domain candidates, prefer the formula that is SOLVABLE IN ONE STEP
+    for `find` — i.e. `find` is in the formula and every OTHER symbol is already
+    given (SymPy solve() rearranges, so find may sit on either side: Q=C*U solves
+    for C). Picks the fully-solvable one with the fewest symbols. Returns None when
+    none is one-step solvable → let FAISS + the chain builder handle multi-step."""
+    solvable = []
+    for d in candidates:
+        syms = _formula_symbols(d.get("formula_sympy", ""))
+        if find not in syms:
+            continue
+        if (syms - {find}) <= given_keys:        # every other symbol is known
+            solvable.append((len(syms), d))
+    if not solvable:
+        return None
+    solvable.sort(key=lambda x: x[0])             # fewest symbols = most direct
+    return solvable[0][1]
+
+
 def retrieve_formula(
     parsed: dict,
     docs: list[dict],
@@ -127,6 +156,7 @@ def retrieve_formula(
     """
     domain = parsed.get("domain", "")
     find = parsed.get("find", "")
+    given_keys = set((parsed.get("given") or {}).keys())
 
     # Layer 1: keyword/exact match
     candidates = [
@@ -137,6 +167,18 @@ def retrieve_formula(
     if len(candidates) == 1:
         logger.info(f"[FORMULA_RAG] Layer 1 hit: {candidates[0]['id']}")
         return candidates[0]
+
+    # Layer 1.5: solvability rerank (deterministic, beats fuzzy FAISS among
+    # same-domain candidates). `find` appears in the `variables` of MANY ac_circuits
+    # docs (Z is in impedance, I=U/Z, cos=R/Z…) so Layer 1 yields >1 and falls to
+    # FAISS, which often picks the wrong one (X_L vs X_C). Prefer the doc that
+    # DIRECTLY computes find (LHS == find) and whose RHS symbols are best covered by
+    # the given values — i.e. the formula actually solvable now.
+    if len(candidates) > 1:
+        best = _rerank_by_solvability(candidates, find, given_keys)
+        if best is not None:
+            logger.info(f"[FORMULA_RAG] Layer 1.5 rerank hit: {best['id']}")
+            return best
 
     # Layer 2: FAISS semantic search
     _ensure_faiss_loaded()

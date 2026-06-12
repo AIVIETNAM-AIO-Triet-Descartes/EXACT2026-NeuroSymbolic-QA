@@ -306,6 +306,32 @@ def _llm_fallback_chain(state: dict, parsed: dict) -> Optional[dict]:
 # Main dispatch
 # ══════════════════════════════════════════════════════════════
 
+_RESONANCE_CUE = _re.compile(r'\bresonan', _re.IGNORECASE)
+
+
+def _solve_resonance_zr(parsed: dict, question: str) -> Optional[dict]:
+    """At resonance Z_L=Z_C → Z=R. Many CH problems state 'at resonance, impedance
+    Z=40 Ω, find R' (or vice-versa) — the answer is just the equal value, but the
+    DB has no direct R=Z formula. Returns a result only when the resonance cue is
+    present AND exactly the R↔Z pair is askable (tight gate, no over-fire)."""
+    if parsed.get("domain") != "ac_circuits" or not _RESONANCE_CUE.search(question):
+        return None
+    given = parsed.get("given", {}) or {}
+    find = parsed.get("find", "")
+    if find == "R" and "Z" in given:
+        val = float(given["Z"])
+    elif find == "Z" and "R" in given:
+        val = float(given["R"])
+    else:
+        return None
+    return {
+        "answer": f"{val:.6g}",
+        "unit": "Ω",
+        "steps": [f"At resonance Z_L = Z_C, so Z = R = {val:.6g} Ω"],
+        "source": "sympy",
+    }
+
+
 def solve_physics(
     parsed: dict,
     q_type: PhysicsQuestionType,
@@ -389,7 +415,13 @@ def sympy_solver_node(state: dict) -> dict:
     # YES_NO guard: domain + given-key check chặn câu qualitative bị classifier
     # nhầm vào YES_NO (weakness #7 over-routing) — thiếu L/C/f thì đi đường thường.
     given = parsed.get("given", {}) or {}
-    if (q_type == PhysicsQuestionType.YES_NO
+    resonance_zr = _solve_resonance_zr(parsed, state.get("question", ""))
+    if resonance_zr:
+        # At resonance Z_L=Z_C → Z=R. This relation is not a DB formula (the DB's
+        # Z=sqrt(R²+(Z_L-Z_C)²) needs Z_L,Z_C which these CH problems don't give),
+        # so handle it directly. Gated tight (resonance cue + R↔Z pair).
+        sympy_result = resonance_zr
+    elif (q_type == PhysicsQuestionType.YES_NO
             and parsed.get("domain") == "ac_circuits"
             and all(k in given for k in ("L", "C", "f"))):
         from pipeline.type2.resonance_solver import solve_resonance
