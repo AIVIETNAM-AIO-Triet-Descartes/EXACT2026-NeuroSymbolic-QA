@@ -315,7 +315,7 @@ Generate a complete Python script that:
    - For numeric implications (completed_courses(x) >= 5 -> eligible(x)), write: s.add(ForAll([x], Implies(completed_courses(x) >= 5, eligible(x))))
 5. Calls the helper function:
    - For Yes/No questions: solve_yes_no(s, goal_expr)
-   - For MCQ: solve_mcq(s, {'A': expr_A, 'B': expr_B, 'C': expr_C, 'D': expr_D}) (or matching choices)
+   - For MCQ: solve_mcq(s, {{'A': expr_A, 'B': expr_B, 'C': expr_C, 'D': expr_D}}) (or matching choices)
 
 IMPORTANT RULES:
 - Output ONLY raw Python code. No markdown, no explanations, no backticks.
@@ -358,11 +358,11 @@ Alice = Const('Alice', Entity)
 s.add(ForAll([x], Implies(completed_courses(x) >= 5, eligible(x))))
 s.add(completed_courses(Alice) == 4)
 
-solve_mcq(s, {
+solve_mcq(s, {{
     'A': eligible(Alice),
     'B': Not(eligible(Alice)),
     'C': None
-})
+}})
 """
 
 # ══════════════════════════════════════════════════════════════
