@@ -516,7 +516,28 @@ class LLMReasoner:
 
         injections = []
         for f in missing_funcs:
-            injections.append(f"{f} = Function('{f}', Entity, BoolSort())")
+            # Find the max arity of the function in the code
+            max_arity = 1
+            calls = re.findall(rf'\b{re.escape(f)}\s*\(([^)]*)\)', code)
+            for call_args_str in calls:
+                if not call_args_str.strip():
+                    arity = 0
+                else:
+                    # Count commas at depth 0
+                    depth = 0
+                    commas = 0
+                    for char in call_args_str:
+                        if char == '(':
+                            depth += 1
+                        elif char == ')':
+                            depth -= 1
+                        elif char == ',' and depth == 0:
+                            commas += 1
+                    arity = commas + 1
+                max_arity = max(max_arity, arity)
+            
+            arg_sorts = ", ".join(["Entity"] * max_arity)
+            injections.append(f"{f} = Function('{f}', {arg_sorts}, BoolSort())")
         for c in missing_consts:
             if c not in defined_vars:
                 injections.append(f"{c} = Const('{c}', Entity)")
