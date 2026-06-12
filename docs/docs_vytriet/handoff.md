@@ -13,8 +13,30 @@
 
 > Nguồn trạng thái chuẩn = §0 này + `docs/TODO.md` (worklist chi tiết + weakness tracker).
 > §1–7 bên dưới là handoff CŨ (2026-05-29), giữ làm lịch sử — đừng tin số liệu cũ ở đó.
+> Block "ĐÃ LÀM ĐƯỢC (2026-06-07)" bên dưới là solver Track 2 (vẫn đúng). Trạng thái MỚI NHẤT = block 2026-06-11 ngay dưới đây.
 
-### ✅ ĐÃ LÀM ĐƯỢC (Track 2 pipeline đầy đủ + evaluable, no-LLM chạy được)
+### 🔄 CẬP NHẬT 2026-06-11 — API + LLM backend + DEPLOY (đọc TRƯỚC)
+
+**✅ ĐÃ LÀM thêm:**
+- **API rebuilt đúng spec BTC** (teammate): `POST /predict` → **List[UnifiedResponse]** `{query_id,answer,unit,explanation,premises_used,reasoning}`, route bằng `request.type`, ASCII-hóa unit inline trong `api/response_builder.py`. → mục CRITICAL "rebuild API" (06-07) = **XONG**. `api/router.py` keyword classifier giờ thừa.
+- **LLM backend vLLM THẬT** (trước là stub): `LLMReasoner` (`llm/llm_reasoner.py`) → **OpenAI client** (`_chat` qua `chat.completions.create`, `check_server` GET /v1/models); `llm/__init__.py` `get_shared_reasoner()` = **singleton config-driven** + `llm_server_available()` health-check thật. → **Đổi vLLM = flip `configs/config.yaml llm.active: dev→prod` (1 DÒNG)**; prod `api_base` = vLLM nội bộ. `create_reasoner` = shim trỏ singleton (deprecated).
+- **3 method physics** thêm vào LLMReasoner: `parse_physics_question`, `solve_physics_cot`, `explain_physics` + 3 prompt `PHYSICS_PARSE/COT/EXPLAIN_PROMPT` (`prompt_templates.py`). (Trước thiếu → track2 `--use-llm` câm.)
+- **Type 1 wired vào `/predict`** (`api/main.py::_run_type1_pipeline`): chạy LLM `solve_with_cot` trên **NL premises** (live KHÔNG có `premises-FOL` → KHÔNG symbolic/LogicTree). Full symbolic consensus chỉ offline qua `scripts/run_track1.py`.
+- **`/v1/models` proxy** trong FastAPI → committee verify model qua **cùng 1 cổng public** (vLLM nội bộ, không expose). `SolverResult.premises_used` (Optional) thêm; `run_track1` propagate premises_used (nhánh logic_tree/consensus/z3).
+- **Unit**: `regex_extract` bảng **u-only + `_unit_factor`** (normalize μ/µ→u trước lookup); **sympy-parse expr value** (`(a)/(b)`, sqrt, √, scientific → float deterministic, không nhờ LLM); E-field → **`V/m`**; `pipeline/type2/units.py` **đã xóa** (ascii inline trong response_builder). `docs/notation_mapping.csv` điền.
+- **Dọn dead code**: xóa `scripts/run_pipeline.py`, `pipeline/type1/{explainer,nl_to_fol}.py`, `tests/test_llm_backend.py`. Fix `test_api.py`+`test_pipeline.py`. **91 test pass.** Docs Vytriet move vào `docs/docs_vytriet/`.
+- **`scripts/serve.sh` (MỚI)** — production serve: vLLM (tmux `vllm`, **:8002 nội bộ**) + uvicorn (tmux `api`, **:8000 public**); env `MODEL`/`VLLM_PORT`/`VLLM_EXTRA`; tự sed config (model_name+api_base+active=prod), dtype auto.
+- **🚀 DEPLOY RunPod — ĐÃ CHẠY + VERIFY**: Network Volume **`electoral_amaranth_vole_volume`** 50GB (DC **EU-CZ-1**), GPU **RTX 3090 24GB**, model **Qwen/Qwen2.5-7B-Instruct** (verify: T2_1 symbolic=5A·A, type1 CoT OK). vLLM `:8002` (nginx template giữ :8001 → né sang 8002), FastAPI `:8000`. Docs: **`docs/deployment_plan.md`** + **`docs/restart_runbook.md`**.
+- **DeepSeek-R1-0528-Qwen3-8B thử → LOẠI**: luôn-reasoning (`enable_thinking=false` bị phớt lờ) → think nuốt token budget (parse JSON câm) + rủi ro >60s/câu (no-retry). **Revert Qwen2.5-7B**.
+
+**🔲 CHƯA LÀM (còn lại, ưu tiên giảm dần):**
+- 🚨 **`premises_used` Type 1 LIVE vẫn `[]`** (= **50% điểm Type 1**). Live chỉ có NL premises → LogicTree không chạy → rỗng. Cần (A) sửa `solve_with_cot` cho LLM xuất chỉ số premise, HOẶC (B) NL→FOL → proof trace. **→ đồng đội phụ trách.**
+- **Eval full `--use-llm`** với vLLM thật (mới smoke test vài câu; chưa đo scale 3 method physics + type1 CoT).
+- **URL ổn định**: failover (Migrate HOẶC pod mới) **ĐỔI POD_ID → đổi proxy URL → phải sửa `submission/urls.txt` + báo BTC**. Team tính reverse-proxy URL cố định (Cloudflare Tunnel / VPS static-IP) — **chưa làm**; xem `restart_runbook.md` mục cuối.
+- **Chiến lược chạy**: **Stop** pod (giữ volume, KHÔNG Terminate) → trước eval 1-2h **Start + `bash scripts/serve.sh`** → verify. Failover theo `restart_runbook.md`.
+- Commit/push thay đổi phiên (user tự lo).
+
+### ✅ ĐÃ LÀM ĐƯỢC (Track 2 pipeline đầy đủ + evaluable, no-LLM chạy được) — 2026-06-07
 
 **Solvers (dispatch đầy đủ trong `sympy_solver_node`):**
 - `vector_solver` A–F — LD/DT Coulomb + E-field (verify LD030 ✓).
@@ -35,10 +57,10 @@
 
 **Kết quả eval no-LLM floor (full 1352, 2026-06-07):** Accuracy **72.06%** (276/383 evaluable). By-prefix: LD 80% · THCB **96%** · CH 62% · CHLT 25% · DT/TD/DDT thấp (extraction/LLM). Tests **56/56** (`tests/test_type2.py`). *(no-LLM = sàn bi quan; nhiều câu chờ LLM lấp given.)*
 
-### 🔲 CHƯA LÀM
-- **🚨 [CRITICAL] Rebuild API layer theo spec chính thức BTC** — endpoint `POST /predict` (1 endpoint, route bằng field `type`), response là **JSON list** `{query_id, answer, unit(ASCII), explanation, premises_used, reasoning}`. Code `api/` hiện tại theo schema CŨ, KHÔNG khớp. **Đọc `docs/official_spec_gaps.md`** (phân tích đầy đủ từ `docs/context/` PDF). Deadline **12/06** (không phải 10/06).
-- **vLLM FP16 trên VPS — BẮT BUỘC trước nộp.** Dev đang llama.cpp GGUF (alias không verify được → không hợp lệ). Setup ở §4-P1. → rồi mới chạy được bản nộp.
-- **Đo eval full `--use-llm`** (mới đo no-LLM floor + subset 50 câu LLM). Cần sau khi vLLM lên.
+### 🔲 CHƯA LÀM (block 06-07 — vài mục đã XONG ở 2026-06-11, xem block trên)
+- ~~**[CRITICAL] Rebuild API layer**~~ → ✅ XONG (2026-06-11, xem block trên).
+- ~~**vLLM FP16 trên VPS**~~ → ✅ XONG (OpenAI client + deploy RunPod Qwen2.5-7B, xem block trên).
+- **Đo eval full `--use-llm`** (mới đo no-LLM floor + smoke test). Vẫn cần sau khi vLLM thật chạy ổn.
 - **Qualitative (#8d)** — NL/DDT/THCB định tính (THCB071/073/081/083…) → LLM, chưa xử lý.
 - **CH226-245** (mạch AB series, LCω²=1) — route đúng ac_circuits rồi nhưng cần reasoning "Z_L=Z_C triệt tiêu" → vẫn cần LLM.
 - **Commit** — toàn bộ thay đổi 2026-06-02…07 còn ở working tree (user tự commit).

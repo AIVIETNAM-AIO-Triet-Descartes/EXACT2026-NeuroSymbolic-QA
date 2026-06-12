@@ -198,15 +198,31 @@ def _llm_explain(question: str, answer: str, unit: str, steps: list) -> str:
 # Demo runner
 # ══════════════════════════════════════════════════════════════
 
-def run_demo(limit: int = 20, use_llm: bool = False, output_path: Optional[str] = None) -> None:
+def run_demo(limit: int = 20, use_llm: bool = False, output_path: Optional[str] = None,
+             ids: Optional[list] = None) -> None:
     clf = PhysicsClassifier()
 
+    # `ids` (if given) overrides `limit`: run ONLY those rows, scanning the whole
+    # CSV. Use this to target the no-LLM FALLBACK cases and re-run them with
+    # --use-llm (PAL/CoT) to see which the LLM rescues.
     rows: list[dict] = []
+    id_set = set(ids) if ids else None
     with open(CSV_PATH, encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):
-            rows.append(row)
-            if len(rows) >= limit:
-                break
+            if id_set is not None:
+                if row["id"] in id_set:
+                    rows.append(row)
+                if len(rows) >= len(id_set):
+                    break
+            else:
+                rows.append(row)
+                if len(rows) >= limit:
+                    break
+
+    if id_set is not None:
+        missing = id_set - {r["id"] for r in rows}
+        if missing:
+            print(f"[WARN] ids not found in dataset: {sorted(missing)}")
 
     correct = wrong = fallback = skipped = 0
     detail_rows: list[tuple] = []
@@ -358,7 +374,7 @@ def run_demo(limit: int = 20, use_llm: bool = False, output_path: Optional[str] 
 
     total_eval = correct + wrong
     llm_label = " (+LLM)" if use_llm else ""
-    print(f"\nSummary ({limit} questions{llm_label}):")
+    print(f"\nSummary ({len(rows)} questions{llm_label}):")
     print(f"  CORRECT  : {correct}")
     print(f"  WRONG    : {wrong}")
     print(f"  FALLBACK : {fallback}  (solver failed, no answer produced)")
@@ -397,5 +413,9 @@ if __name__ == "__main__":
                         help="Bật LLM: augment extraction + CoT fallback + explanation")
     parser.add_argument("--output", type=str, default=None,
                         help="Đường dẫn lưu predictions JSON file (ví dụ: output/predictions.json)")
+    parser.add_argument("--ids", type=str, default=None,
+                        help="Chỉ chạy các id cụ thể, ngăn cách bởi dấu phẩy "
+                             "(vd: LD010,LD014,LD016). Bỏ qua --limit khi có.")
     args = parser.parse_args()
-    run_demo(args.limit, use_llm=args.use_llm, output_path=args.output)
+    ids = [s.strip() for s in args.ids.split(",") if s.strip()] if args.ids else None
+    run_demo(args.limit, use_llm=args.use_llm, output_path=args.output, ids=ids)

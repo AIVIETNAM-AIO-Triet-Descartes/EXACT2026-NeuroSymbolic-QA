@@ -452,3 +452,48 @@ class TestCircuitSolver:
 		# Must NOT hijack series AC-RLC misclassified as circuits (CH226-style).
 		assert self._solve({"R1": 20.0, "R2": 50.0},
 		                   "Circuit AB: R1=20 in series with segment MB, inductor L, LCω²=1.") is None
+
+
+class TestPalSandbox:
+	"""PAL (Program-Aided LM) code-exec sandbox — feeds code directly, no LLM."""
+
+	def _exec(self, code, timeout=5):
+		from pipeline.type2.sympy_solver import execute_generated_code
+		return execute_generated_code(code, timeout=timeout)
+
+	def test_plain_float_answer(self):
+		# Capacitor energy E = Q^2/(2C); machine computes, no LLM arithmetic.
+		r = self._exec("Q, C = 20e-6, 5e-6\nanswer = float(Q**2 / (2 * C))\nunit = 'J'")
+		assert r is not None
+		assert math.isclose(float(r["answer"]), 4e-5, rel_tol=1e-6)
+		assert r["unit"] == "J"
+
+	def test_sympy_expression_answer(self):
+		# sympy symbol result must be coerced to a float via evalf.
+		code = "import sympy as sp\nx = sp.symbols('x')\nanswer = sp.solve(sp.Eq(2*x, 10), x)[0]\nunit = 'A'"
+		r = self._exec(code)
+		assert r is not None
+		assert math.isclose(float(r["answer"]), 5.0, rel_tol=1e-9)
+		assert r["unit"] == "A"
+
+	def test_solve_function_fallback(self):
+		# Code that defines solve() instead of an `answer` var still works.
+		r = self._exec("def solve():\n    return 12.0 / 2.4\nunit = 'A'")
+		assert r is not None
+		assert math.isclose(float(r["answer"]), 5.0, rel_tol=1e-6)
+
+	def test_forbidden_import_rejected(self):
+		assert self._exec("import os\nanswer = 1.0") is None
+
+	def test_forbidden_dunder_rejected(self):
+		assert self._exec("answer = ().__class__.__bases__[0]") is None
+
+	def test_no_answer_returns_none(self):
+		assert self._exec("x = 5 + 3") is None
+
+	def test_runtime_error_returns_none(self):
+		assert self._exec("answer = 1 / 0") is None
+
+	def test_empty_and_oversized_rejected(self):
+		assert self._exec("") is None
+		assert self._exec("answer = 1\n" + "# pad\n" * 5000) is None

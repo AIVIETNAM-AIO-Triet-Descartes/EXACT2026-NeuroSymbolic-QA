@@ -46,8 +46,9 @@ def physics_parser_node(state: PipelineState) -> PipelineState:
     # ── Stage 1: deterministic regex pre-pass (no LLM) ────────────────────────
     regex_given: dict = {}
     regex_find = None
+    phrasal_keys: set = set()
     try:
-        regex_given = extract_given(question)
+        regex_given, phrasal_keys = extract_given(question, return_phrasal=True)
         regex_find = detect_find_from_verb(question)
     except Exception as e:
         logger.warning(f"[PHYSICS_PARSER] regex prepass failed: {e}")
@@ -94,6 +95,11 @@ def physics_parser_node(state: PipelineState) -> PipelineState:
     # domain: keep LLM domain unless missing/"general", then classifier prior
     if (not parsed.get("domain") or parsed["domain"] == "general") and classified:
         parsed["domain"] = classified.domain
+
+    # Flag whether any *used* given value came only from the (less reliable) prose
+    # phrasal pass — sympy_solver uses this to defer a verify-failing symbolic
+    # answer to the PAL/LLM chain instead of blocking it (when the LLM is up).
+    parsed["_phrasal_used"] = bool(phrasal_keys & set(clean_given.keys()))
 
     # question_type for sympy_solver dispatch
     parsed["question_type"] = (
