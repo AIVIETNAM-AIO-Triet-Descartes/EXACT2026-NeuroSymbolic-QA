@@ -41,6 +41,10 @@ from pipeline.type1.logic_tree import LogicTree
 from pipeline.type1.z3_solver import (
     Z3Translator, EntailmentChecker, execute_z3_code,
 )
+from pipeline.type1.preprocessing import (
+    generate_preprocessing_hints,
+    normalize_premises,
+)
 from llm.llm_reasoner import LLMReasoner
 from llm import get_shared_reasoner
 
@@ -398,7 +402,12 @@ class NeuroSymbolicPipeline:
     def _try_logic_tree(
         self, logic_tree: LogicTree, classified, premises_fol
     ) -> Optional[Dict]:
-        """Use Logic Tree for reasoning."""
+        """Use Logic Tree for reasoning.
+        
+        Enhanced with negation detection (can_prove_negation) and
+        missing-condition analysis (check_missing_conditions) to
+        formally return 'No' answers when appropriate.
+        """
         try:
             derived_preds = logic_tree.get_all_derived_predicates()
 
@@ -415,6 +424,38 @@ class NeuroSymbolicPipeline:
                                 return {
                                     'answer': 'Yes',
                                     'premises_used': proof['premises_used'],
+                                }
+
+                # NEW: Check if any keyword's negation is provable → answer 'No'
+                for kw in keywords:
+                    for pred in list(logic_tree.known.keys()) + \
+                                [d.predicate for d in logic_tree.derived]:
+                        if kw.lower() in pred.lower() or \
+                           pred.lower() in kw.lower():
+                            neg_result = logic_tree.can_prove_negation(pred)
+                            if neg_result.get('negated'):
+                                return {
+                                    'answer': 'No',
+                                    'premises_used': neg_result['premises_used'],
+                                }
+
+                # NEW: Check for missing conditions on target predicates
+                for kw in keywords:
+                    for pred in list(logic_tree.graph.keys()):
+                        if kw.lower() in pred.lower() or \
+                           pred.lower() in kw.lower():
+                            missing = logic_tree.check_missing_conditions(pred)
+                            if missing:
+                                logger.debug(
+                                    f"Logic Tree: missing conditions for "
+                                    f"{pred}: {missing}"
+                                )
+                                # Missing conditions → likely 'No'
+                                # Collect premises involved for context
+                                used = logic_tree.get_all_used_premises()
+                                return {
+                                    'answer': 'No',
+                                    'premises_used': used,
                                 }
 
             elif classified.question_type == QuestionType.MCQ:
@@ -434,7 +475,11 @@ class NeuroSymbolicPipeline:
     def _try_llm_cot(
         self, premises_fol, premises_nl, classified, logic_tree: Optional[Any] = None
     ) -> Optional[Dict]:
-        """LLM direct Chain-of-Thought reasoning."""
+        """LLM direct Chain-of-Thought reasoning.
+        
+        Enhanced with preprocessing hints (eligibility-vs-actuality,
+        question criterion detection) injected as symbolic hints.
+        """
         try:
             self._ensure_llm()
             if not self.llm:
@@ -456,6 +501,24 @@ class NeuroSymbolicPipeline:
                     derived_facts.append(f"{neg}{node.predicate}{args}")
                 # Remove duplicates
                 derived_facts = list(dict.fromkeys(derived_facts))
+
+                # NEW: Add missing-condition warnings from Logic Tree
+                for kw in (classified.keywords or []):
+                    for pred in list(logic_tree.graph.keys()):
+                        if kw.lower() in pred.lower() or pred.lower() in kw.lower():
+                            missing = logic_tree.check_missing_conditions(pred)
+                            if missing:
+                                derived_facts.append(
+                                    f"⚠️ MISSING CONDITIONS for {pred}: "
+                                    f"{', '.join(missing)} are NOT satisfied"
+                                )
+
+            # NEW: Generate preprocessing hints
+            preproc_hints = generate_preprocessing_hints(
+                premises_nl, premises_fol, classified.original
+            )
+            for hint in preproc_hints:
+                derived_facts.append(hint)
 
             result = self.llm.solve_with_cot(
                 premises_nl, premises_fol,

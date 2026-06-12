@@ -67,39 +67,67 @@ QUESTION:
 {question}
 
 ---
-FEW-SHOT EXAMPLE 1 (Contraposition):
+FEW-SHOT EXAMPLE 1 (Contraposition — Fewest Premises):
 PREMISES:
-  1. If a project is optimized, then it is fast.
-  2. The project is not fast.
-QUESTION: Which of the following logically follows from the premises?
+  1. If a project is optimized, then it is fast. (Optimized(x) → Fast(x))
+  2. The project is not fast. (¬Fast(x))
+QUESTION: Which conclusion follows with the fewest premises?
   A. The project is not optimized.
   B. The project is optimized.
   C. The project is slow.
 STEP-BY-STEP REASONING:
-  - Fact: "The project is not fast" (~Fast) from Premise 2.
-  - Rule: "If optimized, then fast" (Optimized -> Fast) from Premise 1.
-  - Contrapositive: (~Fast -> ~Optimized). Applying with our fact: ~Optimized.
-  - This matches Option A. (Uses 2 premises)
+  - The question asks for the option using the FEWEST premises.
+  - Option A: Contrapositive of Premise 1: (~Fast → ~Optimized). Combined with Premise 2 (~Fast): ~Optimized. VALID. Uses 2 premises: [0, 1].
+  - Option B: Contradicts derived ~Optimized. INVALID.
+  - Option C: "Slow" is never mentioned in premises. INVALID.
+  - Only Option A is valid. It uses 2 premises.
 PREMISES USED: [0, 1]
 ANSWER: A
 
-FEW-SHOT EXAMPLE 2 (Fewest Premises):
+FEW-SHOT EXAMPLE 2 (Strongest Conclusion — Full Chain):
 PREMISES:
-  1. If it rains, the ground is wet. (Rain -> Wet)
-  2. If the ground is wet, plants grow. (Wet -> Grow)
-  3. It is raining.
-QUESTION: Which conclusion follows with the fewest premises?
-  A. The ground is wet.
-  B. Plants grow.
+  1. If a student passes the exam, they are eligible for certification.
+  2. If eligible for certification and completes internship, they are certified.
+  3. If certified, they qualify for the job.
+  4. John passed the exam.
+  5. John completed the internship.
+QUESTION: Based on the premises, which is the strongest conclusion?
+  A. John is eligible for certification.
+  B. John is certified.
+  C. John qualifies for the job.
+  D. John needs additional training.
 STEP-BY-STEP REASONING:
-  - The question asks for the option using the FEWEST premises.
-  - Option A: Rain -> Wet (Premise 1) + It rains (Premise 3) = 2 premises.
-  - Option B: Rain -> Wet -> Grow (Premises 1, 2) + It rains (Premise 3) = 3 premises.
-  - Both are logically valid, but A uses fewer premises.
-PREMISES USED: [0, 2]
+  - The question asks for the STRONGEST conclusion — the final result of the complete chain.
+  - From P4 (passed) + P1: John is eligible. Uses [0, 3].
+  - From eligible + P5 (internship) + P2: John is certified. Uses [0, 1, 3, 4].
+  - From certified + P3: John qualifies for the job. Uses [0, 1, 2, 3, 4].
+  - Options A, B, C are ALL valid, but C is the STRONGEST (final in chain, most premises).
+  - Option D: No premise mentions training. INVALID.
+PREMISES USED: [0, 1, 2, 3, 4]
+ANSWER: C
+
+FEW-SHOT EXAMPLE 3 (Eligibility ≠ Actuality — Missing Condition):
+PREMISES:
+  1. If a member has valid ID and training, they can use equipment.
+  2. If a member can use equipment AND has a coach, they can book sessions.
+  3. If membership ≥ 6 months, they are eligible for a coach.
+  4. Alex has valid ID and training.
+  5. Alex has membership of 8 months.
+QUESTION: Which statement is correct?
+  A. Alex can use equipment but cannot book sessions without a coach.
+  B. Alex can book sessions if assigned a coach.
+STEP-BY-STEP REASONING:
+  - From P4 + P1: Alex can use equipment. ✓
+  - From P5 + P3: Alex is ELIGIBLE for a coach. ✓
+  - ⚠️ CRITICAL: "eligible for a coach" ≠ "has a coach". No premise states Alex HAS a coach.
+  - P2 requires "has a coach" (NOT "eligible for"). This condition is NOT met.
+  - Option A: Correctly states Alex can use equipment but cannot book without a coach. VALID.
+  - Option B: Says "if assigned a coach" — this is a conditional, not a proven fact. Weaker.
+  - Option A directly reflects the provable state.
+PREMISES USED: [0, 1, 3, 4]
 ANSWER: A
 
-FEW-SHOT EXAMPLE 3 (Insufficient Information → Unknown):
+FEW-SHOT EXAMPLE 4 (Insufficient Information → Unknown):
 PREMISES:
   1. If a student studies hard, they pass the exam.
   2. If a student passes the exam, they graduate.
@@ -108,32 +136,32 @@ QUESTION: Which statement is correct?
   B. Some students study hard.
   C. If a student studies hard, they graduate.
 STEP-BY-STEP REASONING:
-  - Option A: We only know "IF studies hard THEN pass THEN graduate", but there are NO ground facts (no specific student is mentioned). We CANNOT conclude "all students graduate" without knowing who studies hard. NOT derivable.
-  - Option B: No premise states any student actually studies hard. NOT derivable.
-  - Option C: By Hypothetical Syllogism: studies_hard -> pass (P1) and pass -> graduate (P2), so studies_hard -> graduate. This is VALID.
-  - WAIT: Option C is valid. But if the question has NO concrete ground facts and the rules are only conditional (if-then), we must check if ANY option is provably true. If none of the options can be proven true or false from the premises alone, answer Unknown.
-  - Here, Option C IS derivable. So the answer is C.
+  - Option A: No ground facts. CANNOT conclude "all students graduate". NOT derivable.
+  - Option B: No premise states any student studies hard. NOT derivable.
+  - Option C: By Hypothetical Syllogism: studies_hard → pass (P1) + pass → graduate (P2) = studies_hard → graduate. VALID.
   - NOTE: If NONE of the options were derivable, the answer would be "Unknown".
 PREMISES USED: [0, 1]
 ANSWER: C
 ---
 
 STEP-BY-STEP REASONING:
-1. Identify the known facts (premises without conditions) and any given HINTS.
-2. Identify the rules (if-then statements) and actively apply Contraposition (If P -> Q, then ~Q -> ~P).
+1. Identify the known FACTS (premises without conditions) and any given HINTS.
+2. Identify the RULES (if-then statements) and actively apply Contraposition (If P → Q, then ¬Q → ¬P).
 3. Apply rules to facts using Modus Ponens to derive new conclusions.
-   - WARNING: When applying a rule, you MUST explicitly check that ALL conditions in the "if" part are met.
-   - WARNING: If a condition is negated in the facts (e.g., "John has not received X"), the rule CANNOT be applied! Do not hallucinate missing conditions.
-4. Evaluate each answer option against your derived facts. For EACH valid option, note HOW MANY premises are needed.
-5. CAREFULLY READ THE QUESTION. Apply the specific criterion it asks for:
-   - "fewest premises" -> pick the valid option that uses the LEAST number of premises.
-   - "strongest conclusion" -> pick the most specific/powerful valid conclusion.
-   - "correct conclusion" or "logically follows" -> pick any valid option.
+   - ⚠️ CRITICAL: When applying a rule, you MUST explicitly verify that ALL conditions in the "if" part are ACTUALLY SATISFIED (not just "eligible" or "qualified").
+   - ⚠️ CRITICAL: "Eligible for X" ≠ "Has X". "Qualified for X" ≠ "Received X". Do NOT confuse potential with actuality.
+   - ⚠️ CRITICAL: If a condition is negated in the facts (e.g., "has NOT received X"), the rule CANNOT fire.
+4. For EACH answer option, write out:
+   - The logical derivation path (which premises are needed).
+   - The total COUNT of premises used.
+   - Whether the option is VALID (derivable) or INVALID (not derivable).
+5. CAREFULLY READ THE QUESTION and apply the specific criterion:
+   - "fewest premises" → pick the valid option with the MINIMUM premise count.
+   - "strongest conclusion" → pick the valid option at the END of the logical chain (uses the MOST premises).
+   - "correct conclusion" / "logically follows" / "logically valid" → pick any valid option.
    - If a contrapositive uses only 1 original premise, it counts as 1 premise.
 6. If multiple options are valid AND the question does NOT specify a selection criterion, choose the strongest one.
-7. CRITICAL: If NO option can be logically derived from the premises (all are unsupported assumptions), answer "Unknown".
-   - An option that only restates a conditional rule (if-then) WITHOUT a matching ground fact is NOT provable.
-   - If the premises contain NO ground facts (only rules), and all options require ground facts, answer "Unknown".
+7. If NO option can be logically derived from the premises, answer "Unknown".
 
 You MUST output the 0-based indices of the premises you actually used to derive the answer (first premise is index 0, second premise is index 1, etc.) and your final answer in EXACTLY this format on the last two lines:
 PREMISES USED: [comma-separated 0-based indices, e.g., [0, 2] or [] if answer is Unknown]
@@ -153,50 +181,77 @@ STATEMENT TO VERIFY:
 {question}
 
 ---
-FEW-SHOT EXAMPLE (Broken Chain → No):
+FEW-SHOT EXAMPLE 1 (Complete Chain → Yes):
+PREMISES:
+  1. If a student completes courses, they are eligible for graduation.
+  2. If eligible for graduation and submits thesis, they graduate.
+  3. Alice completed all courses.
+  4. Alice submitted her thesis.
+STATEMENT: Does Alice graduate?
+STEP-BY-STEP REASONING:
+  1. From P3 (completed courses) + P1: Alice is eligible. ✓
+  2. From eligible + P4 (thesis) + P2: Alice graduates. ✓
+  All conditions are met.
+PREMISES USED: [0, 1, 2, 3]
+ANSWER: Yes
+
+FEW-SHOT EXAMPLE 2 (Missing Condition → No):
+PREMISES:
+  1. If a member can use equipment AND has a coach, they can book sessions.
+  2. If membership ≥ 6 months, they are eligible for a coach.
+  3. Bob can use equipment.
+  4. Bob has membership of 8 months.
+STATEMENT: Does Bob meet all requirements for booking sessions?
+STEP-BY-STEP REASONING:
+  1. From P4 + P2: Bob is ELIGIBLE for a coach. ✓
+  2. ⚠️ CRITICAL: "eligible for a coach" ≠ "has a coach". No premise states Bob HAS a coach.
+  3. P1 requires "has a coach" — this condition is NOT met.
+  4. Bob can use equipment (P3) but does NOT have a coach → cannot book sessions.
+PREMISES USED: [0, 1, 2, 3]
+ANSWER: No
+
+FEW-SHOT EXAMPLE 3 (Broken Chain → No):
 PREMISES:
   1. If a student studies, they understand the material.
   2. If a student understands the material, they pass the exam.
   3. If a student passes the exam, they graduate.
 STATEMENT: There exists a complete pathway from studying to getting a job.
 STEP-BY-STEP REASONING:
-  1. studies -> understands (Premise 1) ✓
-  2. understands -> passes_exam (Premise 2) ✓
-  3. passes_exam -> graduates (Premise 3) ✓
-  4. graduates -> gets_a_job ← NO SUCH PREMISE EXISTS! Chain is BROKEN.
-  Since the chain from studying to getting a job is INCOMPLETE (missing the last link), the statement is NOT supported.
+  1. studies → understands (P1) ✓
+  2. understands → passes_exam (P2) ✓
+  3. passes_exam → graduates (P3) ✓
+  4. graduates → gets_a_job ← NO SUCH PREMISE EXISTS! Chain is BROKEN.
 PREMISES USED: [0, 1, 2]
 ANSWER: No
 
-FEW-SHOT EXAMPLE (Insufficient Information → Unknown):
+FEW-SHOT EXAMPLE 4 (Insufficient Information → Unknown):
 PREMISES:
   1. If it rains, the ground is wet.
   2. If the ground is wet, flowers bloom.
 STATEMENT: The flowers are blooming.
 STEP-BY-STEP REASONING:
-  1. We have rules: rain -> wet (P1), wet -> bloom (P2).
-  2. But there is NO fact stating "it rains" or "the ground is wet".
-  3. Without a ground fact to trigger the chain, we CANNOT determine if flowers bloom.
-  4. The statement is neither provably true nor provably false.
+  1. Rules: rain → wet (P1), wet → bloom (P2).
+  2. No fact states "it rains" or "the ground is wet".
+  3. Without a ground fact, CANNOT determine if flowers bloom.
 PREMISES USED: []
 ANSWER: Unknown
 ---
 
 STEP-BY-STEP REASONING:
-1. Identify which premises are relevant.
-2. Break down the STATEMENT TO VERIFY into its required conditions.
-3. For EACH required condition, check if it is EXPLICITLY stated or logically derived from the premises.
-   - WARNING: You CANNOT assume any missing conditions (e.g., if a rule requires 'field is X' but the field is not stated, the condition FAILS).
-   - WARNING: You CANNOT assume common sense relations not explicitly stated in the premises.
-4. CRITICAL — Chain Completeness Check & Universal Rules:
-   - If the statement claims a "pathway", "chain", "causal chain", or "leads to" relationship, you MUST verify EVERY SINGLE LINK in the chain has an explicit premise.
-   - List each link as: A -> B (Premise N) ✓ or A -> B ← MISSING ✗
-   - If ANY link is missing, the chain is BROKEN and the answer is "No".
-   - IMPORTANT: Do not overly second-guess universal rules (∀x). If a premise states a rule for "All students" or "All subjects" (e.g., ∀x P(x)), treat it as a valid ground fact for any specific instance. You do not need to explicitly prove that a specific instance exists if the premise universally applies to all of them.
-5. Decision rules:
-   - If ALL required conditions are provably met → "Yes".
-   - If ANY condition is missing, unstated, or contradicted → "No".
-   - If the premises contain NO ground facts and the statement requires specific instances (not just conditional rules), answer "Unknown".
+1. Identify which premises are relevant to the statement.
+2. Break down the STATEMENT into its required conditions.
+3. For EACH required condition, check if it is EXPLICITLY stated or logically derived.
+   - ⚠️ CRITICAL: "Eligible for X" ≠ "Has X". "Qualified for X" ≠ "Received X". Never confuse potential with actuality.
+   - ⚠️ CRITICAL: You CANNOT assume any missing conditions. If a rule requires condition C but no premise provides C, the rule CANNOT fire.
+   - ⚠️ CRITICAL: Scoring above a threshold (e.g., grade > 8.5) does NOT automatically mean "passing" — check the specific definition of passing in the premises.
+4. Chain Completeness Check:
+   - List each link: A → B (Premise N) ✓ or A → B ← MISSING ✗
+   - If ANY link is missing, the answer is "No".
+   - IMPORTANT: Universal rules (∀x) apply to all instances; do not require separate existence proofs.
+5. Decision:
+   - ALL conditions provably met → "Yes".
+   - ANY condition missing, unstated, or contradicted → "No".
+   - No ground facts and statement requires instances → "Unknown".
 
 You MUST output the 0-based indices of the premises you actually used to derive the answer (first premise is index 0, second premise is index 1, etc.) and your final answer in EXACTLY this format on the last two lines:
 PREMISES USED: [comma-separated 0-based indices, e.g., [0, 2] or [] if answer is Unknown]

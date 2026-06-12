@@ -213,16 +213,26 @@ class LLMReasoner:
                 question=question,
             )
 
+        # Detect DeepSeek-R1 models to optimize generation parameters (higher temperature and max_tokens)
+        is_deepseek = "deepseek" in self.model_name.lower()
+        max_toks = 2048 if is_deepseek else 1024
+        temp = 0.6 if is_deepseek else 0.1
+
         response = self._chat(
             system_prompt=SYSTEM_PROMPT_LOGIC,
             user_prompt=prompt,
-            max_tokens=1024,
-            temperature=0.1,
+            max_tokens=max_toks,
+            temperature=temp,
         )
+
+        # Clean reasoning thinking blocks if present (DeepSeek-R1 style)
+        cleaned_response = response
+        if "</think>" in response:
+            cleaned_response = response.split("</think>", 1)[1].strip()
 
         # Extract answer from response
         logger.debug(f"[LLM_COT] Raw Response:\n{response}\n")
-        answer = self._extract_answer(response)
+        answer = self._extract_answer(cleaned_response)
         if not answer:
             logger.warning("[LLM_COT] Failed to extract answer from raw response. Returning None.")
 
@@ -230,7 +240,7 @@ class LLMReasoner:
             'answer': answer,
             'explanation': response,
             'method': 'llm_cot',
-            'premises_used': self._extract_premises_used(response),
+            'premises_used': self._extract_premises_used(cleaned_response),
         }
 
     def generate_z3_code(
