@@ -277,35 +277,42 @@ PREMISES (Natural Language):
 
 QUESTION: {question}
 
-Generate a complete, executable Python script using the z3 library that:
-1. Declare an Entity sort: Entity = DeclareSort('Entity')
-2. Declare a variable x: x = Const('x', Entity)
-3. Declare ALL predicates as Function objects (e.g., WT = Function('WT', Entity, BoolSort()))
-4. If any named entities exist (e.g., John, Sophia), declare them: John = Const('John', Entity)
-5. Assert all premises into a Solver()
-6. For Yes/No questions: check entailment with Not(statement), if unsat print("Yes"), else print("No")
-7. For MCQ (A, B, C, D): you MUST check ALL FOUR options separately using push/pop. Print the letter of the FIRST entailed option.
-8. Prints EXACTLY one line of output.
+You are provided with a Python environment where the following are PRE-DEFINED and PRE-IMPORTED:
+- 'from z3 import *' (all Z3 functions/classes are available)
+- 'Entity = DeclareSort("Entity")' (default sort for all entities)
+- 'x', 'y', 'z' = pre-declared Z3 Consts of sort Entity (use 'x' as default variable for ForAll/Exists)
+- 'solve_yes_no(solver, goal)': checks if 'goal' is entailed (prints "Yes"), refuted (prints "No"), or undetermined (prints "Unknown")
+- 'solve_mcq(solver, options_dict)': checks which option is entailed. 'options_dict' maps option keys (e.g. 'A', 'B') to Z3 expressions. For 'None of the above' options, map the option key to None. Prints the correct option letter.
+
+Generate a complete Python script that:
+1. Declares ALL predicates as Function objects returning BoolSort() or IntSort() (e.g., WT = Function('WT', Entity, BoolSort())).
+   - CRITICAL: If a predicate is numeric (e.g. gpa, grade, completed_courses, hours, age), declare it returning IntSort() or RealSort(), e.g. completed_courses = Function('completed_courses', Entity, IntSort()).
+2. Declares any named entities as Const objects of sort Entity (e.g., John = Const('John', Entity)).
+3. Creates a solver: s = Solver()
+4. Asserts all FOL premises into the solver.
+   - For universal implication (ForAll(x, P(x) -> Q(x))), write: s.add(ForAll([x], Implies(P(x), Q(x))))
+   - For atomic facts (P(John)), write: s.add(P(John))
+   - For negated facts (~P(John)), write: s.add(Not(P(John)))
+   - For numeric comparisons (completed_courses(Sarah) = 4), write: s.add(completed_courses(Sarah) == 4)
+   - For numeric implications (completed_courses(x) >= 5 -> eligible(x)), write: s.add(ForAll([x], Implies(completed_courses(x) >= 5, eligible(x))))
+5. Calls the helper function:
+   - For Yes/No questions: solve_yes_no(s, goal_expr)
+   - For MCQ: solve_mcq(s, {'A': expr_A, 'B': expr_B, 'C': expr_C, 'D': expr_D}) (or matching choices)
 
 IMPORTANT RULES:
-- Output ONLY raw Python code. No markdown, no explanations.
-- CRITICAL: NEVER use the '->' symbol for implication. You MUST use the Z3 function Implies(A, B).
-- CRITICAL: You MUST declare ALL Entity constants and Boolean Functions (predicates) before using them in s.add().
-- For MCQ options: translate each option into a ForAll expression, then check if Not(ForAll(...)) is unsat.
-- You MUST check ALL options A, B, C, D. Do NOT stop after checking only one.
-- Carefully match predicates: read each option's natural language and use the CORRECT predicate names.
+- Output ONLY raw Python code. No markdown, no explanations, no backticks.
+- NEVER redeclare Entity, x, y, z. Use them directly.
+- NEVER use '->' for implication. You MUST use Implies(A, B).
+- NEVER use print("Yes" if s.check()...) yourself. ALWAYS use solve_yes_no(s, goal_expr) or solve_mcq(s, options_dict).
 
 EXAMPLE 1 (YES/NO):
 PREMISES (First-Order Logic):
 1. ForAll(x, WT(x) -> GR(x))
 2. WT(John)
-
 QUESTION: Yes or No: Is it true that John is GR?
 CODE:
 from z3 import *
 s = Solver()
-Entity = DeclareSort('Entity')
-x = Const('x', Entity)
 WT = Function('WT', Entity, BoolSort())
 GR = Function('GR', Entity, BoolSort())
 John = Const('John', Entity)
@@ -313,45 +320,31 @@ John = Const('John', Entity)
 s.add(ForAll([x], Implies(WT(x), GR(x))))
 s.add(WT(John))
 
-s.push()
-s.add(Not(ForAll([x], GR(John))))
-print("Yes" if s.check() == unsat else "No")
-s.pop()
+solve_yes_no(s, GR(John))
 
-EXAMPLE 2 (MCQ):
+EXAMPLE 2 (MCQ with Arithmetic):
 PREMISES (First-Order Logic):
-1. ForAll(x, A(x) -> B(x))
-2. ForAll(x, B(x) -> C(x))
-3. A(John)
-
-QUESTION: Based on the premises, which is true?
-A. C(John)
-B. Not(B(John))
-C. Not(A(John))
-D. None of the above
-
+1. ForAll(x, completed_courses(x) >= 5 -> eligible(x))
+2. completed_courses(Alice) = 4
+QUESTION: Which statement is true?
+A. eligible(Alice)
+B. Not(eligible(Alice))
+C. None of the above
 CODE:
 from z3 import *
 s = Solver()
-Entity = DeclareSort('Entity')
-x = Const('x', Entity)
-A = Function('A', Entity, BoolSort())
-B = Function('B', Entity, BoolSort())
-C = Function('C', Entity, BoolSort())
-John = Const('John', Entity)
+completed_courses = Function('completed_courses', Entity, IntSort())
+eligible = Function('eligible', Entity, BoolSort())
+Alice = Const('Alice', Entity)
 
-s.add(ForAll([x], Implies(A(x), B(x))))
-s.add(ForAll([x], Implies(B(x), C(x))))
-s.add(A(John))
+s.add(ForAll([x], Implies(completed_courses(x) >= 5, eligible(x))))
+s.add(completed_courses(Alice) == 4)
 
-results = []
-s.push(); s.add(Not(ForAll([x], C(John)))); results.append(('A', s.check())); s.pop()
-s.push(); s.add(Not(ForAll([x], Not(B(John))))); results.append(('B', s.check())); s.pop()
-s.push(); s.add(Not(ForAll([x], Not(A(John))))); results.append(('C', s.check())); s.pop()
-s.push(); s.add(Not(ForAll([x], And(Not(C(John)), B(John), A(John))))); results.append(('D', s.check())); s.pop()
-
-entailed = [r[0] for r in results if r[1] == unsat]
-if entailed: print(entailed[0])
+solve_mcq(s, {
+    'A': eligible(Alice),
+    'B': Not(eligible(Alice)),
+    'C': None
+})
 """
 
 # ══════════════════════════════════════════════════════════════
@@ -369,15 +362,14 @@ ERROR/ISSUE:
 ORIGINAL PREMISES (FOL):
 {premises_fol}
 
-COMMON MISTAKES TO FIX:
-1. Named entities (John, Sophia, etc.) and ALL functions MUST be declared: John = Const('John', Entity)
-2. NEVER use '->' for implication. Python Z3 does NOT support it. Use Implies(A, B).
-3. For MCQ: you MUST check ALL 4 options (A, B, C, D) with push/pop, not just one.
-4. Each option check must use ForAll: s.add(Not(ForAll([x], option_expr)))
-5. Ensure predicate names exactly match the FOL premises.
-6. Use Not() instead of NOT() - Python z3 uses Not, And, Or, Implies.
+REMEMBER PRE-DEFINED FUNCTIONS & VARIABLES:
+- Entity, x, y, z are already declared. DO NOT redeclare them.
+- Use solve_yes_no(solver, goal) for Yes/No questions.
+- Use solve_mcq(solver, options_dict) for MCQ questions. Map 'None of the above' options to None.
+- Declare numeric predicates (like GPA, grade, clinical_hours, completed_courses) returning IntSort() or RealSort().
+- Use '==' for equality comparison, and z3 functions like Not(), Implies(), And(), Or().
 
-Output ONLY the corrected Python code. No markdown, no explanations.
+Output ONLY the corrected raw Python code. No markdown, no explanations.
 """
 
 # ══════════════════════════════════════════════════════════════

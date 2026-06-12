@@ -280,6 +280,20 @@ class NeuroSymbolicPipeline:
         q_result = QuestionResult()
         is_long_question = len(premises_fol) > 7
 
+        # Check if premises contain numbers or math/inequality relations
+        has_math_or_numbers = False
+        import re
+        for p in premises_nl + premises_fol:
+            if re.search(r'\d+', p) or any(op in p for op in ['>', '<', '=', '≥', '≤', '%', 'percent', 'plus', 'minus']):
+                has_math_or_numbers = True
+                break
+
+        # Check if question is conditional or structural
+        is_conditional_or_structural = False
+        q_lower = classified.original.lower()
+        if any(w in q_lower for w in ['if', 'when', 'whenever', 'loop', 'pathway', 'chain', 'unless', 'suppose', 'assuming']):
+            is_conditional_or_structural = True
+
         # 1. Run Fast Logic Tree
         tree_ans = None
         tree_result = None
@@ -307,21 +321,56 @@ class NeuroSymbolicPipeline:
                 self.stats['llm_solved'] += 1
                 return q_result
             else:
-                # Conflict: Trust Logic Tree — it derives answers formally
-                # via Modus Ponens / Modus Tollens / Contraposition.
-                # Analysis showed Logic Tree was correct in 100% of conflicts.
-                q_result.answer = tree_ans
-                q_result.method = 'logic_tree_override'
-                q_result.confidence = 0.9
-                q_result.explanation = (
-                    f"Conflict detected. Logic Tree proved '{tree_ans}' "
-                    f"(formally derived). LLM CoT suggested '{cot_ans}' "
-                    f"but was overridden.\n"
-                    + cot_result.get('explanation', '')
-                )
-                q_result.premises_used = (tree_result or {}).get('premises_used') or []
-                self.stats['logic_tree_solved'] += 1
-                return q_result
+                # Conflict Resolution:
+                # First try Z3 as the ultimate formal tie-breaker if allowed
+                if self.config.use_z3 and not is_long_question:
+                    z3_res = self._try_llm_z3(premises_fol, premises_nl, classified)
+                    if z3_res and z3_res.get('answer'):
+                        z3_ans = z3_res['answer']
+                        if z3_ans in ['Yes', 'No', 'A', 'B', 'C', 'D', 'Unknown']:
+                            q_result.answer = z3_ans
+                            q_result.method = 'z3_resolved_conflict'
+                            q_result.confidence = 0.95
+                            q_result.explanation = "Conflict resolved by formal Z3 verification."
+                            q_result.premises_used = z3_res.get('premises_used') or []
+                            self.stats['z3_solved'] += 1
+                            return q_result
+
+                # If Z3 failed, fallback to heuristic conflict resolution:
+                # 1. If premises have math/numbers, the propositional Logic Tree is unreliable.
+                # 2. If the Logic Tree answer is 'No' from check_missing_conditions, but the question is conditional/general,
+                #    it is likely a false negative because the Logic Tree lacks facts to activate the rules.
+                is_tree_weak_no = False
+                if tree_result and tree_ans == 'No' and tree_result.get('is_missing_conditions'):
+                    is_tree_weak_no = True
+
+                if has_math_or_numbers or (is_tree_weak_no and is_conditional_or_structural):
+                    # Trust LLM CoT
+                    q_result.answer = cot_ans
+                    q_result.method = 'llm_cot_override'
+                    q_result.confidence = 0.6
+                    q_result.explanation = (
+                        f"Conflict detected. Trusting LLM CoT over Logic Tree due to "
+                        f"{'mathematical/numeric constraints' if has_math_or_numbers else 'conditional/structural query structure'}.\n"
+                        + cot_result.get('explanation', '')
+                    )
+                    # Convert CoT's 0-based premises to 1-based
+                    cot_premises = cot_result.get('premises_used') or []
+                    q_result.premises_used = [idx + 1 for idx in cot_premises]
+                    self.stats['llm_solved'] += 1
+                    return q_result
+                else:
+                    # Trust Logic Tree
+                    q_result.answer = tree_ans
+                    q_result.method = 'logic_tree_override'
+                    q_result.confidence = 0.9
+                    q_result.explanation = (
+                        f"Conflict detected. Trusting Logic Tree over LLM CoT (verified formal deduction).\n"
+                        + cot_result.get('explanation', '')
+                    )
+                    q_result.premises_used = (tree_result or {}).get('premises_used') or []
+                    self.stats['logic_tree_solved'] += 1
+                    return q_result
         elif cot_ans:
             q_result.answer = cot_ans
             q_result.method = 'llm_cot'
@@ -393,13 +442,34 @@ class NeuroSymbolicPipeline:
 
             if output:
                 answer = self._parse_z3_output(output, classified)
+                premises_used = []
+                import re
+                p_match = re.search(r'PREMISES USED:\s*\[([^\]]*)\]', output)
+                if p_match:
+                    try:
+                        premises_used = [int(x.strip()) for x in p_match.group(1).split(',') if x.strip()]
+                    except Exception:
+                        pass
                 if answer:
-                    return {'answer': answer, 'premises_used': []}
+                    return {'answer': answer, 'premises_used': premises_used}
 
         except Exception as e:
             logger.debug(f"LLM-Z3 failed: {e}")
 
         return None
+
+    def _is_keyword_match(self, kw: str, pred: str) -> bool:
+        kw_clean = kw.strip().lower()
+        pred_clean = pred.strip().lower()
+        if not kw_clean or not pred_clean:
+            return False
+        if kw_clean == pred_clean:
+            return True
+        # Check if keyword is one of the underscore-separated words
+        words = pred_clean.split('_')
+        if kw_clean in words:
+            return True
+        return False
 
     def _try_logic_tree(
         self, logic_tree: LogicTree, classified, premises_fol
@@ -419,33 +489,32 @@ class NeuroSymbolicPipeline:
                 # Check if any derived predicate matches keywords
                 for kw in keywords:
                     for derived in derived_preds:
-                        if kw.lower() in derived.lower() or \
-                           derived.lower() in kw.lower():
+                        if self._is_keyword_match(kw, derived):
                             proof = logic_tree.get_proof_trace(derived)
                             if proof['provable']:
                                 return {
                                     'answer': 'Yes',
                                     'premises_used': proof['premises_used'],
+                                    'is_missing_conditions': False,
                                 }
 
                 # NEW: Check if any keyword's negation is provable → answer 'No'
                 for kw in keywords:
                     for pred in list(logic_tree.known.keys()) + \
                                 [d.predicate for d in logic_tree.derived]:
-                        if kw.lower() in pred.lower() or \
-                           pred.lower() in kw.lower():
+                        if self._is_keyword_match(kw, pred):
                             neg_result = logic_tree.can_prove_negation(pred)
                             if neg_result.get('negated'):
                                 return {
                                     'answer': 'No',
                                     'premises_used': neg_result['premises_used'],
+                                    'is_missing_conditions': False,
                                 }
 
                 # NEW: Check for missing conditions on target predicates
                 for kw in keywords:
                     for pred in list(logic_tree.graph.keys()):
-                        if kw.lower() in pred.lower() or \
-                           pred.lower() in kw.lower():
+                        if self._is_keyword_match(kw, pred):
                             missing = logic_tree.check_missing_conditions(pred)
                             if missing:
                                 logger.debug(
@@ -458,6 +527,7 @@ class NeuroSymbolicPipeline:
                                 return {
                                     'answer': 'No',
                                     'premises_used': used,
+                                    'is_missing_conditions': True,
                                 }
 
             elif classified.question_type == QuestionType.MCQ:
@@ -507,7 +577,7 @@ class NeuroSymbolicPipeline:
                 # NEW: Add missing-condition warnings from Logic Tree
                 for kw in (classified.keywords or []):
                     for pred in list(logic_tree.graph.keys()):
-                        if kw.lower() in pred.lower() or pred.lower() in kw.lower():
+                        if self._is_keyword_match(kw, pred):
                             missing = logic_tree.check_missing_conditions(pred)
                             if missing:
                                 derived_facts.append(
