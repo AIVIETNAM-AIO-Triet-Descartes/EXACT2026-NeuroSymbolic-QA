@@ -72,6 +72,22 @@ def _parse_formula(formula_str: str) -> Optional[tuple]:
         return None
 
 
+def _pick_root(solutions) -> Optional[float]:
+    """Pick a real, NON-NEGATIVE root if available (physical magnitudes — voltage,
+    current, energy… — are reported positive; SymPy may list the negative root of
+    U=±√(2E/C) first). Falls back to the first real root. None if no real root."""
+    def _f(s):
+        try:
+            return float(s)
+        except Exception:
+            return None
+    reals = [v for v in (_f(s) for s in solutions) if v is not None]
+    if not reals:
+        return None
+    nonneg = [v for v in reals if v >= 0]
+    return (nonneg or reals)[0]
+
+
 def _solve_single(formula_str: str, given: dict, find: str) -> Optional[dict]:
     """Solve one formula with known values; returns result dict or None."""
     parsed = _parse_formula(formula_str)
@@ -92,9 +108,8 @@ def _solve_single(formula_str: str, given: dict, find: str) -> Optional[dict]:
     if not solutions:
         return None
 
-    try:
-        answer_float = float(solutions[0])
-    except Exception:
+    answer_float = _pick_root(solutions)   # prefer non-negative real root (magnitude)
+    if answer_float is None:
         return None
 
     unit = _UNIT_MAP.get(find, "")
@@ -143,9 +158,8 @@ def _solve_multi_step(formulas: list[str], given: dict, find: str) -> Optional[d
         if not solutions:
             continue
 
-        try:
-            val = float(solutions[0])
-        except Exception:
+        val = _pick_root(solutions)   # prefer non-negative real root (magnitude)
+        if val is None:
             continue
 
         accumulated[str(unknown)] = val

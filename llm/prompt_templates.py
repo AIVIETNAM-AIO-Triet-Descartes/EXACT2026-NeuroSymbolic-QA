@@ -385,6 +385,7 @@ Candidate formulas: {formulas}
 Requirements:
 - Use ONLY the `math` and `sympy` libraries (already importable). No file, network, or OS access.
 - Assign the final numeric result to a variable named `answer` (a float, in SI base units).
+- Report the POSITIVE magnitude for physical quantities (voltage, current, energy, force, field, power, resistance…) — use abs() — unless the problem explicitly asks for a sign or direction.
 - Assign the ASCII unit string to a variable named `unit` (e.g. "A", "ohm", "V/m", "J"; "" if dimensionless).
 - Keep the symbol convention: U=voltage, Z_L/Z_C/Z for inductive/capacitive reactance/impedance.
 - Output ONLY one Python code block, no prose.
