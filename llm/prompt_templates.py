@@ -238,6 +238,24 @@ STEP-BY-STEP REASONING:
   3. Without a ground fact, CANNOT determine if flowers bloom.
 PREMISES USED: []
 ANSWER: Unknown
+
+FEW-SHOT EXAMPLE 5 (Disjunctive Paths — Alternative Satisfied → Yes):
+PREMISES:
+  1. If a student has an honors diploma and completes community service, they qualify for a scholarship.
+  2. If a student has an honors diploma and receives a faculty recommendation, they qualify for a scholarship.
+  3. Alice has an honors diploma.
+  4. Alice completed community service.
+STATEMENT: Does Alice qualify for a scholarship?
+STEP-BY-STEP REASONING:
+  1. Rule Path A: honors_diploma ∧ community_service → scholarship (P1).
+  2. Rule Path B: honors_diploma ∧ faculty_recommendation → scholarship (P2).
+  3. From P3: Alice has honors diploma. ✓
+  4. From P4: Alice completed community service. ✓
+  5. Path A: honors_diploma (P3) ∧ community_service (P4) → scholarship (P1). ALL conditions met. ✓
+  6. ⚠️ Path B requires faculty_recommendation — not stated. But Path A is FULLY SATISFIED.
+  7. Since ANY one valid path is enough, Alice qualifies for a scholarship.
+PREMISES USED: [0, 2, 3]
+ANSWER: Yes
 ---
 
 STEP-BY-STEP REASONING:

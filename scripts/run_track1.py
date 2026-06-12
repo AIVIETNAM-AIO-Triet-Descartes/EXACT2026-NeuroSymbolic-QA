@@ -280,11 +280,13 @@ class NeuroSymbolicPipeline:
         q_result = QuestionResult()
         is_long_question = len(premises_fol) > 7
 
-        # Check if premises contain numbers or math/inequality relations
+        # Check if NL premises contain real numbers or math/inequality relations
+        # IMPORTANT: Only scan premises_nl, NOT premises_fol, because FOL
+        # contains variable names like x1, predicate_1 that falsely trigger digits.
         has_math_or_numbers = False
         import re
-        for p in premises_nl + premises_fol:
-            if re.search(r'\d+', p) or any(op in p for op in ['>', '<', '=', '≥', '≤', '%', 'percent', 'plus', 'minus']):
+        for p in premises_nl:
+            if re.search(r'\b\d+\b', p) or any(op in p for op in ['>', '<', '≥', '≤', '%', 'percent']):
                 has_math_or_numbers = True
                 break
 
