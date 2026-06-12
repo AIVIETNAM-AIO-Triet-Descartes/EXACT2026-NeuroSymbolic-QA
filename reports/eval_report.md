@@ -3,7 +3,7 @@
 ## Overall Metrics
 | Total | Evaluable | Correct | Acc% |
 |-------|-----------|---------|------|
-| 1352 | 556 | 376 | 67.63% |
+| 1352 | 602 | 369 | 61.30% |
 
 ## Metrics by Prefix
 | Prefix | Total | Evaluable | Correct | Acc% |
@@ -11,8 +11,8 @@
 | CH | 290 | 88 | 61 | 69.32% |
 | CHLT | 20 | 20 | 16 | 80.00% |
 | DDT | 130 | 27 | 10 | 37.04% |
-| DT | 68 | 23 | 7 | 30.43% |
-| LD | 397 | 206 | 164 | 79.61% |
+| DT | 68 | 26 | 7 | 26.92% |
+| LD | 397 | 249 | 157 | 63.05% |
 | NL | 190 | 43 | 21 | 48.84% |
 | TD | 177 | 94 | 46 | 48.94% |
 | THCB | 80 | 55 | 51 | 92.73% |
@@ -21,7 +21,7 @@
 | Kind | Total | Evaluable | Correct | Acc% |
 |------|-------|-----------|---------|------|
 | multi | 25 | 25 | 21 | 84.00% |
-| numeric | 1230 | 510 | 339 | 66.47% |
+| numeric | 1230 | 556 | 332 | 59.71% |
 | qualitative | 76 | 0 | 0 | 0.00% |
 | yes_no | 21 | 21 | 16 | 76.19% |
 
@@ -30,22 +30,30 @@
 |--------|-------|-----------|---------|------|
 | circuit | 6 | 6 | 4 | 66.67% |
 | error_calc | 48 | 48 | 47 | 97.92% |
-| llm_fallback | 796 | 4 | 0 | 0.00% |
+| llm_fallback | 750 | 4 | 0 | 0.00% |
 | resonance | 16 | 16 | 16 | 100.00% |
 | sympy | 256 | 253 | 138 | 54.55% |
-| vector_solver | 230 | 229 | 171 | 74.67% |
+| vector_solver | 276 | 275 | 164 | 59.64% |
 
 ## Wrong Cases
 | ID | Kind | Gold | Pred |
 |----|------|------|------|
 | LD004 | numeric | `5.234 × 10^-3` | `0.00417914` |
+| LD006 | numeric | `1.23 × 10^-3` | `0.000421875` |
+| LD022 | numeric | `14.4` | `1.3485` |
+| LD024 | numeric | `06.04` | `2.06419` |
+| LD038 | numeric | `2.45 × 10^-7` | `876.525` |
 | LD042 | numeric | `0` | `50.5687` |
+| LD045 | numeric | `45` | `12.4861` |
 | LD048 | numeric | `14.4` | `10.788` |
+| LD050 | numeric | `14.4` | `1.3485` |
 | LD060 | numeric | `36000` | `17980` |
+| LD061 | numeric | `1.2178 × 10^-3` | `3.51172e-19` |
 | LD064 | numeric | `10000` | `4994.44` |
 | LD065 | numeric | `2160` | `4994.44` |
 | LD067 | numeric | `9.8 × 10^5` | `2.1576e+06` |
 | LD076 | numeric | `-4 × 10^-7` | `206877` |
+| LD080 | numeric | `1.218 x 10^-3` | `3.51172e-19` |
 | LD088 | numeric | `73718` | `36859` |
 | LD089 | numeric | `3.28 × 10^4` | `36859` |
 | LD100 | numeric | `5.67 × 10^6` | `4.42131e+06` |
@@ -85,16 +93,55 @@
 | DT035 | numeric | `45.10^{5}` | `4.495e+06` |
 | DT036 | numeric | `12` | `8.091` |
 | DT048 | numeric | `246` | `876.525` |
+| DT051 | numeric | `1.22 . 10^{-3}` | `3.65359e+13` |
 | DT052 | numeric | `2160` | `4994.44` |
 | DT054 | numeric | `9.8 . 10^{5}` | `2.1576e+06` |
 | DT056 | numeric | `9000` | `1.67441e+07` |
 | DT062 | numeric | `-2.7 . 10^{-8}` | `1.24861e+06` |
 | DT084 | numeric | `245.91` | `5.08551e+12` |
 | DT085 | numeric | `32000` | `3.6859e+14` |
+| DT092 | numeric | `1.23 . 10^6` | `2.2475` |
+| DT093 | numeric | `4.25 . 10^5` | `2.2475` |
 | DT096 | numeric | `0` | `19977.8` |
-| LD263 | numeric | `0.4315*10^-3` | `0.00199778` |
+| LD123 | numeric | `14.140` | `9.98889` |
+| LD124 | numeric | `1.82*10^-3` | `0.0014384` |
+| LD137 | numeric | `0.115` | `0.000998889` |
+| LD142 | numeric | `2.270` | `0.624306` |
+| LD150 | numeric | `36.32` | `39.9556` |
+| LD152 | numeric | `3.82` | `0.22475` |
+| LD202 | numeric | `0.453` | `0.000249722` |
+| LD206 | numeric | `0.227` | `0.00624306` |
+| LD214 | numeric | `1.02*10^-3` | `0.0014384` |
+| LD215 | numeric | `0.566` | `159.822` |
+| LD219 | numeric | `1.71*10^-3` | `0.0022475` |
+| LD220 | numeric | `0.509*10^-3` | `0.0003596` |
+| LD230 | numeric | `35.355` | `62.4306` |
+| LD233 | numeric | `6.800` | `5.61875` |
+| LD247 | numeric | `1.814` | `0.399556` |
+| LD248 | numeric | `0.495` | `122.364` |
+| LD249 | numeric | `0.163` | `89.9` |
+| LD255 | numeric | `12.71*10^-3` | `0.22475` |
+| LD259 | numeric | `2.036*10^-3` | `0.0057536` |
+| LD262 | numeric | `2.55 × 10^-4` | `8.99e-05` |
+| LD263 | numeric | `0.4315*10^-3` | `0.000249722` |
+| LD264 | numeric | `0.218` | `159.822` |
+| LD266 | numeric | `32.16*10^-3` | `0.505688` |
+| LD272 | numeric | `2.273` | `0.624306` |
 | LD274 | numeric | `36.32` | `57.536` |
-| LD294 | numeric | `0.230 × 10⁻³` | `0.230158` |
+| LD278 | numeric | `0.409` | `0.0072819` |
+| LD287 | numeric | `1.028` | `0.08091` |
+| LD294 | numeric | `0.230 × 10⁻³` | `39.9556` |
+| LD296 | numeric | `7.05 × 10^6` | `33.8165` |
+| LD301 | numeric | `1.25 × 10^7` | `43.7894` |
+| LD305 | numeric | `3.82 × 10^6` | `9.92185` |
+| LD306 | numeric | `1.99 × 10^6` | `2.38308` |
+| LD310 | numeric | `2.77 × 10^7` | `132.677` |
+| LD311 | numeric | `1.76 × 10^6` | `2.11353` |
+| LD314 | numeric | `1.25 × 10^7` | `43.7894` |
+| LD318 | numeric | `5.8 × 10^6` | `20.2728` |
+| LD319 | numeric | `3.82 × 10^6` | `9.92185` |
+| LD322 | numeric | `6.92 × 10^6` | `8.29232` |
+| LD329 | numeric | `1.76 × 10^6` | `2.11353` |
 | LD332 | numeric | `4.012*10^6` | `8.13498e+06` |
 | LD336 | numeric | `1.31*10^7` | `1.49833e+07` |
 | LD339 | numeric | `1.3*10^7` | `16.8881` |
@@ -113,14 +160,20 @@
 | LD358 | numeric | `3.47 × 10^6` | `6.06825` |
 | LD359 | numeric | `6*10^6` | `17.98` |
 | LD360 | numeric | `1.34 × 10⁷` | `10.1647` |
+| LD377 | numeric | `8.44 × 10^6` | `30.6928` |
 | LD379 | numeric | `8.28*10^6` | `23.0748` |
 | LD380 | numeric | `27.51 × 10^6` | `70.0701` |
 | LD384 | numeric | `5.27*10^6` | `6.04423` |
+| LD385 | numeric | `3.50 × 10^6` | `16.6605` |
 | LD387 | numeric | `9.1*10^6` | `29.3548` |
 | LD388 | numeric | `5.02*10^6` | `24.1549` |
 | LD389 | numeric | `1.94*10^6` | `30.9404` |
+| LD390 | numeric | `6.48 × 10⁶` | `22.8249` |
 | LD391 | numeric | `2.89*10^6` | `17.0935` |
+| LD392 | numeric | `8.48 × 10⁶` | `28.661` |
+| LD394 | numeric | `14.03 × 10⁶` | `16.116` |
 | LD395 | numeric | `7.42*10^6` | `11.9997` |
+| LD396 | numeric | `6.49 × 10⁶` | `22.9793` |
 | LD397 | numeric | `3.15*10^6` | `15.4896` |
 | LD400 | numeric | `2.01*10^7` | `7.60703` |
 | TD164 | numeric | `275.26` | `2.75128e-07` |
@@ -222,33 +275,25 @@
 ## Skipped Cases
 | ID | Reason | Gold | Pred |
 |----|--------|------|------|
-| LD010 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD014 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD016 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD017 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD018 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD021 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD024 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD025 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD032 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD034 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD035 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD036 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD037 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD038 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD039 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD041 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'sqrt', '2', 'f₀'}) | `` | `` |
+| LD041 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'2', 'sqrt', 'f₀'}) | `` | `` |
 | LD043 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD044 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD045 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD046 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD047 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'hướng', 'q₂', 'về', 'phía'}) | `` | `` |
+| LD047 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'phía', 'hướng', 'về', 'q₂'}) | `` | `` |
 | LD049 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD050 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD054 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD057 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD059 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD061 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD062 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD063 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD066 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -259,12 +304,11 @@
 | LD075 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD077 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD078 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD080 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD081 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD084 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD085 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'2', 'sqrt', 'k', 'a', 'q'}) | `` | `` |
+| LD085 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'a', '2', 'k', 'sqrt', 'q'}) | `` | `` |
 | LD086 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD087 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'q', 'sqrt', 'x', '2'}) | `` | `` |
+| LD087 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'x', '2', 'q', 'sqrt'}) | `` | `` |
 | LD090 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD092 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD094 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -318,10 +362,10 @@
 | TD098 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD099 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD100 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DT007 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'a', 'sqrt', '2'}) | `` | `` |
-| DT008 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'h', '2', '5', 'a', '2k', 'abs', 'frac', '1', 'q'}) | `` | `` |
+| DT007 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'2', 'sqrt', 'a'}) | `` | `` |
+| DT008 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'h', '2k', 'frac', 'a', 'abs', '2', '1', 'q', '5'}) | `` | `` |
 | DT019 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DT020 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'q', '4', 'epsilon', 'sqrt', 'k', 'a', 'frac', '2'}) | `` | `` |
+| DT020 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'frac', 'a', '4', 'epsilon', '2', 'k', 'sqrt', 'q'}) | `` | `` |
 | DT025 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT027 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT028 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -332,10 +376,9 @@
 | DT044 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT045 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT046 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DT047 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'e_a', 'sqrt', 'e_b', '1', '2'}) | `` | `` |
+| DT047 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'e_a', '2', 'sqrt', '1', 'e_b'}) | `` | `` |
 | DT049 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT050 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DT051 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT053 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT058 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT059 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -355,8 +398,6 @@
 | DT089 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT090 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT091 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DT092 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DT093 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT094 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT095 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DT097 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -395,7 +436,6 @@
 | LD147 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD149 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD151 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD157 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD158 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD159 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD177 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -404,17 +444,12 @@
 | LD182 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD203 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD207 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD209 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD211 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD212 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD216 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD217 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD224 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD226 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD227 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD228 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD231 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD232 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD234 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD235 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD236 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -422,7 +457,6 @@
 | LD242 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD243 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD244 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD245 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD246 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD251 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD252 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -431,42 +465,29 @@
 | LD256 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD258 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD260 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD261 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD265 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD268 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD269 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD271 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD277 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD282 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD283 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD285 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD290 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD291 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD292 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD293 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD295 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD296 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD299 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD301 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD302 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD303 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD305 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD306 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD308 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD309 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD310 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD311 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD312 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD313 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD314 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD315 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD317 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD318 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD319 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD320 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD322 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD324 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD329 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD330 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD335 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD337 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -490,21 +511,7 @@
 | LD373 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD374 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD375 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD376 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD377 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD378 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD381 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD382 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD383 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD385 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD386 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD390 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD392 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD393 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD394 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD396 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | LD398 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| LD399 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD101 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD162 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD165 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -521,17 +528,17 @@
 | TD362 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD363 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD367 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| TD369 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'do', 'not', 'change'}) | `` | `` |
+| TD369 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'change', 'not', 'do'}) | `` | `` |
 | TD371 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD375 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| TD377 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'voltage', 'halfed', 'the', 'is'}) | `` | `` |
-| TD380 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'by', '4', 'decreases', 'times'}) | `` | `` |
+| TD377 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'voltage', 'is', 'halfed', 'the'}) | `` | `` |
+| TD380 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'times', 'decreases', '4', 'by'}) | `` | `` |
 | TD381 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD382 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD383 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD384 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD385 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| TD386 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'by', 'decreases', 'half'}) | `` | `` |
+| TD386 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'half', 'decreases', 'by'}) | `` | `` |
 | TD387 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD388 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | TD389 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -543,17 +550,17 @@
 | TD397 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | THCB004 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | THCB068 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| THCB071 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'resistance', 'increases', 'decreases', 'current'}) | `` | `` |
+| THCB071 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'current', 'decreases', 'increases', 'resistance'}) | `` | `` |
 | THCB072 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| THCB073 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'it', 'through', 'lamp', 'increases', 'brighter', 'because', 'shines', 'the', 'current'}) | `` | `` |
+| THCB073 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'because', 'brighter', 'current', 'increases', 'shines', 'it', 'lamp', 'through', 'the'}) | `` | `` |
 | THCB074 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | THCB075 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | THCB077 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | THCB079 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | THCB080 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| THCB081 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'total', 'increases', 'current'}) | `` | `` |
+| THCB081 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increases', 'current', 'total'}) | `` | `` |
 | THCB082 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| THCB083 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'brighter', 'is', 'because', 'higher', 'the', 'current'}) | `` | `` |
+| THCB083 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'because', 'brighter', 'is', 'current', 'higher', 'the'}) | `` | `` |
 | THCB084 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | THCB085 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | THCB092 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -583,8 +590,8 @@
 | NL019 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL020 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL021 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL025 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'magnetic', 'energy', 'all', 'in', 'entirely', 'field', 'stored', 'is', 'inductor', 'the', 'of'}) | `` | `` |
-| NL026 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'energy', 'all', 'in', 'entirely', 'field', 'stored', 'is', 'electric', 'capacitor', 'the', 'of'}) | `` | `` |
+| NL025 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'all', 'is', 'entirely', 'stored', 'field', 'inductor', 'magnetic', 'energy', 'in', 'the'}) | `` | `` |
+| NL026 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'all', 'is', 'entirely', 'stored', 'field', 'electric', 'energy', 'in', 'capacitor', 'the'}) | `` | `` |
 | NL028 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL029 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL030 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -605,15 +612,15 @@
 | NL091 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL093 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL094 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL095 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'energy', 'all', 'in', 'field', 'stored', 'is', 'electric', 'capacitor', 'the', 'of'}) | `` | `` |
+| NL095 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'all', 'is', 'field', 'stored', 'electric', 'energy', 'in', 'capacitor', 'the'}) | `` | `` |
 | NL096 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL098 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL099 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL100 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'wc', '½li₀²', 'maximum'}) | `` | `` |
+| NL100 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'½li₀²', 'maximum', 'wc'}) | `` | `` |
 | NL101 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL102 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL104 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL105 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'magnetic', 'in', 'energy', 'be', 'stored', 'will', 'inductor', 'at', 'its', 'also', 'the', 'maximum'}) | `` | `` |
+| NL105 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'inductor', 'also', 'stored', 'maximum', 'magnetic', 'energy', 'will', 'be', 'at', 'in', 'its', 'the'}) | `` | `` |
 | NL107 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL108 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL109 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -625,7 +632,7 @@
 | NL116 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL117 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL118 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL119 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'energy', 'all', 'in', 'field', 'stored', 'is', 'electric', 'capacitor', 'the', 'of'}) | `` | `` |
+| NL119 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'all', 'is', 'field', 'stored', 'electric', 'energy', 'in', 'capacitor', 'the'}) | `` | `` |
 | NL120 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'maximum'}) | `` | `` |
 | NL122 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL124 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -633,32 +640,32 @@
 | NL127 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL128 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL130 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL302 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'square', 'voltage', 'u²', 'the', 'of'}) | `` | `` |
-| NL303 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'i²', 'w', 'l', '1', '2'}) | `` | `` |
+| NL302 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'voltage', 'the', 'u²', 'square'}) | `` | `` |
+| NL303 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'w', 'i²', 'l', '2', '1'}) | `` | `` |
 | NL304 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL305 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'parabola', 'upward'}) | `` | `` |
-| NL306 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'parabola', 'upward'}) | `` | `` |
+| NL305 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'upward', 'parabola'}) | `` | `` |
+| NL306 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'upward', 'parabola'}) | `` | `` |
 | NL307 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'less', 'than'}) | `` | `` |
-| NL308 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'zero', 'when', 'is', 'the', 'current'}) | `` | `` |
-| NL309 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'by', '4', 'increase', 'times'}) | `` | `` |
-| NL310 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'unchanged', 'equal'}) | `` | `` |
-| NL311 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'by', 'increase', '2', 'times'}) | `` | `` |
+| NL308 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'is', 'when', 'zero', 'current', 'the'}) | `` | `` |
+| NL309 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'times', 'increase', '4', 'by'}) | `` | `` |
+| NL310 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'equal', 'unchanged'}) | `` | `` |
+| NL311 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'2', 'times', 'increase', 'by'}) | `` | `` |
 | NL312 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL313 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL314 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL315 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'line', 'straight', 'upward'}) | `` | `` |
-| NL316 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'line', 'straight', 'upward'}) | `` | `` |
-| NL317 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'reduced', '4', '1', 'to'}) | `` | `` |
-| NL318 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'energy', 'half', 'total', 'the', 'of'}) | `` | `` |
+| NL315 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'upward', 'straight', 'line'}) | `` | `` |
+| NL316 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'upward', 'straight', 'line'}) | `` | `` |
+| NL317 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'reduced', 'to', '4', '1'}) | `` | `` |
+| NL318 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'energy', 'total', 'half', 'the'}) | `` | `` |
 | NL319 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL320 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'joule'}) | `` | `` |
 | NL322 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL323 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'doubled'}) | `` | `` |
-| NL324 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increases', 'function', 'linear'}) | `` | `` |
+| NL324 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'function', 'linear', 'increases'}) | `` | `` |
 | NL325 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL327 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'conservation', 'of', 'energy'}) | `` | `` |
+| NL327 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'energy', 'conservation'}) | `` | `` |
 | NL328 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'triple'}) | `` | `` |
-| NL329 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'w₀sin²', 'w_c', 'ωt'}) | `` | `` |
+| NL329 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'ωt', 'w_c', 'w₀sin²'}) | `` | `` |
 | NL330 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'ωc', '1'}) | `` | `` |
 | NL331 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL332 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -677,7 +684,7 @@
 | NL347 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL348 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL349 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL350 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'3', 'increase', 'times'}) | `` | `` |
+| NL350 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'times', 'increase', '3'}) | `` | `` |
 | NL352 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL353 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL354 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -697,7 +704,7 @@
 | NL374 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL375 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL377 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| NL378 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'by', '4', 'increases', 'times'}) | `` | `` |
+| NL378 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'times', 'increases', '4', 'by'}) | `` | `` |
 | NL380 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL382 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | NL383 | unparseable: Could not parse prediction '' as a number. | `` | `` |
@@ -716,74 +723,74 @@
 | DDT133 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT134 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT135 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT136 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'density', 'number', 'turns', 'intensity', 'and', 'of', 'current'}) | `` | `` |
+| DDT136 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'number', 'density', 'current', 'and', 'intensity', 'turns'}) | `` | `` |
 | DDT137 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'doubled'}) | `` | `` |
 | DDT139 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT140 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'approximately', 'zero'}) | `` | `` |
 | DDT141 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT142 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT143 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'an', 'electromotive', 'force', 'in', 'opposite', 'appears', 'induced', 'emf', 'the', 'direction'}) | `` | `` |
+| DDT143 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'an', 'force', 'induced', 'emf', 'in', 'electromotive', 'opposite', 'appears', 'direction', 'the'}) | `` | `` |
 | DDT144 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT145 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'intensity', 'current'}) | `` | `` |
-| DDT146 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'and', 'electromagnet', 'relay'}) | `` | `` |
+| DDT146 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'electromagnet', 'relay', 'and'}) | `` | `` |
 | DDT147 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT148 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT149 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'it', 'cause', 'opposite', 'increase', 'and', 'the', 'direction', 'current'}) | `` | `` |
+| DDT149 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'increase', 'cause', 'current', 'and', 'it', 'opposite', 'direction', 'the'}) | `` | `` |
 | DDT150 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT151 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT152 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'solenoid', 'through', 'the', 'current'}) | `` | `` |
 | DDT153 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'emf', 'induced', 'force', 'electromotive'}) | `` | `` |
 | DDT154 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT155 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT156 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'h', 'henry'}) | `` | `` |
-| DDT157 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'magnetic', 'in', 'field', 'coil', 'core', 'the'}) | `` | `` |
+| DDT156 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'henry', 'h'}) | `` | `` |
+| DDT157 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'magnetic', 'core', 'in', 'coil', 'the'}) | `` | `` |
 | DDT158 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT159 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT160 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT201 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT203 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT205 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'sectional', 'area', 'cross', 'of', 'number', 'turns', 'length'}) | `` | `` |
-| DDT206 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'v', 'volt'}) | `` | `` |
-| DDT207 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'proportion', 'increases', 'direct', 'in'}) | `` | `` |
+| DDT205 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'length', 'number', 'area', 'cross', 'sectional', 'turns'}) | `` | `` |
+| DDT206 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'volt', 'v'}) | `` | `` |
+| DDT207 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'in', 'proportion', 'increases', 'direct'}) | `` | `` |
 | DDT208 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT209 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'magnetic', 'b', 'induction'}) | `` | `` |
-| DDT210 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'solenoid', 'inside', 'the'}) | `` | `` |
+| DDT210 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'inside', 'solenoid', 'the'}) | `` | `` |
 | DDT211 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT214 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT215 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT216 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'square', 'increases', 'in', 'number', 'turns', 'proportion', 'the', 'of', 'to'}) | `` | `` |
-| DDT217 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'cross', 'sectional', 's', 'area'}) | `` | `` |
+| DDT216 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'proportion', 'square', 'turns', 'number', 'in', 'to', 'increases', 'the'}) | `` | `` |
+| DDT217 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'s', 'cross', 'sectional', 'area'}) | `` | `` |
 | DDT218 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT219 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'magnetic', 'increases', 'b²', 'energy', 'field', 'the', 'proportionally', 'to'}) | `` | `` |
-| DDT220 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'changes', 'with', 'time', 'the', 'current'}) | `` | `` |
+| DDT219 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'field', 'magnetic', 'energy', 'b²', 'proportionally', 'to', 'increases', 'the'}) | `` | `` |
+| DDT220 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'time', 'current', 'changes', 'with', 'the'}) | `` | `` |
 | DDT322 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT323 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT326 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT327 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT329 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT330 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'an', 'circuit', 'inductive', 'exhibits', 'characteristic', 'the'}) | `` | `` |
+| DDT330 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'an', 'exhibits', 'inductive', 'characteristic', 'circuit', 'the'}) | `` | `` |
 | DDT332 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT333 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT336 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT337 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT339 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT340 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'ω', '0', '30', 'and', '16', '38'}) | `` | `` |
+| DDT340 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'0', '16', '38', 'ω', 'and', '30'}) | `` | `` |
 | DDT342 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT343 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT346 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT347 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT348 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT349 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT350 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'an', 'circuit', 'inductive', 'exhibits', 'characteristic', 'the'}) | `` | `` |
+| DDT350 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'an', 'exhibits', 'inductive', 'characteristic', 'circuit', 'the'}) | `` | `` |
 | DDT351 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT352 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'charge', 'value', 'its', 'reaches', 'the', 'maximum', 'q'}) | `` | `` |
-| DDT353 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'u', '5', '0', 'i_max²', 'l'}) | `` | `` |
-| DDT355 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'lc', '1', 'ω'}) | `` | `` |
-| DDT356 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'lc', 't', '2π'}) | `` | `` |
+| DDT352 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'maximum', 'charge', 'value', 'reaches', 'q', 'its', 'the'}) | `` | `` |
+| DDT353 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'0', 'u', 'l', 'i_max²', '5'}) | `` | `` |
+| DDT355 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'ω', 'lc', '1'}) | `` | `` |
+| DDT356 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'2π', 't', 'lc'}) | `` | `` |
 | DDT357 | unparseable: Could not parse prediction '' as a number. | `` | `` |
-| DDT358 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'motion', 'harmonic', 'shm', 'simple'}) | `` | `` |
+| DDT358 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'simple', 'shm', 'harmonic', 'motion'}) | `` | `` |
 | DDT359 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'henry'}) | `` | `` |
-| DDT360 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'2', 'sinusoidal', 'with', 'a', 'phase', 'shift', 'of', 'waves', 'π'}) | `` | `` |
+| DDT360 | qualitative needs_review: Token overlap: 0.00% (Intersection: set(), Gold tokens: {'of', 'shift', 'a', 'sinusoidal', '2', 'π', 'with', 'waves', 'phase'}) | `` | `` |
 | DDT363 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT364 | unparseable: Could not parse prediction '' as a number. | `` | `` |
 | DDT365 | unparseable: Could not parse prediction '' as a number. | `` | `` |

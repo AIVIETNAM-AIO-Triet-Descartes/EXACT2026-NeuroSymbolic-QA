@@ -31,6 +31,18 @@ def _parallelogram(f1: float, f2: float, theta_deg: float) -> float:
     return math.sqrt(f1 ** 2 + f2 ** 2 + 2 * f1 * f2 * math.cos(math.radians(theta_deg)))
 
 
+# Point-label → charge-index convention used across the dataset: A=q1, B=q2,
+# C=q3, M=q0 (M is the test/probe charge). Used to map _place_three_points output
+# (A,B,C positions) onto the right charges instead of sorted q_syms order.
+_LETTER_IDX = {"A": 1, "B": 2, "C": 3, "M": 0}
+
+
+def _charge_suffix(sym: str) -> Optional[int]:
+    """Numeric index of a charge symbol (q1→1, q0→0); None if no digits."""
+    m = re.search(r'\d+', sym)
+    return int(m.group()) if m else None
+
+
 def _place_three_points(r_ab: float, r_ac: float, r_bc: float) -> Optional[tuple]:
     """
     Place A at origin, B at (r_ab, 0), C computed from distances r_ac (A→C) and r_bc (B→C).
@@ -311,11 +323,22 @@ def _build_triangle_positions(
             pts = _place_three_points(dists[r_ab_key], dists[r_ac_key], dists[r_bc_key])
             if pts is not None and n >= 3:
                 A_pos, B_pos, C_pos = pts
-                return {
-                    q_syms[0]: A_pos,
-                    q_syms[1]: B_pos,
-                    q_syms[2]: C_pos,
-                }
+                # Map point LABELS to charges by index convention (A=q1, B=q2,
+                # C=q3, M=q0) — NOT by sorted q_syms order. The third point's
+                # label is whichever of the AC/BC keys is not A or B (C or M).
+                # Bug fixed: q0 sorts first but sits at M (the third point), so the
+                # old sorted [0]→A,[1]→B,[2]→C mis-placed every charge (LD004).
+                third = next((c for c in (r_ac_key + r_bc_key) if c not in "AB"), "C")
+
+                def _chg(letter: str) -> Optional[str]:
+                    idx = _LETTER_IDX.get(letter)
+                    return next((s for s in q_syms if _charge_suffix(s) == idx), None)
+
+                qa, qb, qc = _chg("A"), _chg("B"), _chg(third)
+                if qa and qb and qc and len({qa, qb, qc}) == 3:
+                    return {qa: A_pos, qb: B_pos, qc: C_pos}
+                # Fallback: original sorted assignment (convention didn't resolve)
+                return {q_syms[0]: A_pos, q_syms[1]: B_pos, q_syms[2]: C_pos}
 
     # ── Right triangle from AB and BC with implicit AC via Pythagoras ──────
     if n >= 3:
@@ -747,11 +770,14 @@ def solve_vector_problem(state: dict) -> Optional[dict]:
         key=lambda s: (int(re.sub(r'\D', '', s)) if re.search(r'\d', s) else 999, s)
     )
 
-    # Strategy F: E-field at evaluation point (find == "E_field")
+    # Strategy F: E-field at evaluation point (find == "E_field").
+    # An E-field question must NEVER fall through to the force strategies below —
+    # computing a Coulomb FORCE for a field question is always physically wrong
+    # (it produced confident-wrong answers, e.g. LD296 → 33.8 instead of 7.05e6).
+    # If Strategy F can't build the geometry, return None → defer to the LLM/PAL
+    # fallback rather than emit a wrong number that would block it.
     if find == "E_field":
-        result = _solve_efield_geometry(charges, q_syms, dists, given, k_val, question)
-        if result:
-            return result
+        return _solve_efield_geometry(charges, q_syms, dists, given, k_val, question)
 
     # Strategy D: perpendicular bisector geometry (force on charge at bisector)
     d_perp = given.get("d_perp")

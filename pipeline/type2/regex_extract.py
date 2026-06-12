@@ -96,9 +96,13 @@ _APART_PAT = re.compile(
     re.IGNORECASE,
 )
 
-# "side length X cm" / "side of X cm" → a distance
+# Triangle/polygon side length → `a`. Covers "side length of 10 cm", "sides of
+# length 10 cm", "side of 10 cm", "legs of 0.1 m", "side length 10 cm". The old
+# pattern allowed "length " OR "of " but NOT "length of " together, so the common
+# "side length of 10 cm" phrasing was missed (LD010 etc. fell back).
 _SIDE_PAT = re.compile(
-    r'side\s+(?:length\s+|of\s+)?([\d.]+)\s*(cm|m)\b', re.IGNORECASE
+    r'\b(?:sides?|legs?)\s+(?:length\s+)?(?:of\s+(?:length\s+)?)?([\d.]+)\s*(cm|m)\b',
+    re.IGNORECASE,
 )
 
 # "X cm away from AB" / "X cm from AB" → perpendicular bisector distance
@@ -182,6 +186,12 @@ _EXPR_MARKERS = ('(', ')', '/', 'sqrt', '√')
 
 # Unicode superscript digits/minus → ASCII helper
 _SUP_TABLE = str.maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺', '0123456789-+')
+
+# Unicode minus-sign variants → ASCII '-'. The dataset writes negative charges
+# with en-dash/minus-sign ("q2 = –5 × 10^-9 C") which _ASSIGN_PAT's [+-] class
+# does NOT match → the charge was silently dropped (E-field computed from one
+# charge instead of two → confident-wrong, e.g. LD060/LD064). Normalize first.
+_MINUS_TABLE = str.maketrans('–—−‐‑', '-----')
 
 
 def _normalize_superscripts(text: str) -> str:
@@ -332,8 +342,9 @@ def extract_given(question: str, return_phrasal: bool = False):
     F = 9*sqrt(3)×10^-27 N, √3), and a few geometry distances (AB, side, bisector).
     """
     given: dict[str, float] = {}
-    # Normalize Unicode superscript chars (⁻⁸ → -8) before regex matching
-    question = _normalize_superscripts(question)
+    # Normalize Unicode superscripts (⁻⁸ → -8) and minus-sign variants (– − → -)
+    # before regex matching, so signed values parse regardless of glyph.
+    question = _normalize_superscripts(question).translate(_MINUS_TABLE)
 
     for m in _ASSIGN_PAT.finditer(question):
         sym = m.group(1)
