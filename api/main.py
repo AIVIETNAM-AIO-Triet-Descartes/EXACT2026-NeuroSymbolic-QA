@@ -288,7 +288,8 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
         answer=answer,
         question_type=q_type,
         options=options_dict,
-        explanation=explanation
+        explanation=explanation,
+        query=request.query
     )
 
     # Map key ('A', 'B', 'C', 'D') back to the original option string to satisfy exactly-one-of-the-options rule

@@ -187,7 +187,8 @@ def sanitize_and_snap_answer(
     answer: Optional[str], 
     question_type: str, 
     options: Optional[Dict[str, str]] = None,
-    explanation: Optional[str] = None
+    explanation: Optional[str] = None,
+    query: Optional[str] = None
 ) -> str:
     """
     Sanitize and snap the answer strictly to the expected submission format.
@@ -197,8 +198,9 @@ def sanitize_and_snap_answer(
         - If not, check if it matches the text or keyword of any option.
         - If not, try to extract from the explanation.
         - Default fallback to 'A'.
-    If Yes/No:
-        - Must be 'Yes', 'No', or 'Unknown'.
+    If Yes/No / Free-form:
+        - If free-form (who, what, how, etc.), return raw answer.
+        - Otherwise must be 'Yes', 'No', or 'Unknown'.
         - If not, try to map from words like "true"/"false" or extract from explanation.
         - Default fallback to 'Unknown'.
     """
@@ -207,12 +209,24 @@ def sanitize_and_snap_answer(
         
     answer_clean = answer.strip()
     
-    # ── Case 1: Yes/No question ──
+    # ── Case 1: Yes/No or Free-form question ──
     if question_type != "mcq":
         # First check direct match
         val = answer_clean.lower()
         if val in ('yes', 'no', 'unknown'):
             return val.capitalize()
+
+        # Check if the query is a Yes/No question. If not (free-form who/what/how/numeric), return raw answer.
+        is_yes_no = True
+        if query:
+            query_clean = query.strip().lower()
+            if re.match(r'^(who|what|which|how|find|calculate|determine|identify|list|give|state)\b', query_clean):
+                is_yes_no = False
+        
+        if not is_yes_no:
+            if answer_clean:
+                return answer_clean
+            return "Unknown"
             
         # Try to clean punctuation
         val_clean = re.sub(r'[^a-zA-Z]', '', val)

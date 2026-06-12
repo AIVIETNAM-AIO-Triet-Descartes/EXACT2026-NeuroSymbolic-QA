@@ -277,7 +277,8 @@ class NeuroSymbolicPipeline:
             answer=q_result.answer,
             question_type=classified.question_type.value,
             options=classified.options,
-            explanation=q_result.explanation
+            explanation=q_result.explanation,
+            query=classified.original
         )
         return q_result
 
