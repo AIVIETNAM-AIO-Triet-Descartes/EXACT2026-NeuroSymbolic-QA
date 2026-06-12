@@ -221,8 +221,17 @@ async def handle_predict(request: UnifiedRequest):
         return [_run_type1_pipeline(request)]
 
     except Exception as e:
+        # Never 500 on a pipeline error — return a format-valid response so a single
+        # failing query can't break committee parsing or the run; it is simply scored
+        # wrong. query_id is echoed and explanation is non-empty (spec §4.2 / §9).
         logger.error(f"Pipeline error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        return [build_response(
+            query_id=request.query_id,
+            query_type=request.type,
+            answer="Unknown",
+            explanation="The system was unable to process this query.",
+            premises_used=[],
+        )]
 
 
 @app.get("/v1/models")
