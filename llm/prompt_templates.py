@@ -305,7 +305,9 @@ You are provided with a Python environment where the following are PRE-DEFINED a
 Generate a complete Python script that:
 1. Declares ALL predicates as Function objects returning BoolSort() or IntSort() (e.g., WT = Function('WT', Entity, BoolSort())).
    - CRITICAL: If a predicate is numeric (e.g. gpa, grade, completed_courses, hours, age), declare it returning IntSort() or RealSort(), e.g. completed_courses = Function('completed_courses', Entity, IntSort()).
+   - CRITICAL: The Python variable name for each predicate MUST match the predicate name exactly. For example, if a predicate is 'mentor', you must declare it as 'mentor = Function("mentor", ...)' (NOT 'GR = Function("mentor", ...)' or any other name).
 2. Declares any named entities as Const objects of sort Entity (e.g., John = Const('John', Entity)).
+   - CRITICAL: The Python variable name for each constant MUST match the constant name exactly. For example, if a constant is 'Dr_John', declare 'Dr_John = Const("Dr_John", Entity)' (NOT 'John = Const("Dr_John", Entity)').
 3. Creates a solver: s = Solver()
 4. Asserts all FOL premises into the solver.
    - For universal implication (ForAll(x, P(x) -> Q(x))), write: s.add(ForAll([x], Implies(P(x), Q(x))))
@@ -322,6 +324,7 @@ IMPORTANT RULES:
 - NEVER redeclare Entity, x, y, z. Use them directly.
 - NEVER use '->' for implication. You MUST use Implies(A, B).
 - NEVER use print("Yes" if s.check()...) yourself. ALWAYS use solve_yes_no(s, goal_expr) or solve_mcq(s, options_dict).
+- DO NOT use variable names or placeholders from the examples (such as WT, GR, completed_courses, eligible, Alice, John) unless they are explicitly present in the question. Always match your Python variable/function names exactly to the predicate and constant names from the premises.
 
 EXAMPLE 1 (YES/NO):
 PREMISES (First-Order Logic):
