@@ -291,6 +291,27 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
         explanation=explanation
     )
 
+    # Map key ('A', 'B', 'C', 'D') back to the original option string to satisfy exactly-one-of-the-options rule
+    if request.options and answer in ('A', 'B', 'C', 'D'):
+        mapped_answer = None
+        for opt in request.options:
+            opt_str = opt.strip()
+            match = re.match(r'^([A-D])[\.\)\s]\s*(.*)$', opt_str, re.DOTALL | re.IGNORECASE)
+            if match and match.group(1).upper() == answer:
+                mapped_answer = opt
+                break
+            elif len(opt_str) > 0 and opt_str[0].upper() == answer:
+                mapped_answer = opt
+                break
+        if mapped_answer:
+            answer = mapped_answer
+        else:
+            letters = ['A', 'B', 'C', 'D']
+            if answer in letters:
+                idx = letters.index(answer)
+                if idx < len(request.options):
+                    answer = request.options[idx]
+
     log_pipeline_request(
         question=request.query, query_type="type1", answer=str(answer),
         confidence=0.0, has_fol=False, has_cot=bool(steps), fol_retries=0,
