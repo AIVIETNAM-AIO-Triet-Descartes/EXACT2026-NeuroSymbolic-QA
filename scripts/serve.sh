@@ -48,6 +48,22 @@ tmux new -d -s api \
    export VLLM_BASE='${VLLM_BASE}'; \
    uvicorn api.main:app --host 0.0.0.0 --port ${API_PORT}"
 
+# Optional: Auto-register with AWS Proxy
+PROXY_IP="${PROXY_IP:-}"
+PROXY_SECRET="${PROXY_SECRET:-exact2026_secret}"
+RUNPOD_PUBLIC_URL="${RUNPOD_PUBLIC_URL:-}"
+
+if [ -n "$PROXY_IP" ] && [ -n "$RUNPOD_PUBLIC_URL" ]; then
+    echo "Registering dynamic RunPod URL ($RUNPOD_PUBLIC_URL) with AWS Proxy ($PROXY_IP)..."
+    (
+        sleep 10
+        curl -s -X POST "http://${PROXY_IP}:8000/register_pod" \
+             -H "Content-Type: application/json" \
+             -d "{\"url\": \"${RUNPOD_PUBLIC_URL}\", \"secret\": \"${PROXY_SECRET}\"}"
+        echo "AWS Proxy registration completed."
+    ) &
+fi
+
 echo "vLLM → tmux 'vllm' (port ${VLLM_PORT}); API → tmux 'api' (port ${API_PORT})."
 echo "Weights load ~3-5 min. Verify: curl http://127.0.0.1:${VLLM_PORT}/v1/models"
 echo "Attach a session: tmux attach -t vllm    (detach: Ctrl-b then d)"

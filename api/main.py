@@ -265,6 +265,33 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
         answer = "Unknown"
         explanation = explanation or "Type 1 reasoning unavailable (LLM server down)."
 
+    # Sanitize and snap answer to expected options or Yes/No/Unknown format
+    options_dict = None
+    if request.options:
+        options_dict = {}
+        for opt in request.options:
+            opt_str = opt.strip()
+            # Match "A. Option Text" or similar
+            match = re.match(r'^([A-D])[\.\)\s]\s*(.*)$', opt_str, re.DOTALL | re.IGNORECASE)
+            if match:
+                options_dict[match.group(1).upper()] = match.group(2).strip()
+            else:
+                # Fallback if no dot/parenthesis
+                if len(opt_str) > 0 and opt_str[0].upper() in ('A', 'B', 'C', 'D'):
+                    options_dict[opt_str[0].upper()] = opt_str[1:].strip()
+        if not options_dict:
+            # Fallback by index
+            letters = ['A', 'B', 'C', 'D']
+            options_dict = {letters[i]: opt for i, opt in enumerate(request.options) if i < len(letters)}
+
+    from pipeline.type1.question_classifier import sanitize_and_snap_answer
+    answer = sanitize_and_snap_answer(
+        answer=answer,
+        question_type=q_type,
+        options=options_dict,
+        explanation=explanation
+    )
+
     log_pipeline_request(
         question=request.query, query_type="type1", answer=str(answer),
         confidence=0.0, has_fol=False, has_cot=bool(steps), fol_retries=0,

@@ -268,6 +268,28 @@ class NeuroSymbolicPipeline:
         metadata: Dict,
         q_idx: int,
     ) -> QuestionResult:
+        q_result = self._solve_question_raw(
+            classified, premises_fol, premises_nl, logic_tree, metadata, q_idx
+        )
+        # Clean and snap the answer to the expected format
+        from pipeline.type1.question_classifier import sanitize_and_snap_answer
+        q_result.answer = sanitize_and_snap_answer(
+            answer=q_result.answer,
+            question_type=classified.question_type.value,
+            options=classified.options,
+            explanation=q_result.explanation
+        )
+        return q_result
+
+    def _solve_question_raw(
+        self,
+        classified,
+        premises_fol: List[str],
+        premises_nl: List[str],
+        logic_tree: Optional[LogicTree],
+        metadata: Dict,
+        q_idx: int,
+    ) -> QuestionResult:
         """
         Giải câu hỏi bằng kiến trúc Lai ghép Đồng thuận (Consensus Hybridization).
         
