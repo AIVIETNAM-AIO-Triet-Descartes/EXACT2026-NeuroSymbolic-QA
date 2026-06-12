@@ -97,20 +97,14 @@ class QuestionClassifier:
                 keywords=self._extract_keywords(stem),
             )
 
-        # Check Yes/No
-        if self._is_yes_no(question):
-            return ClassifiedQuestion(
-                original=question,
-                question_type=QuestionType.YES_NO,
-                stem=question.strip(),
-                options=None,
-                keywords=self._extract_keywords(question),
-            )
-
-        # Default: Open
+        # Default: All non-MCQ questions are treated as Yes/No.
+        # Previously, questions starting with "According to..." or "Statement:"
+        # were classified as OPEN and bypassed the Logic Tree entirely.
+        # This caused the pipeline to rely solely on LLM CoT, which is less
+        # reliable than the formal reasoning engine for these question types.
         return ClassifiedQuestion(
             original=question,
-            question_type=QuestionType.OPEN,
+            question_type=QuestionType.YES_NO,
             stem=question.strip(),
             options=None,
             keywords=self._extract_keywords(question),

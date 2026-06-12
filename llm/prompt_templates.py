@@ -151,17 +151,20 @@ STEP-BY-STEP REASONING:
    - ⚠️ CRITICAL: When applying a rule, you MUST explicitly verify that ALL conditions in the "if" part are ACTUALLY SATISFIED (not just "eligible" or "qualified").
    - ⚠️ CRITICAL: "Eligible for X" ≠ "Has X". "Qualified for X" ≠ "Received X". Do NOT confuse potential with actuality.
    - ⚠️ CRITICAL: If a condition is negated in the facts (e.g., "has NOT received X"), the rule CANNOT fire.
+   - ⚠️ CRITICAL: NEVER affirm the consequent. If P → Q and Q is true, you CANNOT conclude P is true.
 4. For EACH answer option, write out:
    - The logical derivation path (which premises are needed).
    - The total COUNT of premises used.
    - Whether the option is VALID (derivable) or INVALID (not derivable).
+   - ⚠️ NO EXTRAPOLATIONS: If an option contains claims that go BEYOND what the premises prove (e.g., "permanent base" when premises only prove "breakthrough"), it is INVALID.
 5. CAREFULLY READ THE QUESTION and apply the specific criterion:
    - "fewest premises" → pick the valid option with the MINIMUM premise count.
    - "strongest conclusion" → pick the valid option at the END of the logical chain (uses the MOST premises).
    - "correct conclusion" / "logically follows" / "logically valid" → pick any valid option.
-   - If a contrapositive uses only 1 original premise, it counts as 1 premise.
-6. If multiple options are valid AND the question does NOT specify a selection criterion, choose the strongest one.
-7. If NO option can be logically derived from the premises, answer "Unknown".
+   - If a contrapositive of a single rule (¬Q → ¬P from P → Q) is applied, it counts as using only 1 premise (the rule itself).
+6. DISJUNCTIVE PATH CHECK: If there are multiple rules that can derive the same goal (A∧B→G OR A∧C→G), check EACH path independently. If ANY path is fully satisfied, the goal is provable.
+7. If multiple options are valid AND the question does NOT specify a selection criterion, choose the strongest one.
+8. If NO option can be logically derived from the premises, answer "Unknown".
 
 You MUST output the 0-based indices of the premises you actually used to derive the answer (first premise is index 0, second premise is index 1, etc.) and your final answer in EXACTLY this format on the last two lines:
 PREMISES USED: [comma-separated 0-based indices, e.g., [0, 2] or [] if answer is Unknown]
@@ -244,11 +247,14 @@ STEP-BY-STEP REASONING:
    - ⚠️ CRITICAL: "Eligible for X" ≠ "Has X". "Qualified for X" ≠ "Received X". Never confuse potential with actuality.
    - ⚠️ CRITICAL: You CANNOT assume any missing conditions. If a rule requires condition C but no premise provides C, the rule CANNOT fire.
    - ⚠️ CRITICAL: Scoring above a threshold (e.g., grade > 8.5) does NOT automatically mean "passing" — check the specific definition of passing in the premises.
+   - ⚠️ CRITICAL: NEVER affirm the consequent. If P → Q and Q is true, you CANNOT conclude P is true.
+   - ⚠️ CRITICAL: A universal rule ∀x(P(x) → Q(x)) combined with a universal fact ∀x P(x) yields ∀x Q(x) — this applies to ALL individuals, not just specific named ones. If the premises state "all students complete assignments" and "if a student completes assignments → they attend lectures", then ALL students attend lectures.
 4. Chain Completeness Check:
    - List each link: A → B (Premise N) ✓ or A → B ← MISSING ✗
    - If ANY link is missing, the answer is "No".
    - IMPORTANT: Universal rules (∀x) apply to all instances; do not require separate existence proofs.
-5. Decision:
+5. DISJUNCTIVE PATH CHECK: If there are multiple rules that can derive the same goal (A∧B→G OR A∧C→G), check EACH path independently. If ANY path is fully satisfied, the statement is provable → "Yes".
+6. Decision:
    - ALL conditions provably met → "Yes".
    - ANY condition missing, unstated, or contradicted → "No".
    - No ground facts and statement requires instances → "Unknown".

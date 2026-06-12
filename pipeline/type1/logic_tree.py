@@ -645,9 +645,23 @@ class LogicTree:
                 return d.premises_involved
 
         # Try each rule where goal is consequent
-        clean_goal = goal_predicate.replace("NOT_", "")
-        if clean_goal in self.graph:
-            for rule in self.graph[clean_goal].get('as_consequent', []):
+        # For negated goals (NOT_X), search for rules with NOT_X as consequent
+        # (i.e., contraposition rules). Do NOT strip NOT_ and search for positive rules.
+        search_keys = []
+        if goal_predicate.startswith("NOT_"):
+            # Negated goal: look for contraposition rules in the graph
+            clean = goal_predicate.replace("NOT_", "")
+            if clean in self.graph:
+                search_keys.append(clean)
+        else:
+            if goal_predicate in self.graph:
+                search_keys.append(goal_predicate)
+
+        for graph_key in search_keys:
+            for rule in self.graph[graph_key].get('as_consequent', []):
+                # Only use rules whose consequent matches the goal exactly
+                if rule.consequent != goal_predicate:
+                    continue
                 if rule.blocked:
                     continue
 
@@ -836,27 +850,54 @@ class LogicTree:
 
         Hữu ích để phát hiện: "eligible for trainer" nhưng thiếu "has_trainer".
 
+        DISJUNCTIVE PATH HANDLING:
+            If multiple rules can derive the goal (OR paths), missing conditions
+            are only reported if ALL alternative paths are blocked. If at least
+            one path is fully satisfied, no missing conditions are returned.
+
         Returns:
             Danh sách tên predicates bị thiếu (không có fact hoặc derived).
+            Empty list if at least one path to the goal is fully satisfied.
         """
-        missing = []
         clean_goal = goal_predicate.replace("NOT_", "")
 
-        if clean_goal in self.graph:
-            for rule in self.graph[clean_goal].get('as_consequent', []):
-                for ant in rule.antecedents:
-                    # Check if antecedent is satisfied
-                    in_known = ant in self.known and any(
-                        not f.is_negated for f in self.known[ant]
-                    )
-                    in_derived = any(
-                        d.predicate == ant and not d.is_negated
-                        for d in self.derived
-                    )
-                    if not in_known and not in_derived:
-                        missing.append(ant)
+        if clean_goal not in self.graph:
+            return []
 
-        return missing
+        rules_for_goal = self.graph[clean_goal].get('as_consequent', [])
+        if not rules_for_goal:
+            return []
+
+        # Check each alternative rule path
+        all_paths_missing = []
+        for rule in rules_for_goal:
+            path_missing = []
+            for ant in rule.antecedents:
+                # Check if antecedent is satisfied
+                in_known = ant in self.known and any(
+                    not f.is_negated for f in self.known[ant]
+                )
+                in_derived = any(
+                    d.predicate == ant and not d.is_negated
+                    for d in self.derived
+                )
+                if not in_known and not in_derived:
+                    path_missing.append(ant)
+
+            if not path_missing:
+                # This path is fully satisfied → goal is provable
+                # No missing conditions to report
+                return []
+
+            all_paths_missing.append(path_missing)
+
+        # All paths have missing conditions → return the union of missing conditions
+        # from the path with the fewest missing conditions (the "closest" path)
+        if all_paths_missing:
+            best_path = min(all_paths_missing, key=len)
+            return best_path
+
+        return []
 
     def get_all_derived_predicates(self) -> Set[str]:
         """Trả về tập tất cả predicates đã suy ra được."""
