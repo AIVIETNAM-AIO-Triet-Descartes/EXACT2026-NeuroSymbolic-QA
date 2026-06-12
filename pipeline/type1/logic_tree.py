@@ -645,9 +645,23 @@ class LogicTree:
                 return d.premises_involved
 
         # Try each rule where goal is consequent
-        clean_goal = goal_predicate.replace("NOT_", "")
-        if clean_goal in self.graph:
-            for rule in self.graph[clean_goal].get('as_consequent', []):
+        # For negated goals (NOT_X), search for rules with NOT_X as consequent
+        # (i.e., contraposition rules). Do NOT strip NOT_ and search for positive rules.
+        search_keys = []
+        if goal_predicate.startswith("NOT_"):
+            # Negated goal: look for contraposition rules in the graph
+            clean = goal_predicate.replace("NOT_", "")
+            if clean in self.graph:
+                search_keys.append(clean)
+        else:
+            if goal_predicate in self.graph:
+                search_keys.append(goal_predicate)
+
+        for graph_key in search_keys:
+            for rule in self.graph[graph_key].get('as_consequent', []):
+                # Only use rules whose consequent matches the goal exactly
+                if rule.consequent != goal_predicate:
+                    continue
                 if rule.blocked:
                     continue
 
@@ -773,6 +787,117 @@ class LogicTree:
             'depth': 0,
             'method': 'none',
         }
+
+    def can_prove_negation(self, goal_predicate: str) -> Dict:
+        """
+        Kiểm tra xem phủ định của goal predicate có chứng minh được không.
+
+        Nếu ¬P(x) đã được suy ra (hoặc là fact gốc), trả về proof trace
+        cho phủ định → cho phép trả lời "No" thay vì "Unknown".
+
+        Returns:
+            Dict với keys: negated, premises_used, reason
+        """
+        # Ensure forward chaining has been done
+        if not self.derived:
+            self.handle_negations()
+            self.generate_contrapositions()
+            self.forward_chain()
+
+        # Check 1: Is the negated predicate a known fact?
+        if goal_predicate in self.known:
+            neg_facts = [f for f in self.known[goal_predicate] if f.is_negated]
+            if neg_facts:
+                return {
+                    'negated': True,
+                    'premises_used': sorted(
+                        [f.premise_index for f in neg_facts if f.premise_index > 0]
+                    ),
+                    'reason': f"¬{goal_predicate} is an explicit negated fact.",
+                }
+
+        # Check 2: Is NOT_{goal} derived?
+        neg_goal = f"NOT_{goal_predicate}"
+        for d in self.derived:
+            if d.predicate == neg_goal or \
+               (d.predicate == goal_predicate and d.is_negated):
+                return {
+                    'negated': True,
+                    'premises_used': sorted(
+                        [p for p in d.premises_involved if p > 0]
+                    ),
+                    'reason': f"¬{goal_predicate} derived via {d.rule_used}.",
+                }
+
+        # Check 3: Try backward chaining for NOT_{goal}
+        bc_result = self.backward_chain(neg_goal)
+        if bc_result is not None:
+            return {
+                'negated': True,
+                'premises_used': sorted([p for p in bc_result if p > 0]),
+                'reason': f"¬{goal_predicate} proved by backward chaining.",
+            }
+
+        return {
+            'negated': False,
+            'premises_used': [],
+            'reason': 'Cannot prove negation.',
+        }
+
+    def check_missing_conditions(self, goal_predicate: str) -> List[str]:
+        """
+        Tìm các antecedent conditions bị thiếu để goal có thể suy ra.
+
+        Hữu ích để phát hiện: "eligible for trainer" nhưng thiếu "has_trainer".
+
+        DISJUNCTIVE PATH HANDLING:
+            If multiple rules can derive the goal (OR paths), missing conditions
+            are only reported if ALL alternative paths are blocked. If at least
+            one path is fully satisfied, no missing conditions are returned.
+
+        Returns:
+            Danh sách tên predicates bị thiếu (không có fact hoặc derived).
+            Empty list if at least one path to the goal is fully satisfied.
+        """
+        clean_goal = goal_predicate.replace("NOT_", "")
+
+        if clean_goal not in self.graph:
+            return []
+
+        rules_for_goal = self.graph[clean_goal].get('as_consequent', [])
+        if not rules_for_goal:
+            return []
+
+        # Check each alternative rule path
+        all_paths_missing = []
+        for rule in rules_for_goal:
+            path_missing = []
+            for ant in rule.antecedents:
+                # Check if antecedent is satisfied
+                in_known = ant in self.known and any(
+                    not f.is_negated for f in self.known[ant]
+                )
+                in_derived = any(
+                    d.predicate == ant and not d.is_negated
+                    for d in self.derived
+                )
+                if not in_known and not in_derived:
+                    path_missing.append(ant)
+
+            if not path_missing:
+                # This path is fully satisfied → goal is provable
+                # No missing conditions to report
+                return []
+
+            all_paths_missing.append(path_missing)
+
+        # All paths have missing conditions → return the union of missing conditions
+        # from the path with the fewest missing conditions (the "closest" path)
+        if all_paths_missing:
+            best_path = min(all_paths_missing, key=len)
+            return best_path
+
+        return []
 
     def get_all_derived_predicates(self) -> Set[str]:
         """Trả về tập tất cả predicates đã suy ra được."""

@@ -215,16 +215,26 @@ class LLMReasoner:
                 question=question,
             )
 
+        # Detect DeepSeek-R1 models to optimize generation parameters (higher temperature and max_tokens)
+        is_deepseek = "deepseek" in self.model_name.lower()
+        max_toks = 2048 if is_deepseek else 1024
+        temp = 0.6 if is_deepseek else 0.1
+
         response = self._chat(
             system_prompt=SYSTEM_PROMPT_LOGIC,
             user_prompt=prompt,
-            max_tokens=1024,
-            temperature=0.1,
+            max_tokens=max_toks,
+            temperature=temp,
         )
+
+        # Clean reasoning thinking blocks if present (DeepSeek-R1 style)
+        cleaned_response = response
+        if "</think>" in response:
+            cleaned_response = response.split("</think>", 1)[1].strip()
 
         # Extract answer from response
         logger.debug(f"[LLM_COT] Raw Response:\n{response}\n")
-        answer = self._extract_answer(response)
+        answer = self._extract_answer(cleaned_response)
         if not answer:
             logger.warning("[LLM_COT] Failed to extract answer from raw response. Returning None.")
 
@@ -232,6 +242,7 @@ class LLMReasoner:
             'answer': answer,
             'explanation': response,
             'method': 'llm_cot',
+            'premises_used': self._extract_premises_used(cleaned_response),
         }
 
     def generate_z3_code(
@@ -316,6 +327,34 @@ class LLMReasoner:
     # ══════════════════════════════════════════════════════════
     # Private Helpers
     # ══════════════════════════════════════════════════════════
+
+    def _extract_premises_used(self, response: str) -> List[int]:
+        """
+        Trích xuất danh sách index premises 0-based từ phản hồi của LLM CoT.
+        Ví dụ: "PREMISES USED: [0, 2]" -> [0, 2]
+        """
+        if not response:
+            return []
+
+        match = re.search(r'(?i)PREMISES\s*USED:\s*\[(.*?)\]', response)
+        if not match:
+            return []
+
+        indices_str = match.group(1).strip()
+        if not indices_str:
+            return []
+
+        try:
+            # Tách bằng dấu phẩy, khoảng trắng hoặc chấm phẩy và lọc các chữ số
+            indices = [
+                int(x.strip())
+                for x in re.split(r'[,;\s]+', indices_str)
+                if x.strip().isdigit()
+            ]
+            return indices
+        except Exception as e:
+            logger.warning(f"Failed to parse premises_used from string '{indices_str}': {e}")
+            return []
 
     def _extract_answer(self, response: str) -> Optional[str]:
         """
