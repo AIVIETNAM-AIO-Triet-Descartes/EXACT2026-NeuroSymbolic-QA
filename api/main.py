@@ -308,8 +308,6 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                 else:
                                     # Z3 disagrees with confident CoT — trust CoT, log discrepancy
                                     logger.warning(f"[TYPE1] Z3 disagrees with CoT (IGNORED): CoT={answer}, Z3={z3_ans}")
-                                    if z3_premises_used:
-                                        premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
                 except Exception as z3_err:
                     logger.error(f"[TYPE1] Z3 verification failed: {z3_err}")
                     
@@ -404,8 +402,8 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                 p_words = set(re.findall(r'\w+', p_lower))
                 if len(q_words.intersection(p_words)) >= 2:
                     unknown_indices.append(i)
-        if unknown_indices:
-            premises_used = sorted(list(set(premises_used).union(unknown_indices)))
+        # For Uncertain/Unknown answers, the premises_used should strictly be the uncertainty/absence premises
+        premises_used = sorted(list(set(unknown_indices)))
 
     log_pipeline_request(
         question=request.query, query_type="type1", answer=str(answer),
