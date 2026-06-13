@@ -411,35 +411,45 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                     answer = request.options[idx]
 
     # Proactive Missing Information / Uncertainty Override
-    missing_phrases = ["no premise states", "no information", "unknown whether", "not specified", "not mentioned", "no statement", "is unknown"]
-    q_words_proactive = set(re.findall(r'\w+', request.query.lower()))
-    stop_words_proactive = {
-        'does', 'do', 'did', 'is', 'are', 'was', 'were', 'have', 'has', 'had',
-        'whether', 'about', 'a', 'an', 'the', 'can', 'could', 'should', 'would',
-        'be', 'been', 'to', 'of', 'in', 'on', 'at', 'by', 'for', 'with', 'who',
-        'what', 'which', 'how', 'where', 'when', 'whose', 'whom', 'page', 'user'
-    }
-    q_keywords_proactive = {w for w in q_words_proactive if w not in stop_words_proactive and len(w) >= 3}
-    
-    missing_info_premise_idx = None
-    for i, p in enumerate(request.premises or []):
-        p_lower = p.lower()
-        if any(phrase in p_lower for phrase in missing_phrases):
-            p_words = set(re.findall(r'\w+', p_lower))
-            if q_keywords_proactive.intersection(p_words):
-                missing_info_premise_idx = i
-                break
-                
-    if missing_info_premise_idx is not None:
-        uncertain_ans = "Uncertain"
-        if request.options:
-            for opt in request.options:
-                opt_clean = opt.strip().lower()
-                if any(u in opt_clean for u in ['uncertain', 'cannot determine', 'cannot be determined', 'unknown', 'maybe', 'none of the above']):
-                    uncertain_ans = opt
+    # Skip for MCQ — MCQ always has a definite answer from options
+    if q_type != "mcq":
+        missing_phrases = ["no premise states", "no information", "unknown whether", "not specified", "not mentioned", "no statement", "is unknown"]
+        # Use only the question line (not MCQ option text) for keyword extraction
+        query_first_line = request.query.split('\n')[0]
+        q_words_proactive = set(re.findall(r'\w+', query_first_line.lower()))
+        stop_words_proactive = {
+            'does', 'do', 'did', 'is', 'are', 'was', 'were', 'have', 'has', 'had',
+            'whether', 'about', 'a', 'an', 'the', 'can', 'could', 'should', 'would',
+            'be', 'been', 'to', 'of', 'in', 'on', 'at', 'by', 'for', 'with', 'who',
+            'what', 'which', 'how', 'where', 'when', 'whose', 'whom', 'page', 'user'
+        }
+        q_keywords_proactive = {w for w in q_words_proactive if w not in stop_words_proactive and len(w) >= 3}
+        # Exclude entity names (capitalized words like Asha, Alpha) — matching only on
+        # entity names causes false positives when the question is about a different property
+        entity_names = {w.lower() for w in re.findall(r'\b[A-Z][a-z]*\b', query_first_line)}
+        q_keywords_proactive = q_keywords_proactive - entity_names
+        
+        missing_info_premise_idx = None
+        for i, p in enumerate(request.premises or []):
+            p_lower = p.lower()
+            if any(phrase in p_lower for phrase in missing_phrases):
+                p_words = set(re.findall(r'\w+', p_lower))
+                # Also strip entity names from premise words for the comparison
+                overlap = q_keywords_proactive.intersection(p_words)
+                if overlap:
+                    missing_info_premise_idx = i
                     break
-        answer = uncertain_ans
-        premises_used = [missing_info_premise_idx]
+                    
+        if missing_info_premise_idx is not None:
+            uncertain_ans = "Uncertain"
+            if request.options:
+                for opt in request.options:
+                    opt_clean = opt.strip().lower()
+                    if any(u in opt_clean for u in ['uncertain', 'cannot determine', 'cannot be determined', 'unknown', 'maybe', 'none of the above']):
+                        uncertain_ans = opt
+                        break
+            answer = uncertain_ans
+            premises_used = [missing_info_premise_idx]
 
     # Post-process for Unknown/Uncertain premise extraction
     ans_lower = answer.strip().lower()
