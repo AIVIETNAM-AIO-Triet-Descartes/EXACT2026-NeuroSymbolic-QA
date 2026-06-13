@@ -532,17 +532,23 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                             if p_other_word_set.intersection({'she', 'he', 'it', 'they'}):
                                 is_pure_distractor = False
                                 break
-                            p_other_words = re.findall(r'\b[A-Z][a-z]+\b', p_other)
-                            q_cap_words = set(re.findall(r'\b[A-Z][a-z]+\b', request.query))
+                            p_other_words = re.findall(r'\b[A-Z][a-z]*\b', p_other)
+                            q_cap_words = set(re.findall(r'\b[A-Z][a-z]*\b', request.query))
                             other_cap = [w for w in p_other_words if w not in q_cap_words]
                             if not other_cap:
                                 is_pure_distractor = False
                                 break
                             
                             # Linking premise check (check for any common non-stop capitalized word shared with the single source)
-                            generic_prefixes = {'Project', 'Server', 'Team', 'Study', 'Lab', 'File', 'Device', 'Task', 'User', 'Router', 'Department', 'The'}
+                            generic_prefixes = {
+                                'Project', 'Server', 'Team', 'Study', 'Lab', 'File', 'Device',
+                                'Task', 'User', 'Router', 'Department', 'The', 'A', 'An', 'If',
+                                'Every', 'Whether', 'Only', 'Either', 'All', 'Each', 'No', 'Not',
+                                'But', 'Or', 'And', 'So', 'It', 'Is', 'Are', 'Was', 'Were',
+                                'Has', 'Have', 'Had', 'Do', 'Does', 'Did'
+                            }
                             p_source = request.premises[single_source_idx]
-                            source_cap = set(re.findall(r'\b[A-Z][a-z]+\b', p_source))
+                            source_cap = set(re.findall(r'\b[A-Z][a-z]*\b', p_source))
                             shared_cap = set(other_cap).intersection(source_cap) - generic_prefixes
                             if shared_cap:
                                 is_pure_distractor = False
