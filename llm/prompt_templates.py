@@ -460,10 +460,10 @@ Output ONLY the corrected raw Python code. No markdown, no explanations.
 
 ANSWER_EXTRACT_PATTERNS = [
     r'(?i)\**ANSWER:\**\s*\**([A-D])\**\b',
-    r'(?i)\**ANSWER:\**\s*\**(Yes|No|Unknown)\**',
+    r'(?i)\**ANSWER:\**\s*\**(Yes|No|Unknown|Uncertain)\**',
     r'(?i)(?:answer is|correct answer is|conclusion is)\s*[:\s]*\**([A-D])\**\b',
-    r'(?i)(?:answer is|correct answer is)\s*[:\s]*\**(Yes|No|Unknown)\**',
-    r'(?i)\b(Yes|No|Unknown)\s*[,.]?\s*$',
+    r'(?i)(?:answer is|correct answer is|conclusion is)\s*[:\s]*\**(Yes|No|Unknown|Uncertain)\**',
+    r'(?i)\b(Yes|No|Unknown|Uncertain)\s*[,.]?\s*$',
     r'^([A-D])\s*[.\)]',
 ]
 

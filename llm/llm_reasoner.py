@@ -406,7 +406,7 @@ class LLMReasoner:
                 return ans
             if ans in ('A', 'B', 'C', 'D'):
                 return ans
-            if ans.lower() in ('yes', 'no', 'unknown'):
+            if ans.lower() in ('yes', 'no', 'unknown', 'uncertain'):
                 return ans.capitalize()
 
         # Sau đó thử các pattern cụ thể trong ANSWER_EXTRACT_PATTERNS
@@ -416,7 +416,7 @@ class LLMReasoner:
                 answer = match.group(1).strip()
                 if answer in ('A', 'B', 'C', 'D'):
                     return answer
-                if answer.lower() in ('yes', 'no', 'unknown'):
+                if answer.lower() in ('yes', 'no', 'unknown', 'uncertain'):
                     return answer.capitalize()
                 if question_type == "open":
                     return answer
@@ -428,7 +428,7 @@ class LLMReasoner:
             if last_line == ch or last_line.startswith(f"{ch}.") or \
                last_line.startswith(f"{ch})"):
                 return ch
-        for word in ('Yes', 'No', 'Unknown'):
+        for word in ('Yes', 'No', 'Unknown', 'Uncertain'):
             if last_line.lower().startswith(word.lower()):
                 return word
 
