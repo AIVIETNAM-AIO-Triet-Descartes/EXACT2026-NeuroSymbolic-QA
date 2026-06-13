@@ -498,51 +498,57 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                             premises_used.append(i)
                 premises_used = sorted(list(set(premises_used)))
 
-            # 2. Sibling distractor exclusion
-            if len(premises_used) > 1:
-                has_single_source = False
-                single_source_idx = None
-                for idx in premises_used:
-                    p_lower = request.premises[idx].lower()
-                    has_ans = (ans_clean in p_lower) or any(part in p_lower for part in ans_clean.split() if len(part) >= 3 and part not in ('professor', 'dr', 'mr', 'ms', 'project', 'department', 'office', 'team', 'room'))
-                    has_q = bool(q_keywords.intersection(set(re.findall(r'\w+', p_lower))))
-                    if has_ans and has_q:
-                        others_dont_have = True
-                        for other_idx in premises_used:
-                            if other_idx == idx:
-                                continue
-                            p_other_lower = request.premises[other_idx].lower()
-                            if (ans_clean in p_other_lower) or any(part in p_other_lower for part in ans_clean.split() if len(part) >= 3 and part not in ('professor', 'dr', 'mr', 'ms', 'project', 'department', 'office', 'team', 'room')):
-                                others_dont_have = False
+                # 2. Sibling distractor exclusion
+                if len(premises_used) > 1:
+                    has_single_source = False
+                    single_source_idx = None
+                    for idx in premises_used:
+                        p_lower = request.premises[idx].lower()
+                        has_ans = (ans_clean in p_lower) or any(part in p_lower for part in ans_clean.split() if len(part) >= 3 and part not in ('professor', 'dr', 'mr', 'ms', 'project', 'department', 'office', 'team', 'room'))
+                        has_q = bool(q_keywords.intersection(set(re.findall(r'\w+', p_lower))))
+                        if has_ans and has_q:
+                            others_dont_have = True
+                            for other_idx in premises_used:
+                                if other_idx == idx:
+                                    continue
+                                p_other_lower = request.premises[other_idx].lower()
+                                if (ans_clean in p_other_lower) or any(part in p_other_lower for part in ans_clean.split() if len(part) >= 3 and part not in ('professor', 'dr', 'mr', 'ms', 'project', 'department', 'office', 'team', 'room')):
+                                    others_dont_have = False
+                                    break
+                            if others_dont_have:
+                                has_single_source = True
+                                single_source_idx = idx
                                 break
-                        if others_dont_have:
-                            has_single_source = True
-                            single_source_idx = idx
-                            break
 
-                if has_single_source and single_source_idx is not None:
-                    is_pure_distractor = True
-                    for other_idx in premises_used:
-                        if other_idx == single_source_idx:
-                            continue
-                        p_other = request.premises[other_idx]
-                        p_other_words = re.findall(r'\b[A-Z][a-z]+\b', p_other)
-                        q_cap_words = set(re.findall(r'\b[A-Z][a-z]+\b', request.query))
-                        other_cap = [w for w in p_other_words if w not in q_cap_words]
-                        if not other_cap:
-                            is_pure_distractor = False
-                            break
-                        
-                        # Linking premise check (check for any common non-stop capitalized word shared with the single source)
-                        p_source = request.premises[single_source_idx]
-                        source_cap = set(re.findall(r'\b[A-Z][a-z]+\b', p_source))
-                        shared_cap = set(other_cap).intersection(source_cap)
-                        if shared_cap:
-                            is_pure_distractor = False
-                            break
+                    if has_single_source and single_source_idx is not None:
+                        is_pure_distractor = True
+                        for other_idx in premises_used:
+                            if other_idx == single_source_idx:
+                                continue
+                            p_other = request.premises[other_idx]
+                            p_other_lower = p_other.lower()
+                            p_other_word_set = set(re.findall(r'\w+', p_other_lower))
+                            # If the other premise contains a pronoun, it's a coreference, not a distractor
+                            if p_other_word_set.intersection({'she', 'he', 'it', 'they'}):
+                                is_pure_distractor = False
+                                break
+                            p_other_words = re.findall(r'\b[A-Z][a-z]+\b', p_other)
+                            q_cap_words = set(re.findall(r'\b[A-Z][a-z]+\b', request.query))
+                            other_cap = [w for w in p_other_words if w not in q_cap_words]
+                            if not other_cap:
+                                is_pure_distractor = False
+                                break
+                            
+                            # Linking premise check (check for any common non-stop capitalized word shared with the single source)
+                            p_source = request.premises[single_source_idx]
+                            source_cap = set(re.findall(r'\b[A-Z][a-z]+\b', p_source))
+                            shared_cap = set(other_cap).intersection(source_cap)
+                            if shared_cap:
+                                is_pure_distractor = False
+                                break
 
-                    if is_pure_distractor:
-                        premises_used = [single_source_idx]
+                        if is_pure_distractor:
+                            premises_used = [single_source_idx]
 
     log_pipeline_request(
         question=request.query, query_type="type1", answer=str(answer),
