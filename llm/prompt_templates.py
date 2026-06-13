@@ -152,6 +152,7 @@ STEP-BY-STEP REASONING:
    - ⚠️ CRITICAL: "Eligible for X" ≠ "Has X". "Qualified for X" ≠ "Received X". Do NOT confuse potential with actuality.
    - ⚠️ CRITICAL: If a condition is negated in the facts (e.g., "has NOT received X"), the rule CANNOT fire.
    - ⚠️ CRITICAL: NEVER affirm the consequent. If P → Q and Q is true, you CANNOT conclude P is true.
+   - ⚠️ COREFERENCE RULE: If a premise uses a pronoun (e.g. "She", "He", "It", "They", "This project") referring to an entity in another premise, you MUST include BOTH the referring premise and the referent-defining premise in PREMISES USED.
 4. For EACH answer option, write out:
    - The logical derivation path (which premises are needed).
    - The total COUNT of premises used.
@@ -263,10 +264,11 @@ STEP-BY-STEP REASONING:
 2. Break down the STATEMENT into its required conditions.
 3. For EACH required condition, check if it is EXPLICITLY stated or logically derived.
    - ⚠️ CRITICAL: "Eligible for X" ≠ "Has X". "Qualified for X" ≠ "Received X". Never confuse potential with actuality.
-   - ⚠️ CRITICAL: You CANNOT assume any missing conditions. If a rule requires condition C but no premise provides C, the rule CANNOT fire.
-   - ⚠️ CRITICAL: Scoring above a threshold (e.g., grade > 8.5) does NOT automatically mean "passing" — check the specific definition of passing in the premises.
+   - ⚠️ CRITICAL: You CANNOT assume any missing conditions.
    - ⚠️ CRITICAL: NEVER affirm the consequent. If P → Q and Q is true, you CANNOT conclude P is true.
-   - ⚠️ CRITICAL: A universal rule ∀x(P(x) → Q(x)) combined with a universal fact ∀x P(x) yields ∀x Q(x) — this applies to ALL individuals, not just specific named ones. If the premises state "all students complete assignments" and "if a student completes assignments → they attend lectures", then ALL students attend lectures.
+   - ⚠️ CRITICAL: NEVER deny the antecedent. If P → Q and P is false, you CANNOT conclude Q is false.
+   - ⚠️ COREFERENCE RULE: If a premise uses a pronoun (e.g. "She", "He", "It", "They", "This project") referring to an entity in another premise, you MUST include BOTH the referring premise and the referent-defining premise in PREMISES USED.
+   - ⚠️ CRITICAL: A universal rule ∀x(P(x) → Q(x)) combined with a universal fact ∀x P(x) yields ∀x Q(x) — this applies to ALL individuals.
 4. Chain Completeness Check:
    - List each link: A → B (Premise N) ✓ or A → B ← MISSING ✗
    - If ANY link is missing, the answer is "No".
@@ -336,7 +338,8 @@ STEP-BY-STEP REASONING:
 1. Identify which premises are directly relevant to the question.
 2. If the answer is DIRECTLY STATED in a premise (a fact), extract it immediately.
 3. If the answer requires derivation, chain the relevant rules and facts.
-4. Output the specific name, number, or phrase. If not derivable, output "Unknown".
+4. ⚠️ COREFERENCE RULE: If a premise uses a pronoun (e.g. "She", "He", "It", "They", "This project") referring to an entity in another premise, you MUST include BOTH the referring premise and the referent-defining premise in PREMISES USED.
+5. Output the specific name, number, or phrase. If not derivable, output "Unknown".
 
 You MUST output the 0-based indices of the premises you used and your final answer in EXACTLY this format on the last two lines:
 PREMISES USED: [comma-separated 0-based indices, e.g., [0, 2] or [] if answer is Unknown]
