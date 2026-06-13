@@ -451,6 +451,61 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
             answer = uncertain_ans
             premises_used = [missing_info_premise_idx]
 
+    # 1. Direct fact lookup for open-ended questions (when model is uncertain or has no digits for numeric questions)
+    if not request.options:
+        ans_lower_temp = str(answer).lower()
+        is_uncertain_temp = ans_lower_temp in ("unknown", "uncertain", "cannot determine", "cannot be determined", "maybe", "none of the above")
+        is_numeric_q = any(q in request.query.lower() for q in ["how many", "how much", "total number", "count of", "number of"])
+        has_digits_temp = bool(re.search(r'\d+', str(answer)))
+        
+        if is_uncertain_temp or (is_numeric_q and not has_digits_temp):
+            # Try direct lookup
+            query_lower = request.query.lower()
+            q_words = set(re.findall(r'\w+', query_lower))
+            stop_words_lookup = {
+                'if', 'then', 'else', 'every', 'each', 'all', 'any', 'some', 'a', 'an', 'the',
+                'is', 'are', 'was', 'were', 'be', 'been', 'has', 'have', 'had', 'do', 'does', 'did',
+                'who', 'which', 'that', 'this', 'these', 'those', 'to', 'of', 'in', 'on', 'at', 'by',
+                'for', 'with', 'about', 'and', 'or', 'not', 'no', 'can', 'could', 'should', 'would',
+                'researcher', 'person', 'someone', 'individual', 'member', 'user', 'does', 'how', 'many',
+                'much', 'total', 'count', 'number', 'have', 'has', 'had'
+            }
+            q_keywords_lookup = {w for w in q_words if w not in stop_words_lookup and len(w) >= 3}
+            
+            best_idx = None
+            best_overlap = 0
+            best_match_val = None
+            
+            for idx, p in enumerate(request.premises or []):
+                p_lower = p.lower()
+                if any(phrase in p_lower for phrase in ["no premise states", "no information", "unknown whether", "not specified", "not mentioned", "no statement", "is unknown"]):
+                    continue
+                p_words = set(re.findall(r'\w+', p_lower))
+                overlap = len(q_keywords_lookup.intersection(p_words))
+                if overlap > best_overlap:
+                    if is_numeric_q:
+                        num_match = re.search(r'\b\d+\b', p_lower)
+                        if num_match:
+                            best_overlap = overlap
+                            best_idx = idx
+                            best_match_val = num_match.group(0)
+                        else:
+                            word_to_num = {
+                                "one": "1", "two": "2", "three": "3", "four": "4", "five": "5",
+                                "six": "6", "seven": "7", "eight": "8", "nine": "9", "ten": "10"
+                            }
+                            for word, val in word_to_num.items():
+                                if re.search(r'\b' + word + r'\b', p_lower):
+                                    best_overlap = overlap
+                                    best_idx = idx
+                                    best_match_val = val
+                                    break
+            
+            if best_idx is not None and best_overlap >= max(1, int(len(q_keywords_lookup) * 0.5)):
+                answer = best_match_val
+                premises_used = [best_idx]
+                logger.info(f"[TYPE1] Direct fact lookup overrode answer to: {answer} (premise {best_idx})")
+
     # Post-process for Unknown/Uncertain premise extraction
     ans_lower = answer.strip().lower()
     is_uncertain_ans = ans_lower in ("unknown", "uncertain", "cannot determine", "cannot be determined", "maybe", "none of the above")
@@ -566,6 +621,68 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
 
                         if is_pure_distractor:
                             premises_used = [single_source_idx]
+
+    # 3. Backward Reachability Filter to prune unnecessary premises
+    if not is_uncertain_ans and premises_used and len(premises_used) > 1:
+        reachability_stop = {
+            'if', 'then', 'else', 'every', 'each', 'all', 'any', 'some', 'a', 'an', 'the',
+            'is', 'are', 'was', 'were', 'be', 'been', 'has', 'have', 'had', 'do', 'does', 'did',
+            'who', 'which', 'that', 'this', 'these', 'those', 'to', 'of', 'in', 'on', 'at', 'by',
+            'for', 'with', 'about', 'and', 'or', 'not', 'no', 'can', 'could', 'should', 'would',
+            'researcher', 'person', 'someone', 'individual', 'member', 'user', 'study', 'project',
+            'team', 'office', 'department', 'room'
+        }
+        
+        def split_premise_internal(text: str):
+            text_lower = text.lower()
+            def get_clean_set(s: str):
+                return {w for w in re.findall(r'\w+', s) if w not in reachability_stop and len(w) >= 3}
+            if "if" in text_lower:
+                if "then" in text_lower:
+                    parts = text_lower.split("then", 1)
+                    return get_clean_set(parts[0]), get_clean_set(parts[1])
+                else:
+                    parts = text_lower.split(",", 1)
+                    if len(parts) > 1:
+                        return get_clean_set(parts[0]), get_clean_set(parts[1])
+            if ("every" in text_lower or "each" in text_lower) and "is" in text_lower:
+                parts = text_lower.split("is", 1)
+                return get_clean_set(parts[0]), get_clean_set(parts[1])
+            return set(), get_clean_set(text_lower)
+
+        q_words = set(re.findall(r'\w+', request.query.lower()))
+        target_set = {w for w in q_words if w not in reachability_stop and len(w) >= 3}
+        ans_clean_words = {w for w in re.findall(r'\w+', str(answer).lower()) if w not in reachability_stop and len(w) >= 3}
+        target_set.update(ans_clean_words)
+        
+        reachable_indices = set()
+        added = True
+        while added:
+            added = False
+            for idx in list(premises_used):
+                if idx in reachable_indices:
+                    continue
+                ant_words, cons_words = split_premise_internal(request.premises[idx])
+                if ant_words:
+                    if cons_words.intersection(target_set):
+                        reachable_indices.add(idx)
+                        target_set.update(ant_words)
+                        added = True
+                        
+        for idx in list(premises_used):
+            if idx in reachable_indices:
+                continue
+            ant_words, cons_words = split_premise_internal(request.premises[idx])
+            if not ant_words:
+                if cons_words.intersection(target_set):
+                    reachable_indices.add(idx)
+                    
+        if reachable_indices:
+            ans_clean = str(answer).strip().lower()
+            for i, p in enumerate(request.premises or []):
+                if ans_clean in p.lower() and i in premises_used:
+                    reachable_indices.add(i)
+            premises_used = sorted(list(reachable_indices.intersection(set(premises_used))))
 
     log_pipeline_request(
         question=request.query, query_type="type1", answer=str(answer),
