@@ -540,9 +540,10 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                 break
                             
                             # Linking premise check (check for any common non-stop capitalized word shared with the single source)
+                            generic_prefixes = {'Project', 'Server', 'Team', 'Study', 'Lab', 'File', 'Device', 'Task', 'User', 'Router', 'Department', 'The'}
                             p_source = request.premises[single_source_idx]
                             source_cap = set(re.findall(r'\b[A-Z][a-z]+\b', p_source))
-                            shared_cap = set(other_cap).intersection(source_cap)
+                            shared_cap = set(other_cap).intersection(source_cap) - generic_prefixes
                             if shared_cap:
                                 is_pure_distractor = False
                                 break
