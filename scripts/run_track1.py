@@ -674,14 +674,13 @@ class NeuroSymbolicPipeline:
             return None
 
         # ── Case 3: Yes/No question ──
-        if classified.question_type != QuestionType.MCQ:
-            full = raw.lower()
-            if 'yes' in full:
-                return 'Yes'
-            if 'no' in full:
-                return 'No'
-            if 'unknown' in full:
-                return 'Unknown'
+        full = raw.lower()
+        if 'yes' in full:
+            return 'Yes'
+        if 'no' in full:
+            return 'No'
+        if 'unknown' in full:
+            return 'Unknown'
 
         return None
 

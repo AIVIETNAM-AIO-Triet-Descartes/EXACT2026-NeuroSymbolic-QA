@@ -226,7 +226,7 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                         break
                                         
                             # Yes/No
-                            if q_type != "mcq" and not z3_ans:
+                            if not z3_ans:
                                 full_lower = raw.lower()
                                 if 'yes' in full_lower:
                                     z3_ans = 'Yes'

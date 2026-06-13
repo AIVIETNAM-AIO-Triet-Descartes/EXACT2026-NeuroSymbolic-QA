@@ -242,7 +242,7 @@ class LLMReasoner:
             'answer': answer,
             'explanation': response,
             'method': 'llm_cot',
-            'premises_used': self._extract_premises_used(cleaned_response),
+            'premises_used': self._extract_premises_used(cleaned_response, len(premises_nl)),
         }
 
     def generate_z3_code(
@@ -328,7 +328,7 @@ class LLMReasoner:
     # Private Helpers
     # ══════════════════════════════════════════════════════════
 
-    def _extract_premises_used(self, response: str) -> List[int]:
+    def _extract_premises_used(self, response: str, num_premises: int = 0) -> List[int]:
         """
         Trích xuất danh sách index premises 0-based từ phản hồi của LLM CoT.
         Ví dụ: "PREMISES USED: [0, 2]" -> [0, 2]
@@ -351,6 +351,13 @@ class LLMReasoner:
                 for x in re.split(r'[,;\s]+', indices_str)
                 if x.strip().isdigit()
             ]
+            if indices and num_premises > 0:
+                # Nếu bất kỳ chỉ số nào >= num_premises, hoặc giá trị nhỏ nhất >= 1,
+                # khả năng cao LLM dùng hệ 1-based. Ta dịch dịch chuyển về 0-based.
+                if any(idx >= num_premises for idx in indices) or min(indices) >= 1:
+                    indices = [idx - 1 for idx in indices]
+                # Chỉ giữ lại các chỉ số hợp lệ trong khoảng [0, num_premises - 1]
+                indices = [idx for idx in indices if 0 <= idx < num_premises]
             return indices
         except Exception as e:
             logger.warning(f"Failed to parse premises_used from string '{indices_str}': {e}")
