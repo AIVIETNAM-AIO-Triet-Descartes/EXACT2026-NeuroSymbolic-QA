@@ -421,6 +421,8 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
         # For Uncertain/Unknown answers, the premises_used should strictly be the uncertainty/absence premises if they exist
         if unknown_indices:
             premises_used = sorted(list(set(unknown_indices)))
+        else:
+            premises_used = list(range(len(request.premises or [])))
 
     # Coreference pronoun detector for open-ended questions
     if not request.options and answer and not is_uncertain_ans:
