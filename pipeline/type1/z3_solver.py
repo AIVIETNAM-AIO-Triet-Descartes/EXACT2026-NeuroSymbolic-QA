@@ -580,6 +580,137 @@ class EntailmentChecker:
 # LLM-Assisted Z3 Code Generation
 # ══════════════════════════════════════════════════════════════
 
+def autofix_z3_declarations(code_str: str) -> str:
+    """
+    Auto-fixes Z3 code where predicates are declared as single-value variables
+    (e.g., CR = Bool('CR') or CR, HD = Bools('CR HD')) but called as functions (e.g., CR(Asha)).
+    Rewrites declarations to Function('CR', Entity, ..., BoolSort()) based on calling arity.
+    """
+    import ast
+    try:
+        tree = ast.parse(code_str)
+    except Exception:
+        return code_str
+
+    # Step 0: Unpack multiple assignments like A, B = Bools('A B')
+    class UnpackAssignments(ast.NodeTransformer):
+        def visit_Assign(self, node):
+            if len(node.targets) == 1 and isinstance(node.targets[0], (ast.Tuple, ast.List)):
+                elements = node.targets[0].elts
+                if all(isinstance(e, ast.Name) for e in elements):
+                    if isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name):
+                        func_name = node.value.func.id
+                        if func_name in ('Bools', 'Ints', 'Reals'):
+                            single_func = func_name[:-1]
+                            new_nodes = []
+                            for e in elements:
+                                var_name = e.id
+                                new_assign = ast.Assign(
+                                    targets=[ast.copy_location(ast.Name(id=var_name, ctx=ast.Store()), e)],
+                                    value=ast.Call(
+                                        func=ast.Name(id=single_func, ctx=ast.Load()),
+                                        args=[ast.Constant(value=var_name)],
+                                        keywords=[]
+                                    )
+                                )
+                                new_nodes.append(ast.copy_location(new_assign, node))
+                            return new_nodes
+                        elif func_name == 'Consts':
+                            new_nodes = []
+                            sort_arg = node.value.args[1] if len(node.value.args) >= 2 else ast.Name(id='Entity', ctx=ast.Load())
+                            for e in elements:
+                                var_name = e.id
+                                new_assign = ast.Assign(
+                                    targets=[ast.copy_location(ast.Name(id=var_name, ctx=ast.Store()), e)],
+                                    value=ast.Call(
+                                        func=ast.Name(id='Const', ctx=ast.Load()),
+                                        args=[ast.Constant(value=var_name), sort_arg],
+                                        keywords=[]
+                                    )
+                                )
+                                new_nodes.append(ast.copy_location(new_assign, node))
+                            return new_nodes
+            return node
+
+    tree = UnpackAssignments().visit(tree)
+
+    declared_vars = {} # name -> (node, type_str)
+    
+    class DeclFinder(ast.NodeVisitor):
+        def visit_Assign(self, node):
+            if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+                var_name = node.targets[0].id
+                if isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name):
+                    func_name = node.value.func.id
+                    if func_name in ('Bool', 'BoolConst', 'Bools'):
+                        declared_vars[var_name] = (node, 'Bool')
+                    elif func_name in ('Int', 'IntConst', 'Ints'):
+                        declared_vars[var_name] = (node, 'Int')
+                    elif func_name in ('Real', 'RealConst', 'Reals'):
+                        declared_vars[var_name] = (node, 'Real')
+                    elif func_name == 'Const':
+                        type_str = 'Entity'
+                        if len(node.value.args) >= 2:
+                            second_arg = node.value.args[1]
+                            if isinstance(second_arg, ast.Call) and isinstance(second_arg.func, ast.Name):
+                                if second_arg.func.id == 'BoolSort':
+                                    type_str = 'Bool'
+                                elif second_arg.func.id in ('IntSort', 'RealSort'):
+                                    type_str = 'Int'
+                        declared_vars[var_name] = (node, type_str)
+
+    DeclFinder().visit(tree)
+
+    called_vars_arity = {} # name -> arity
+    
+    class CallFinder(ast.NodeVisitor):
+        def visit_Call(self, node):
+            if isinstance(node.func, ast.Name):
+                func_name = node.func.id
+                if func_name in declared_vars:
+                    called_vars_arity[func_name] = len(node.args)
+            self.generic_visit(node)
+
+    CallFinder().visit(tree)
+
+    class DeclRewriter(ast.NodeTransformer):
+        def visit_Assign(self, node):
+            if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+                var_name = node.targets[0].id
+                if var_name in called_vars_arity:
+                    arity = called_vars_arity[var_name]
+                    type_str = declared_vars[var_name][1]
+                    
+                    sort_name = 'BoolSort' if type_str == 'Bool' else ('IntSort' if type_str == 'Int' else 'BoolSort')
+                    
+                    args = [ast.Constant(value=var_name)]
+                    for _ in range(arity):
+                        args.append(ast.Name(id='Entity', ctx=ast.Load()))
+                    args.append(ast.Call(
+                        func=ast.Name(id=sort_name, ctx=ast.Load()),
+                        args=[],
+                        keywords=[]
+                    ))
+                    
+                    new_node = ast.Assign(
+                        targets=node.targets,
+                        value=ast.Call(
+                            func=ast.Name(id='Function', ctx=ast.Load()),
+                            args=args,
+                            keywords=[]
+                        )
+                    )
+                    return ast.copy_location(new_node, node)
+            return node
+
+    rewritten_tree = DeclRewriter().visit(tree)
+    ast.fix_missing_locations(rewritten_tree)
+    try:
+        return ast.unparse(rewritten_tree)
+    except Exception:
+        return code_str
+
+
 def execute_z3_code(code: str, timeout_sec: int = 30) -> Optional[str]:
     """
     Thực thi Z3 Python code an toàn trong sandbox.
@@ -591,6 +722,8 @@ def execute_z3_code(code: str, timeout_sec: int = 30) -> Optional[str]:
     Returns:
         Output text hoặc None nếu thất bại.
     """
+    # Auto-fix variable/function declarations (e.g. Bool vs Function)
+    code = autofix_z3_declarations(code)
     # Capture stdout
     old_stdout = sys.stdout
     sys.stdout = buffer = io.StringIO()
