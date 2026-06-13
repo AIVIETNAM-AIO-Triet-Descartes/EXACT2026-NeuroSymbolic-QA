@@ -291,7 +291,7 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                 # Z3 is supplementary — only override CoT if Z3 agrees or
                                 # CoT had no answer at all. Unknown IS a confident answer
                                 # (it means "I reasoned and found insufficient information").
-                                cot_confident = bool(answer and answer.strip() and answer.strip().lower() not in ('unknown', 'uncertain', 'cannot determine'))
+                                cot_confident = bool(answer and answer.strip())
                                 z3_agrees = (z3_ans == answer)
                                 if z3_agrees:
                                     # Z3 confirms CoT — merge premises
