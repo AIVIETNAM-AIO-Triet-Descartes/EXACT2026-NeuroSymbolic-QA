@@ -342,12 +342,17 @@ class NeuroSymbolicPipeline:
                 q_result.method = 'hybrid_consensus'
                 q_result.confidence = 1.0
                 q_result.explanation = "Consensus Reached (Logic Tree & CoT agreed):\n" + cot_result.get('explanation', '')
-                q_result.premises_used = (tree_result or {}).get('premises_used') or []
+                
+                # Union Logic Tree and CoT premises
+                tree_premises = (tree_result or {}).get('premises_used') or []
+                cot_premises = cot_result.get('premises_used') or []
+                cot_premises_1based = [idx + 1 for idx in cot_premises]
+                q_result.premises_used = sorted(list(set(tree_premises).union(cot_premises_1based)))
                 self.stats['llm_solved'] += 1
-                return q_result
             else:
                 # Conflict Resolution:
                 # First try Z3 as the ultimate formal tie-breaker if allowed
+                resolved = False
                 if self.config.use_z3 and not is_long_question:
                     z3_res = self._try_llm_z3(premises_fol, premises_nl, classified)
                     if z3_res and z3_res.get('answer'):
@@ -357,56 +362,55 @@ class NeuroSymbolicPipeline:
                             q_result.method = 'z3_resolved_conflict'
                             q_result.confidence = 0.95
                             q_result.explanation = "Conflict resolved by formal Z3 verification."
-                            q_result.premises_used = z3_res.get('premises_used') or []
+                            z3_premises = z3_res.get('premises_used') or []
+                            # If Z3 agrees with CoT, union their premises
+                            if z3_ans == cot_ans:
+                                cot_premises = cot_result.get('premises_used') or []
+                                cot_premises_1based = [idx + 1 for idx in cot_premises]
+                                q_result.premises_used = sorted(list(set(z3_premises).union(cot_premises_1based)))
+                            else:
+                                q_result.premises_used = z3_premises
                             self.stats['z3_solved'] += 1
-                            return q_result
+                            resolved = True
 
-                # If Z3 failed, fallback to heuristic conflict resolution:
-                # 1. If premises have math/numbers, the propositional Logic Tree is unreliable.
-                # 2. If the Logic Tree answer is 'No' from check_missing_conditions, but the question is conditional/general,
-                #    it is likely a false negative because the Logic Tree lacks facts to activate the rules.
-                is_tree_weak_no = False
-                if tree_result and tree_ans == 'No' and tree_result.get('is_missing_conditions'):
-                    is_tree_weak_no = True
+                if not resolved:
+                    # If Z3 failed, fallback to heuristic conflict resolution:
+                    is_tree_weak_no = False
+                    if tree_result and tree_ans == 'No' and tree_result.get('is_missing_conditions'):
+                        is_tree_weak_no = True
 
-                if has_math_or_numbers or (is_tree_weak_no and is_conditional_or_structural):
-                    # Trust LLM CoT
-                    q_result.answer = cot_ans
-                    q_result.method = 'llm_cot_override'
-                    q_result.confidence = 0.6
-                    q_result.explanation = (
-                        f"Conflict detected. Trusting LLM CoT over Logic Tree due to "
-                        f"{'mathematical/numeric constraints' if has_math_or_numbers else 'conditional/structural query structure'}.\n"
-                        + cot_result.get('explanation', '')
-                    )
-                    # Convert CoT's 0-based premises to 1-based
-                    cot_premises = cot_result.get('premises_used') or []
-                    q_result.premises_used = [idx + 1 for idx in cot_premises]
-                    self.stats['llm_solved'] += 1
-                    return q_result
-                else:
-                    # Trust Logic Tree
-                    q_result.answer = tree_ans
-                    q_result.method = 'logic_tree_override'
-                    q_result.confidence = 0.9
-                    q_result.explanation = (
-                        f"Conflict detected. Trusting Logic Tree over LLM CoT (verified formal deduction).\n"
-                        + cot_result.get('explanation', '')
-                    )
-                    q_result.premises_used = (tree_result or {}).get('premises_used') or []
-                    self.stats['logic_tree_solved'] += 1
-                    return q_result
+                    if has_math_or_numbers or (is_tree_weak_no and is_conditional_or_structural):
+                        # Trust LLM CoT
+                        q_result.answer = cot_ans
+                        q_result.method = 'llm_cot_override'
+                        q_result.confidence = 0.6
+                        q_result.explanation = (
+                            f"Conflict detected. Trusting LLM CoT over Logic Tree due to "
+                            f"{'mathematical/numeric constraints' if has_math_or_numbers else 'conditional/structural query structure'}.\n"
+                            + cot_result.get('explanation', '')
+                        )
+                        cot_premises = cot_result.get('premises_used') or []
+                        q_result.premises_used = [idx + 1 for idx in cot_premises]
+                        self.stats['llm_solved'] += 1
+                    else:
+                        # Trust Logic Tree
+                        q_result.answer = tree_ans
+                        q_result.method = 'logic_tree_override'
+                        q_result.confidence = 0.9
+                        q_result.explanation = (
+                            f"Conflict detected. Trusting Logic Tree over LLM CoT (verified formal deduction).\n"
+                            + cot_result.get('explanation', '')
+                        )
+                        q_result.premises_used = (tree_result or {}).get('premises_used') or []
+                        self.stats['logic_tree_solved'] += 1
         elif cot_ans:
             q_result.answer = cot_ans
             q_result.method = 'llm_cot'
             q_result.confidence = 0.8
             q_result.explanation = cot_result.get('explanation', '')
-            
-            # Convert CoT's 0-based premises to 1-based
             cot_premises = cot_result.get('premises_used') or []
             q_result.premises_used = [idx + 1 for idx in cot_premises]
             self.stats['llm_solved'] += 1
-            return q_result
         elif tree_ans:
             q_result.answer = tree_ans
             q_result.method = 'logic_tree'
@@ -414,10 +418,8 @@ class NeuroSymbolicPipeline:
             q_result.explanation = "Derived exclusively by Logic Tree."
             q_result.premises_used = (tree_result or {}).get('premises_used') or []
             self.stats['logic_tree_solved'] += 1
-            return q_result
-
-        # 4. Fallback to Z3 (For short questions only if everything else failed)
-        if self.config.use_z3 and self.config.use_llm and not is_long_question:
+        elif self.config.use_z3 and self.config.use_llm and not is_long_question:
+            # Fallback to Z3
             z3_result = self._try_llm_z3(premises_fol, premises_nl, classified)
             if z3_result and z3_result.get('answer'):
                 q_result.answer = z3_result['answer']
@@ -426,14 +428,34 @@ class NeuroSymbolicPipeline:
                 q_result.explanation = "Derived by Z3."
                 q_result.premises_used = (z3_result or {}).get('premises_used') or []
                 self.stats['z3_solved'] += 1
-                return q_result
-                
-        # 5. Ultimate Fallback
-        q_result.answer = "Unknown"
-        q_result.explanation = "Insufficient information to determine the answer."
-        q_result.method = 'default'
-        q_result.confidence = 0.0
-        self.stats['failed'] += 1
+            else:
+                q_result.answer = "Unknown"
+                q_result.explanation = "Insufficient information to determine the answer."
+                q_result.method = 'default'
+                q_result.confidence = 0.0
+                self.stats['failed'] += 1
+        else:
+            q_result.answer = "Unknown"
+            q_result.explanation = "Insufficient information to determine the answer."
+            q_result.method = 'default'
+            q_result.confidence = 0.0
+            self.stats['failed'] += 1
+
+        # Post-process for Unknown/Uncertain premise extraction (1-based for offline)
+        if q_result.answer in ("Unknown", "Uncertain", "unknown", "uncertain"):
+            unknown_indices = []
+            q_words = set(re.findall(r'\w+', classified.original.lower()))
+            stop_words = {'does', 'do', 'is', 'are', 'was', 'were', 'have', 'has', 'had', 'whether', 'about', 'a', 'an', 'the'}
+            q_words = q_words - stop_words
+            for i, p in enumerate(premises_nl):
+                p_lower = p.lower()
+                if any(phrase in p_lower for phrase in ["no premise states", "no information", "unknown whether", "not specified"]):
+                    p_words = set(re.findall(r'\w+', p_lower))
+                    if len(q_words.intersection(p_words)) >= 2:
+                        unknown_indices.append(i + 1) # 1-based index
+            if unknown_indices:
+                q_result.premises_used = sorted(list(set(q_result.premises_used).union(unknown_indices)))
+
         return q_result
 
     # ── Strategy Implementations ─────────────────────────────

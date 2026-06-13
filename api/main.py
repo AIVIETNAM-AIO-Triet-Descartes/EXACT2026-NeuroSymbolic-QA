@@ -263,8 +263,11 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                     logger.info(f"[TYPE1] Z3 overrode answer: CoT={answer} -> Z3={z3_ans}")
                                     answer = z3_ans
                                     explanation = f"[Formal Verification] Formally verified by Z3. \n{explanation}"
-                                if z3_premises_used:
-                                    premises_used = z3_premises_used
+                                    if z3_premises_used:
+                                        premises_used = z3_premises_used
+                                else:
+                                    if z3_premises_used:
+                                        premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
                 except Exception as z3_err:
                     logger.error(f"[TYPE1] Z3 verification failed: {z3_err}")
                     
@@ -325,6 +328,21 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                 idx = letters.index(answer)
                 if idx < len(request.options):
                     answer = request.options[idx]
+
+    # Post-process for Unknown/Uncertain premise extraction
+    if answer in ("Unknown", "Uncertain") or (options_dict and options_dict.get(answer) in ("Unknown", "Uncertain")):
+        unknown_indices = []
+        q_words = set(re.findall(r'\w+', request.query.lower()))
+        stop_words = {'does', 'do', 'is', 'are', 'was', 'were', 'have', 'has', 'had', 'whether', 'about', 'a', 'an', 'the'}
+        q_words = q_words - stop_words
+        for i, p in enumerate(request.premises or []):
+            p_lower = p.lower()
+            if any(phrase in p_lower for phrase in ["no premise states", "no information", "unknown whether", "not specified"]):
+                p_words = set(re.findall(r'\w+', p_lower))
+                if len(q_words.intersection(p_words)) >= 2:
+                    unknown_indices.append(i)
+        if unknown_indices:
+            premises_used = sorted(list(set(premises_used).union(unknown_indices)))
 
     log_pipeline_request(
         question=request.query, query_type="type1", answer=str(answer),

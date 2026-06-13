@@ -242,7 +242,7 @@ class LLMReasoner:
 
         # Extract answer from response
         logger.debug(f"[LLM_COT] Raw Response:\n{response}\n")
-        answer = self._extract_answer(cleaned_response)
+        answer = self._extract_answer(cleaned_response, question_type)
         if not answer:
             logger.warning("[LLM_COT] Failed to extract answer from raw response. Returning None.")
 
@@ -340,55 +340,75 @@ class LLMReasoner:
         """
         Trích xuất danh sách index premises 0-based từ phản hồi của LLM CoT.
         Ví dụ: "PREMISES USED: [0, 2]" -> [0, 2]
+        Quét toàn bộ văn bản để tìm thêm các chỉ số dạng [i] nhằm tránh bỏ sót.
         """
         if not response:
             return []
 
+        indices = []
+        
+        # 1. Trích xuất từ dòng "PREMISES USED: [...]"
         match = re.search(r'(?i)PREMISES\s*USED:\s*\[(.*?)\]', response)
-        if not match:
-            return []
+        if match:
+            indices_str = match.group(1).strip()
+            if indices_str:
+                try:
+                    indices = [
+                        int(x.strip())
+                        for x in re.split(r'[,;\s]+', indices_str)
+                        if x.strip().isdigit()
+                    ]
+                except Exception:
+                    pass
 
-        indices_str = match.group(1).strip()
-        if not indices_str:
-            return []
+        # 2. Quét toàn bộ văn bản để tìm thêm các chỉ số dạng [i]
+        all_bracketed = re.findall(r'\[(\d+)\]', response)
+        for val in all_bracketed:
+            try:
+                idx = int(val)
+                if idx not in indices:
+                    indices.append(idx)
+            except Exception:
+                pass
 
-        try:
-            # Tách bằng dấu phẩy, khoảng trắng hoặc chấm phẩy và lọc các chữ số
-            indices = [
-                int(x.strip())
-                for x in re.split(r'[,;\s]+', indices_str)
-                if x.strip().isdigit()
-            ]
-            if indices and num_premises > 0:
-                # Nếu bất kỳ chỉ số nào >= num_premises, hoặc giá trị nhỏ nhất >= 1,
-                # khả năng cao LLM dùng hệ 1-based. Ta dịch dịch chuyển về 0-based.
-                if any(idx >= num_premises for idx in indices) or min(indices) >= 1:
-                    indices = [idx - 1 for idx in indices]
-                # Chỉ giữ lại các chỉ số hợp lệ trong khoảng [0, num_premises - 1]
-                indices = [idx for idx in indices if 0 <= idx < num_premises]
-            return indices
-        except Exception as e:
-            logger.warning(f"Failed to parse premises_used from string '{indices_str}': {e}")
-            return []
+        if indices and num_premises > 0:
+            # Chỉ dịch dịch chuyển về 0-based nếu có phần tử >= num_premises (chắc chắn là 1-based)
+            if any(idx >= num_premises for idx in indices):
+                indices = [idx - 1 for idx in indices]
+            # Chỉ giữ lại các chỉ số hợp lệ trong khoảng [0, num_premises - 1]
+            indices = [idx for idx in indices if 0 <= idx < num_premises]
 
-    def _extract_answer(self, response: str) -> Optional[str]:
+        return sorted(list(set(indices)))
+
+    def _extract_answer(self, response: str, question_type: str = "yes_no") -> Optional[str]:
         """
         Trích xuất đáp án từ LLM response.
-
-        Thử nhiều pattern khác nhau để robust extraction.
         """
         if not response:
             return None
 
+        # Thử khớp mẫu dạng "ANSWER: [giá trị]" đầu tiên
+        match = re.search(r'(?i)\**ANSWER:\**\s*\**([^\n\*]+)', response)
+        if match:
+            ans = match.group(1).strip()
+            if question_type == "open":
+                return ans
+            if ans in ('A', 'B', 'C', 'D'):
+                return ans
+            if ans.lower() in ('yes', 'no', 'unknown'):
+                return ans.capitalize()
+
+        # Sau đó thử các pattern cụ thể trong ANSWER_EXTRACT_PATTERNS
         for pattern in ANSWER_EXTRACT_PATTERNS:
             match = re.search(pattern, response, re.IGNORECASE | re.MULTILINE)
             if match:
                 answer = match.group(1).strip()
-                # Normalize
                 if answer in ('A', 'B', 'C', 'D'):
                     return answer
                 if answer.lower() in ('yes', 'no', 'unknown'):
                     return answer.capitalize()
+                if question_type == "open":
+                    return answer
 
         # Last resort: check last line
         lines = response.strip().split('\n')
@@ -400,6 +420,9 @@ class LLMReasoner:
         for word in ('Yes', 'No', 'Unknown'):
             if last_line.lower().startswith(word.lower()):
                 return word
+
+        if question_type == "open":
+            return last_line
 
         return None
 

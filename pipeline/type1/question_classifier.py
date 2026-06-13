@@ -280,7 +280,7 @@ def sanitize_and_snap_answer(
     ans_lower = answer_clean.lower()
     for key, val in options.items():
         val_lower = val.strip().lower()
-        if ans_lower == val_lower or val_lower in ans_lower or ans_lower in val_lower:
+        if ans_lower == val_lower or (len(val_lower) > 2 and (val_lower in ans_lower or ans_lower in val_lower)) or re.search(r'\b' + re.escape(val_lower) + r'\b', ans_lower):
             return key
 
     # Check word overlap / Jaccard-like similarity between answer and option text
@@ -301,6 +301,12 @@ def sanitize_and_snap_answer(
     if best_overlap > 0:
         return best_key
         
+    # Bridge Unknown/Uncertain mapping
+    if ans_lower in ('unknown', 'uncertain'):
+        for key, val in options.items():
+            if val.strip().lower() in ('uncertain', 'unknown', 'none of the above', 'none of the premises'):
+                return key
+                
     # If the answer is "Yes" or "No", see if any option starts with yes/no or represents affirmation/negation
     if ans_lower in ('yes', 'no'):
         for key, val in options.items():
@@ -325,6 +331,10 @@ def sanitize_and_snap_answer(
                 ans_extracted = match.group(1).strip().upper()
                 if ans_extracted in options:
                     return ans_extracted
+                if ans_extracted.lower() in ('unknown', 'uncertain'):
+                    for key, val in options.items():
+                        if val.strip().lower() in ('uncertain', 'unknown', 'none of the above', 'none of the premises'):
+                            return key
                     
         # Check last few lines for any single letter A, B, C, D
         lines = [l.strip() for l in explanation.split('\n') if l.strip()]
