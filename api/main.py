@@ -395,7 +395,12 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                     answer = request.options[idx]
 
     # Post-process for Unknown/Uncertain premise extraction
-    if answer in ("Unknown", "Uncertain") or (options_dict and options_dict.get(answer) in ("Unknown", "Uncertain")):
+    ans_lower = answer.strip().lower()
+    is_uncertain_ans = ans_lower in ("unknown", "uncertain", "cannot determine", "cannot be determined", "maybe", "none of the above")
+    if not is_uncertain_ans and options_dict and answer in options_dict:
+        is_uncertain_ans = options_dict[answer].strip().lower() in ("unknown", "uncertain", "cannot determine", "cannot be determined", "maybe", "none of the above")
+        
+    if is_uncertain_ans:
         unknown_indices = []
         q_words = set(re.findall(r'\w+', request.query.lower()))
         stop_words = {'does', 'do', 'is', 'are', 'was', 'were', 'have', 'has', 'had', 'whether', 'about', 'a', 'an', 'the'}
