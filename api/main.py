@@ -177,13 +177,22 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
         # Check if the query is an open-ended logic question (who, what, how, how many, which, etc.)
         is_yes_no = True
         query_clean = request.query.strip().lower()
-        if re.match(r'^(who|what|which|how|find|calculate|determine|identify|list|give|state)\b', query_clean):
+        if re.match(r'^(who|what|which|how|where|when|whose|whom|find|calculate|determine|identify|list|give|state)\b', query_clean):
             is_yes_no = False
         q_type = "yes_no" if is_yes_no else "open"
 
     full_q = request.query
     if request.options:
-        full_q = full_q + "\n" + "\n".join(request.options)
+        formatted_options = []
+        for i, opt in enumerate(request.options):
+            opt_str = opt.strip()
+            if re.match(r'^[\(\[\s]*[A-D][\.\)\s\]]', opt_str, re.IGNORECASE):
+                formatted_options.append(opt_str)
+            else:
+                letters = ['A', 'B', 'C', 'D']
+                prefix = f"{letters[i]}. " if i < len(letters) else ""
+                formatted_options.append(f"{prefix}{opt_str}")
+        full_q = full_q + "\n" + "\n".join(formatted_options)
 
     answer, explanation, steps = "", "", []
     premises_used = []
@@ -401,6 +410,37 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                 if idx < len(request.options):
                     answer = request.options[idx]
 
+    # Proactive Missing Information / Uncertainty Override
+    missing_phrases = ["no premise states", "no information", "unknown whether", "not specified", "not mentioned", "no statement", "is unknown"]
+    q_words_proactive = set(re.findall(r'\w+', request.query.lower()))
+    stop_words_proactive = {
+        'does', 'do', 'did', 'is', 'are', 'was', 'were', 'have', 'has', 'had',
+        'whether', 'about', 'a', 'an', 'the', 'can', 'could', 'should', 'would',
+        'be', 'been', 'to', 'of', 'in', 'on', 'at', 'by', 'for', 'with', 'who',
+        'what', 'which', 'how', 'where', 'when', 'whose', 'whom', 'page', 'user'
+    }
+    q_keywords_proactive = {w for w in q_words_proactive if w not in stop_words_proactive and len(w) >= 3}
+    
+    missing_info_premise_idx = None
+    for i, p in enumerate(request.premises or []):
+        p_lower = p.lower()
+        if any(phrase in p_lower for phrase in missing_phrases):
+            p_words = set(re.findall(r'\w+', p_lower))
+            if q_keywords_proactive.intersection(p_words):
+                missing_info_premise_idx = i
+                break
+                
+    if missing_info_premise_idx is not None:
+        uncertain_ans = "Uncertain"
+        if request.options:
+            for opt in request.options:
+                opt_clean = opt.strip().lower()
+                if any(u in opt_clean for u in ['uncertain', 'cannot determine', 'cannot be determined', 'unknown', 'maybe', 'none of the above']):
+                    uncertain_ans = opt
+                    break
+        answer = uncertain_ans
+        premises_used = [missing_info_premise_idx]
+
     # Post-process for Unknown/Uncertain premise extraction
     ans_lower = answer.strip().lower()
     is_uncertain_ans = ans_lower in ("unknown", "uncertain", "cannot determine", "cannot be determined", "maybe", "none of the above")
@@ -410,13 +450,13 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
     if is_uncertain_ans:
         unknown_indices = []
         q_words = set(re.findall(r'\w+', request.query.lower()))
-        stop_words = {'does', 'do', 'is', 'are', 'was', 'were', 'have', 'has', 'had', 'whether', 'about', 'a', 'an', 'the'}
+        stop_words = {'does', 'do', 'is', 'are', 'was', 'were', 'have', 'has', 'had', 'whether', 'about', 'a', 'an', 'the', 'can', 'page', 'user'}
         q_words = q_words - stop_words
         for i, p in enumerate(request.premises or []):
             p_lower = p.lower()
             if any(phrase in p_lower for phrase in ["no premise states", "no information", "unknown whether", "not specified"]):
                 p_words = set(re.findall(r'\w+', p_lower))
-                if len(q_words.intersection(p_words)) >= 2:
+                if len(q_words.intersection(p_words)) >= 1:
                     unknown_indices.append(i)
         # For Uncertain/Unknown answers, the premises_used should strictly be the uncertainty/absence premises if they exist
         if unknown_indices:
