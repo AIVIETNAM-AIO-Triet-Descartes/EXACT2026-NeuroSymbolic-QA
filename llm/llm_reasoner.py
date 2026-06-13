@@ -23,6 +23,7 @@ from llm.prompt_templates import (
     EXPLANATION_PROMPT,
     COT_MCQ_PROMPT,
     COT_YESNO_PROMPT,
+    COT_OPEN_PROMPT,
     Z3_CODE_GENERATION_PROMPT,
     Z3_REFINEMENT_PROMPT,
     ANSWER_EXTRACT_PATTERNS,
@@ -188,10 +189,10 @@ class LLMReasoner:
         """
         # Format premises
         nl_text = "\n".join(
-            f"  {i+1}. {p}" for i, p in enumerate(premises_nl)
+            f"  [{i}] {p}" for i, p in enumerate(premises_nl)
         )
         fol_text = "\n".join(
-            f"  {i+1}. {p}" for i, p in enumerate(premises_fol)
+            f"  [{i}] {p}" for i, p in enumerate(premises_fol)
         )
 
         hints_text = ""
@@ -202,6 +203,13 @@ class LLMReasoner:
         # Select appropriate prompt
         if question_type == "mcq":
             prompt = COT_MCQ_PROMPT.format(
+                premises_nl=nl_text,
+                premises_fol=fol_text,
+                hints=hints_text,
+                question=question,
+            )
+        elif question_type == "open":
+            prompt = COT_OPEN_PROMPT.format(
                 premises_nl=nl_text,
                 premises_fol=fol_text,
                 hints=hints_text,

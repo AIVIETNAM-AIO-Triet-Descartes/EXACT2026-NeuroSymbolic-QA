@@ -301,7 +301,7 @@ class NeuroSymbolicPipeline:
             4. Fallback to Z3
         """
         q_result = QuestionResult()
-        is_long_question = len(premises_fol) > 7
+        is_long_question = len(premises_fol) > 12
 
         # Check if NL premises contain real numbers or math/inequality relations
         # IMPORTANT: Only scan premises_nl, NOT premises_fol, because FOL
@@ -582,8 +582,14 @@ class NeuroSymbolicPipeline:
             if not self.llm:
                 return None
 
-            q_type = "mcq" if classified.question_type == QuestionType.MCQ \
-                     else "yes_no"
+            if classified.question_type == QuestionType.MCQ:
+                q_type = "mcq"
+            else:
+                is_yes_no = True
+                query_clean = classified.original.strip().lower()
+                if re.match(r'^(who|what|which|how|find|calculate|determine|identify|list|give|state)\b', query_clean):
+                    is_yes_no = False
+                q_type = "yes_no" if is_yes_no else "open"
 
             # Extract symbolic hints from LogicTree
             derived_facts = []

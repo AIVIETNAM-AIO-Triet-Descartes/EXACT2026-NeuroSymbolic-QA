@@ -157,7 +157,20 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
     Single-query Type 1 solve via LLM Chain-of-Thought over the NL premises.
     Verified and augmented by Z3 logic solver when possible to get precise premises_used.
     """
-    q_type = "mcq" if request.options else "yes_no"
+    from pipeline.type1.question_classifier import QuestionClassifier, QuestionType
+    classifier = QuestionClassifier()
+    classified_q = classifier.classify(request.query)
+    
+    if request.options or classified_q.question_type == QuestionType.MCQ:
+        q_type = "mcq"
+    else:
+        # Check if the query is an open-ended logic question (who, what, how, how many, which, etc.)
+        is_yes_no = True
+        query_clean = request.query.strip().lower()
+        if re.match(r'^(who|what|which|how|find|calculate|determine|identify|list|give|state)\b', query_clean):
+            is_yes_no = False
+        q_type = "yes_no" if is_yes_no else "open"
+
     full_q = request.query
     if request.options:
         full_q = full_q + "\n" + "\n".join(request.options)
@@ -180,7 +193,7 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
             premises_used = res.get("premises_used") or []
             
             # 2. Try Z3 Verification & Tie-break for short questions
-            if len(request.premises or []) <= 7:
+            if q_type != "open" and len(request.premises or []) <= 12:
                 try:
                     from pipeline.type1.z3_solver import execute_z3_code
                     

@@ -69,15 +69,15 @@ QUESTION:
 ---
 FEW-SHOT EXAMPLE 1 (Contraposition — Fewest Premises):
 PREMISES:
-  1. If a project is optimized, then it is fast. (Optimized(x) → Fast(x))
-  2. The project is not fast. (¬Fast(x))
+  [0] If a project is optimized, then it is fast. (Optimized(x) → Fast(x))
+  [1] The project is not fast. (¬Fast(x))
 QUESTION: Which conclusion follows with the fewest premises?
   A. The project is not optimized.
   B. The project is optimized.
   C. The project is slow.
 STEP-BY-STEP REASONING:
   - The question asks for the option using the FEWEST premises.
-  - Option A: Contrapositive of Premise 1: (~Fast → ~Optimized). Combined with Premise 2 (~Fast): ~Optimized. VALID. Uses 2 premises: [0, 1].
+  - Option A: Contrapositive of [0]: (~Fast → ~Optimized). Combined with [1] (~Fast): ~Optimized. VALID. Uses premises [0, 1].
   - Option B: Contradicts derived ~Optimized. INVALID.
   - Option C: "Slow" is never mentioned in premises. INVALID.
   - Only Option A is valid. It uses 2 premises.
@@ -86,11 +86,11 @@ ANSWER: A
 
 FEW-SHOT EXAMPLE 2 (Strongest Conclusion — Full Chain):
 PREMISES:
-  1. If a student passes the exam, they are eligible for certification.
-  2. If eligible for certification and completes internship, they are certified.
-  3. If certified, they qualify for the job.
-  4. John passed the exam.
-  5. John completed the internship.
+  [0] If a student passes the exam, they are eligible for certification.
+  [1] If eligible for certification and completes internship, they are certified.
+  [2] If certified, they qualify for the job.
+  [3] John passed the exam.
+  [4] John completed the internship.
 QUESTION: Based on the premises, which is the strongest conclusion?
   A. John is eligible for certification.
   B. John is certified.
@@ -98,9 +98,9 @@ QUESTION: Based on the premises, which is the strongest conclusion?
   D. John needs additional training.
 STEP-BY-STEP REASONING:
   - The question asks for the STRONGEST conclusion — the final result of the complete chain.
-  - From P4 (passed) + P1: John is eligible. Uses [0, 3].
-  - From eligible + P5 (internship) + P2: John is certified. Uses [0, 1, 3, 4].
-  - From certified + P3: John qualifies for the job. Uses [0, 1, 2, 3, 4].
+  - From [3] (passed) + [0]: John is eligible. Uses [0, 3].
+  - From eligible + [4] (internship) + [1]: John is certified. Uses [0, 1, 3, 4].
+  - From certified + [2]: John qualifies for the job. Uses [0, 1, 2, 3, 4].
   - Options A, B, C are ALL valid, but C is the STRONGEST (final in chain, most premises).
   - Option D: No premise mentions training. INVALID.
 PREMISES USED: [0, 1, 2, 3, 4]
@@ -108,19 +108,19 @@ ANSWER: C
 
 FEW-SHOT EXAMPLE 3 (Eligibility ≠ Actuality — Missing Condition):
 PREMISES:
-  1. If a member has valid ID and training, they can use equipment.
-  2. If a member can use equipment AND has a coach, they can book sessions.
-  3. If membership ≥ 6 months, they are eligible for a coach.
-  4. Alex has valid ID and training.
-  5. Alex has membership of 8 months.
+  [0] If a member has valid ID and training, they can use equipment.
+  [1] If a member can use equipment AND has a coach, they can book sessions.
+  [2] If membership ≥ 6 months, they are eligible for a coach.
+  [3] Alex has valid ID and training.
+  [4] Alex has membership of 8 months.
 QUESTION: Which statement is correct?
   A. Alex can use equipment but cannot book sessions without a coach.
   B. Alex can book sessions if assigned a coach.
 STEP-BY-STEP REASONING:
-  - From P4 + P1: Alex can use equipment. ✓
-  - From P5 + P3: Alex is ELIGIBLE for a coach. ✓
+  - From [3] + [0]: Alex can use equipment. ✓
+  - From [4] + [2]: Alex is ELIGIBLE for a coach. ✓
   - ⚠️ CRITICAL: "eligible for a coach" ≠ "has a coach". No premise states Alex HAS a coach.
-  - P2 requires "has a coach" (NOT "eligible for"). This condition is NOT met.
+  - [1] requires "has a coach" (NOT "eligible for"). This condition is NOT met.
   - Option A: Correctly states Alex can use equipment but cannot book without a coach. VALID.
   - Option B: Says "if assigned a coach" — this is a conditional, not a proven fact. Weaker.
   - Option A directly reflects the provable state.
@@ -129,8 +129,8 @@ ANSWER: A
 
 FEW-SHOT EXAMPLE 4 (Insufficient Information → Unknown):
 PREMISES:
-  1. If a student studies hard, they pass the exam.
-  2. If a student passes the exam, they graduate.
+  [0] If a student studies hard, they pass the exam.
+  [1] If a student passes the exam, they graduate.
 QUESTION: Which statement is correct?
   A. All students graduate.
   B. Some students study hard.
@@ -138,7 +138,7 @@ QUESTION: Which statement is correct?
 STEP-BY-STEP REASONING:
   - Option A: No ground facts. CANNOT conclude "all students graduate". NOT derivable.
   - Option B: No premise states any student studies hard. NOT derivable.
-  - Option C: By Hypothetical Syllogism: studies_hard → pass (P1) + pass → graduate (P2) = studies_hard → graduate. VALID.
+  - Option C: By Hypothetical Syllogism: studies_hard → pass ([0]) + pass → graduate ([1]) = studies_hard → graduate. VALID.
   - NOTE: If NONE of the options were derivable, the answer would be "Unknown".
 PREMISES USED: [0, 1]
 ANSWER: C
@@ -186,54 +186,54 @@ STATEMENT TO VERIFY:
 ---
 FEW-SHOT EXAMPLE 1 (Complete Chain → Yes):
 PREMISES:
-  1. If a student completes courses, they are eligible for graduation.
-  2. If eligible for graduation and submits thesis, they graduate.
-  3. Alice completed all courses.
-  4. Alice submitted her thesis.
+  [0] If a student completes courses, they are eligible for graduation.
+  [1] If eligible for graduation and submits thesis, they graduate.
+  [2] Alice completed all courses.
+  [3] Alice submitted her thesis.
 STATEMENT: Does Alice graduate?
 STEP-BY-STEP REASONING:
-  1. From P3 (completed courses) + P1: Alice is eligible. ✓
-  2. From eligible + P4 (thesis) + P2: Alice graduates. ✓
+  1. From [2] (completed courses) + [0]: Alice is eligible. ✓
+  2. From eligible + [3] (thesis) + [1]: Alice graduates. ✓
   All conditions are met.
 PREMISES USED: [0, 1, 2, 3]
 ANSWER: Yes
 
 FEW-SHOT EXAMPLE 2 (Missing Condition → No):
 PREMISES:
-  1. If a member can use equipment AND has a coach, they can book sessions.
-  2. If membership ≥ 6 months, they are eligible for a coach.
-  3. Bob can use equipment.
-  4. Bob has membership of 8 months.
+  [0] If a member can use equipment AND has a coach, they can book sessions.
+  [1] If membership ≥ 6 months, they are eligible for a coach.
+  [2] Bob can use equipment.
+  [3] Bob has membership of 8 months.
 STATEMENT: Does Bob meet all requirements for booking sessions?
 STEP-BY-STEP REASONING:
-  1. From P4 + P2: Bob is ELIGIBLE for a coach. ✓
+  1. From [3] + [1]: Bob is ELIGIBLE for a coach. ✓
   2. ⚠️ CRITICAL: "eligible for a coach" ≠ "has a coach". No premise states Bob HAS a coach.
-  3. P1 requires "has a coach" — this condition is NOT met.
-  4. Bob can use equipment (P3) but does NOT have a coach → cannot book sessions.
+  3. [0] requires "has a coach" — this condition is NOT met.
+  4. Bob can use equipment ([2]) but does NOT have a coach → cannot book sessions.
 PREMISES USED: [0, 1, 2, 3]
 ANSWER: No
 
 FEW-SHOT EXAMPLE 3 (Broken Chain → No):
 PREMISES:
-  1. If a student studies, they understand the material.
-  2. If a student understands the material, they pass the exam.
-  3. If a student passes the exam, they graduate.
+  [0] If a student studies, they understand the material.
+  [1] If a student understands the material, they pass the exam.
+  [2] If a student passes the exam, they graduate.
 STATEMENT: There exists a complete pathway from studying to getting a job.
 STEP-BY-STEP REASONING:
-  1. studies → understands (P1) ✓
-  2. understands → passes_exam (P2) ✓
-  3. passes_exam → graduates (P3) ✓
+  1. studies → understands ([0]) ✓
+  2. understands → passes_exam ([1]) ✓
+  3. passes_exam → graduates ([2]) ✓
   4. graduates → gets_a_job ← NO SUCH PREMISE EXISTS! Chain is BROKEN.
 PREMISES USED: [0, 1, 2]
 ANSWER: No
 
 FEW-SHOT EXAMPLE 4 (Insufficient Information → Unknown):
 PREMISES:
-  1. If it rains, the ground is wet.
-  2. If the ground is wet, flowers bloom.
+  [0] If it rains, the ground is wet.
+  [1] If the ground is wet, flowers bloom.
 STATEMENT: The flowers are blooming.
 STEP-BY-STEP REASONING:
-  1. Rules: rain → wet (P1), wet → bloom (P2).
+  1. Rules: rain → wet ([0]), wet → bloom ([1]).
   2. No fact states "it rains" or "the ground is wet".
   3. Without a ground fact, CANNOT determine if flowers bloom.
 PREMISES USED: []
@@ -241,17 +241,17 @@ ANSWER: Unknown
 
 FEW-SHOT EXAMPLE 5 (Disjunctive Paths — Alternative Satisfied → Yes):
 PREMISES:
-  1. If a student has an honors diploma and completes community service, they qualify for a scholarship.
-  2. If a student has an honors diploma and receives a faculty recommendation, they qualify for a scholarship.
-  3. Alice has an honors diploma.
-  4. Alice completed community service.
+  [0] If a student has an honors diploma and completes community service, they qualify for a scholarship.
+  [1] If a student has an honors diploma and receives a faculty recommendation, they qualify for a scholarship.
+  [2] Alice has an honors diploma.
+  [3] Alice completed community service.
 STATEMENT: Does Alice qualify for a scholarship?
 STEP-BY-STEP REASONING:
-  1. Rule Path A: honors_diploma ∧ community_service → scholarship (P1).
-  2. Rule Path B: honors_diploma ∧ faculty_recommendation → scholarship (P2).
-  3. From P3: Alice has honors diploma. ✓
-  4. From P4: Alice completed community service. ✓
-  5. Path A: honors_diploma (P3) ∧ community_service (P4) → scholarship (P1). ALL conditions met. ✓
+  1. Rule Path A: honors_diploma ∧ community_service → scholarship ([0]).
+  2. Rule Path B: honors_diploma ∧ faculty_recommendation → scholarship ([1]).
+  3. From [2]: Alice has honors diploma. ✓
+  4. From [3]: Alice completed community service. ✓
+  5. Path A: honors_diploma ([2]) ∧ community_service ([3]) → scholarship ([0]). ALL conditions met. ✓
   6. ⚠️ Path B requires faculty_recommendation — not stated. But Path A is FULLY SATISFIED.
   7. Since ANY one valid path is enough, Alice qualifies for a scholarship.
 PREMISES USED: [0, 2, 3]
@@ -280,6 +280,67 @@ STEP-BY-STEP REASONING:
 You MUST output the 0-based indices of the premises you actually used to derive the answer (first premise is index 0, second premise is index 1, etc.) and your final answer in EXACTLY this format on the last two lines:
 PREMISES USED: [comma-separated 0-based indices, e.g., [0, 2] or [] if answer is Unknown]
 ANSWER: [Yes, No, or Unknown]"""
+
+# ══════════════════════════════════════════════════════════════
+# Chain-of-Thought for Open-Ended / Numeric / Text Questions
+# ══════════════════════════════════════════════════════════════
+
+COT_OPEN_PROMPT = """Answer this question using ONLY the given premises. The answer may be a name, number, list, or short phrase.
+
+PREMISES:
+{premises_nl}
+
+PREMISES (Formal Logic):
+{premises_fol}
+
+{hints}
+
+QUESTION:
+{question}
+
+---
+FEW-SHOT EXAMPLE 1 (Direct Fact Retrieval — Number):
+PREMISES:
+  [0] If a student passes the exam, they graduate.
+  [1] The class has 30 students.
+QUESTION: How many students are in the class?
+STEP-BY-STEP REASONING:
+  - [1] directly states the class has 30 students. No derivation needed.
+PREMISES USED: [1]
+ANSWER: 30
+
+FEW-SHOT EXAMPLE 2 (Derivation — Name):
+PREMISES:
+  [0] If a researcher has a grant and publishes a paper, they are promoted.
+  [1] Dr. Lee has a grant.
+  [2] Dr. Lee published a paper.
+QUESTION: Which researcher is promoted?
+STEP-BY-STEP REASONING:
+  - From [1] (grant) + [2] (paper) + [0]: Dr. Lee is promoted.
+PREMISES USED: [0, 1, 2]
+ANSWER: Dr. Lee
+
+FEW-SHOT EXAMPLE 3 (No Information → Unknown):
+PREMISES:
+  [0] All birds can fly.
+  [1] Penguins are birds.
+QUESTION: How fast can a penguin fly?
+STEP-BY-STEP REASONING:
+  - From [1] + [0]: Penguins can fly.
+  - But no premise states speed. Cannot determine.
+PREMISES USED: []
+ANSWER: Unknown
+---
+
+STEP-BY-STEP REASONING:
+1. Identify which premises are directly relevant to the question.
+2. If the answer is DIRECTLY STATED in a premise (a fact), extract it immediately.
+3. If the answer requires derivation, chain the relevant rules and facts.
+4. Output the specific name, number, or phrase. If not derivable, output "Unknown".
+
+You MUST output the 0-based indices of the premises you used and your final answer in EXACTLY this format on the last two lines:
+PREMISES USED: [comma-separated 0-based indices, e.g., [0, 2] or [] if answer is Unknown]
+ANSWER: [the specific name, number, phrase, or Unknown]"""
 
 # ══════════════════════════════════════════════════════════════
 # Z3 Code Generation Prompt
