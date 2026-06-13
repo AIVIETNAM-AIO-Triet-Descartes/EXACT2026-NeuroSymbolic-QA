@@ -362,7 +362,13 @@ class LLMReasoner:
                     pass
 
         # 2. Quét toàn bộ văn bản để tìm thêm các chỉ số dạng [i] (bỏ qua các dòng chỉ ra giả thiết không cần thiết/bị loại trừ)
-        negation_phrases = ["not necessary", "not needed", "not required", "not used", "irrelevant", "unnecessary", "no need", "without using", "does not use", "not be needed", "not be necessary"]
+        negation_phrases = [
+            "not necessary", "not needed", "not required", "not used", "irrelevant", 
+            "unnecessary", "no need", "without using", "does not use", "not be needed", 
+            "not be necessary", "none mention", "none of the", "only discuss", 
+            "do not discuss", "do not mention", "do not state", "does not state", 
+            "does not mention", "no mention", "not provide", "without any", "none of these"
+        ]
         for line in response.split('\n'):
             line_lower = line.lower()
             if any(phrase in line_lower for phrase in negation_phrases):

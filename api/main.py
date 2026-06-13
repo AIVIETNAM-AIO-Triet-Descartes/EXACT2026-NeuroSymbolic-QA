@@ -204,14 +204,25 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                             self.question_type = QuestionType.MCQ if q_type_str == "mcq" else QuestionType.YES_NO
                     
                     classified = MockClassified(full_q, q_type)
+                    
+                    # Filter out meta-premises about missing information
+                    filtered_premises = []
+                    z3_to_orig_index = {}
+                    for i, p in enumerate(request.premises or []):
+                        p_lower = p.lower()
+                        if any(phrase in p_lower for phrase in ["no premise states", "no information", "unknown whether", "not specified", "not mentioned", "no statement"]):
+                            continue
+                        z3_to_orig_index[len(filtered_premises)] = i
+                        filtered_premises.append(p)
+
                     code = reasoner.generate_z3_code(
-                        request.premises or [], request.premises or [], full_q
+                        filtered_premises, filtered_premises, full_q
                     )
                     if code:
                         output = execute_z3_code(code)
                         if output is None:
                             code2 = reasoner.refine_z3_code(
-                                code, "Execution returned no output", request.premises or []
+                                code, "Execution returned no output", filtered_premises
                             )
                             output = execute_z3_code(code2) if code2 else None
                         
@@ -259,7 +270,9 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                             z3_premises_used = []
                             if p_match:
                                 try:
-                                    z3_premises_used = [int(x.strip()) - 1 for x in p_match.group(1).split(',') if x.strip()]
+                                    parsed_indices = [int(x.strip()) - 1 for x in p_match.group(1).split(',') if x.strip()]
+                                    # Map back to original indices
+                                    z3_premises_used = [z3_to_orig_index[idx] for idx in parsed_indices if idx in z3_to_orig_index]
                                     z3_premises_used = [idx for idx in z3_premises_used if 0 <= idx < len(request.premises or [])]
                                 except Exception:
                                     pass
