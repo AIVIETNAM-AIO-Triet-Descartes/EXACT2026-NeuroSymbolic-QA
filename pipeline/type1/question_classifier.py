@@ -213,8 +213,8 @@ def sanitize_and_snap_answer(
     if question_type != "mcq":
         # First check direct match
         val = answer_clean.lower()
-        if val in ('yes', 'no', 'unknown'):
-            return val.capitalize()
+        if val in ('yes', 'no', 'unknown', 'uncertain'):
+            return 'Unknown' if val == 'uncertain' else val.capitalize()
 
         # Check if the query is a Yes/No question. If not (free-form who/what/how/numeric), return raw answer.
         is_yes_no = True
@@ -230,8 +230,8 @@ def sanitize_and_snap_answer(
             
         # Try to clean punctuation
         val_clean = re.sub(r'[^a-zA-Z]', '', val)
-        if val_clean in ('yes', 'no', 'unknown'):
-            return val_clean.capitalize()
+        if val_clean in ('yes', 'no', 'unknown', 'uncertain'):
+            return 'Unknown' if val_clean == 'uncertain' else val_clean.capitalize()
             
         # Check explanation for hints
         expl_lower = (explanation or "").lower()
@@ -240,15 +240,16 @@ def sanitize_and_snap_answer(
         last_part = " ".join(lines[-2:]) if len(lines) >= 2 else expl_lower
         
         # Look for explicit conclusion sentences in explanation
-        if any(w in last_part for w in ['therefore, yes', 'the answer is yes', 'does qualify', 'is valid', 'logically follows', 'is true']):
+        if re.search(r'\b(therefore, yes|the answer is yes|does qualify|is valid|logically follows|is true)\b', last_part):
             return 'Yes'
-        if any(w in last_part for w in ['therefore, no', 'the answer is no', 'does not qualify', 'is invalid', 'cannot be concluded', 'is false']):
+        if re.search(r'\b(therefore, no|the answer is no|does not qualify|is invalid|cannot be concluded|is false)\b', last_part):
             return 'No'
             
-        # Broader search in last part
-        if 'yes' in last_part or 'true' in last_part:
+        # Broader search in last part using word boundaries
+        # Exclude "no info/premise/statement" from indicating a negative answer
+        if re.search(r'\b(yes|true)\b', last_part):
             return 'Yes'
-        if 'no' in last_part or 'false' in last_part:
+        if re.search(r'\b(no|false)\b', last_part) and not re.search(r'\b(no information|no premise|no statement|no mention|no details|unknown|uncertain)\b', last_part):
             return 'No'
             
         # Default fallback
