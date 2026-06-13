@@ -704,6 +704,140 @@ def autofix_z3_declarations(code_str: str) -> str:
             return node
 
     rewritten_tree = DeclRewriter().visit(tree)
+
+    # Now, find all defined names (including newly rewritten custom functions)
+    import z3
+    predefined = {
+        'z3', 'Entity', 'x', 'y', 'z', 'Solver', 'solve_yes_no', 'solve_mcq', 's',
+        'True', 'False', 'None', 'print', 'len', 'range', 'int', 'str', 'dict', 'list', 'set'
+    }
+    for name in dir(z3):
+        if not name.startswith('_'):
+            predefined.add(name)
+
+    defined_names = set(predefined)
+    custom_functions = set()
+
+    class FinalDefFinder(ast.NodeVisitor):
+        def visit_Assign(self, node):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    defined_names.add(target.id)
+                    if isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Name):
+                        if node.value.func.id == 'Function':
+                            custom_functions.add(target.id)
+            self.generic_visit(node)
+            
+        def visit_FunctionDef(self, node):
+            defined_names.add(node.name)
+            self.generic_visit(node)
+            
+        def visit_Import(self, node):
+            for alias in node.names:
+                defined_names.add(alias.asname or alias.name)
+                
+        def visit_ImportFrom(self, node):
+            for alias in node.names:
+                defined_names.add(alias.asname or alias.name)
+
+    FinalDefFinder().visit(rewritten_tree)
+
+    # Find all loaded names (uses) in the tree
+    loaded_names = {} # name -> max_arity
+
+    class LoadedNameFinder(ast.NodeVisitor):
+        def visit_Name(self, node):
+            if isinstance(node.ctx, ast.Load):
+                if node.id not in loaded_names:
+                    loaded_names[node.id] = 0
+            self.generic_visit(node)
+            
+        def visit_Call(self, node):
+            if isinstance(node.func, ast.Name):
+                func_name = node.func.id
+                loaded_names[func_name] = max(loaded_names.get(func_name, 0), len(node.args))
+            self.generic_visit(node)
+
+    LoadedNameFinder().visit(rewritten_tree)
+
+    # Determine undeclared variables/functions
+    undeclared_consts = []
+    undeclared_funcs = []
+
+    for name, arity in loaded_names.items():
+        if name not in defined_names:
+            if arity > 0:
+                undeclared_funcs.append((name, arity))
+                custom_functions.add(name)
+            else:
+                undeclared_consts.append(name)
+
+    # Build new assignments for these undeclared entities
+    new_decls = []
+    for name, arity in undeclared_funcs:
+        # name = Function('name', Entity, ..., BoolSort())
+        args = [ast.Constant(value=name)]
+        for _ in range(arity):
+            args.append(ast.Name(id='Entity', ctx=ast.Load()))
+        args.append(ast.Call(func=ast.Name(id='BoolSort', ctx=ast.Load()), args=[], keywords=[]))
+        
+        assign = ast.Assign(
+            targets=[ast.Name(id=name, ctx=ast.Store())],
+            value=ast.Call(func=ast.Name(id='Function', ctx=ast.Load()), args=args, keywords=[])
+        )
+        new_decls.append(assign)
+
+    for name in undeclared_consts:
+        # name = Const('name', Entity)
+        assign = ast.Assign(
+            targets=[ast.Name(id=name, ctx=ast.Store())],
+            value=ast.Call(
+                func=ast.Name(id='Const', ctx=ast.Load()),
+                args=[ast.Constant(value=name), ast.Name(id='Entity', ctx=ast.Load())],
+                keywords=[]
+            )
+        )
+        new_decls.append(assign)
+
+    # Insert new declarations at the beginning of rewritten_tree.body
+    if new_decls:
+        rewritten_tree.body = new_decls + rewritten_tree.body
+
+    # Rewrite literal arguments of custom functions to Z3 Const(str(val), Entity)
+    class LiteralArgumentRewriter(ast.NodeTransformer):
+        def visit_Call(self, node):
+            self.generic_visit(node)
+            if isinstance(node.func, ast.Name) and node.func.id in custom_functions:
+                new_args = []
+                for arg in node.args:
+                    is_literal = False
+                    val = None
+                    if isinstance(arg, ast.Constant):
+                        is_literal = True
+                        val = arg.value
+                    elif isinstance(arg, ast.Num):
+                        is_literal = True
+                        val = arg.n
+                    elif isinstance(arg, ast.Str):
+                        is_literal = True
+                        val = arg.s
+                    elif isinstance(arg, ast.NameConstant):
+                        is_literal = True
+                        val = arg.value
+                        
+                    if is_literal:
+                        new_arg = ast.Call(
+                            func=ast.Name(id='Const', ctx=ast.Load()),
+                            args=[ast.Constant(value=str(val)), ast.Name(id='Entity', ctx=ast.Load())],
+                            keywords=[]
+                        )
+                        new_args.append(new_arg)
+                    else:
+                        new_args.append(arg)
+                node.args = new_args
+            return node
+
+    rewritten_tree = LiteralArgumentRewriter().visit(rewritten_tree)
     ast.fix_missing_locations(rewritten_tree)
     try:
         return ast.unparse(rewritten_tree)
@@ -870,6 +1004,7 @@ def execute_z3_code(code: str, timeout_sec: int = 30) -> Optional[str]:
             'y': y,
             'z': z,
             'Solver': TrackingSolver,
+            's': TrackingSolver(),
             'solve_yes_no': solve_yes_no,
             'solve_mcq': solve_mcq,
         }
