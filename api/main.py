@@ -166,7 +166,7 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
     is_ynu_options = False
     if request.options:
         opt_vals = {o.strip().lower() for o in request.options}
-        if opt_vals <= {'yes', 'no', 'uncertain', 'unknown', 'true', 'false'}:
+        if opt_vals <= {'yes', 'no', 'uncertain', 'unknown', 'true', 'false', 'maybe', 'cannot determine', 'cannot be determined', 'none of the above'}:
             is_ynu_options = True
     
     if is_ynu_options:
@@ -364,10 +364,14 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
         ans_lower = answer.strip().lower()
         if ans_lower in opt_lower_map:
             answer = opt_lower_map[ans_lower]
-        elif ans_lower == 'unknown' and 'uncertain' in opt_lower_map:
-            answer = opt_lower_map['uncertain']
-        elif ans_lower == 'uncertain' and 'unknown' in opt_lower_map:
-            answer = opt_lower_map['unknown']
+        elif ans_lower in ('unknown', 'uncertain'):
+            # Try to map to other uncertainty variants
+            mapped = False
+            for var in ('uncertain', 'unknown', 'cannot determine', 'cannot be determined', 'maybe', 'none of the above'):
+                if var in opt_lower_map:
+                    answer = opt_lower_map[var]
+                    mapped = True
+                    break
 
     # Map key ('A', 'B', 'C', 'D') back to the original option string to satisfy exactly-one-of-the-options rule
     if request.options and not is_ynu_options and answer in ('A', 'B', 'C', 'D'):
