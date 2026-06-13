@@ -240,13 +240,19 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                         
                             # Yes/No
                             if not z3_ans:
-                                full_lower = raw.lower()
-                                if 'yes' in full_lower:
-                                    z3_ans = 'Yes'
-                                elif 'no' in full_lower:
-                                    z3_ans = 'No'
-                                elif 'unknown' in full_lower:
-                                    z3_ans = 'Unknown'
+                                ans_match = re.search(r'\bANSWER:\s*(\w+)', raw, re.IGNORECASE)
+                                if ans_match:
+                                    ans_val = ans_match.group(1).strip().capitalize()
+                                    if ans_val in ('Yes', 'No', 'Unknown', 'Uncertain'):
+                                        z3_ans = ans_val
+                                if not z3_ans:
+                                    full_lower = raw.lower()
+                                    if re.search(r'\byes\b', full_lower):
+                                        z3_ans = 'Yes'
+                                    elif re.search(r'\bno\b', full_lower):
+                                        z3_ans = 'No'
+                                    elif re.search(r'\bunknown\b', full_lower) or re.search(r'\buncertain\b', full_lower):
+                                        z3_ans = 'Unknown'
                                     
                             # Parse premises used from Z3
                             p_match = re.search(r'PREMISES USED:\s*\[([^\]]*)\]', output)

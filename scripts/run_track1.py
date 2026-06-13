@@ -702,14 +702,20 @@ class NeuroSymbolicPipeline:
             return None
 
         # ── Case 3: Yes/No question ──
+        ans_match = re.search(r'\bANSWER:\s*(\w+)', raw, re.IGNORECASE)
+        if ans_match:
+            ans_val = ans_match.group(1).strip().capitalize()
+            if ans_val in ('Yes', 'No', 'Unknown', 'Uncertain'):
+                return ans_val
+        
         full = raw.lower()
-        if 'yes' in full:
+        if re.search(r'\byes\b', full):
             return 'Yes'
-        if 'no' in full:
+        if re.search(r'\bno\b', full):
             return 'No'
-        if 'unknown' in full:
+        if re.search(r'\bunknown\b', full) or re.search(r'\buncertain\b', full):
             return 'Unknown'
-
+            
         return None
 
     def _make_fallback_result(

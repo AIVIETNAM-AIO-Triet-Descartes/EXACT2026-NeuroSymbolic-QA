@@ -361,15 +361,20 @@ class LLMReasoner:
                 except Exception:
                     pass
 
-        # 2. Quét toàn bộ văn bản để tìm thêm các chỉ số dạng [i]
-        all_bracketed = re.findall(r'\[(\d+)\]', response)
-        for val in all_bracketed:
-            try:
-                idx = int(val)
-                if idx not in indices:
-                    indices.append(idx)
-            except Exception:
-                pass
+        # 2. Quét toàn bộ văn bản để tìm thêm các chỉ số dạng [i] (bỏ qua các dòng chỉ ra giả thiết không cần thiết/bị loại trừ)
+        negation_phrases = ["not necessary", "not needed", "not required", "not used", "irrelevant", "unnecessary", "no need", "without using", "does not use", "not be needed", "not be necessary"]
+        for line in response.split('\n'):
+            line_lower = line.lower()
+            if any(phrase in line_lower for phrase in negation_phrases):
+                continue
+            all_bracketed = re.findall(r'\[(\d+)\]', line)
+            for val in all_bracketed:
+                try:
+                    idx = int(val)
+                    if idx not in indices:
+                        indices.append(idx)
+                except Exception:
+                    pass
 
         if indices and num_premises > 0:
             # Chỉ dịch dịch chuyển về 0-based nếu có phần tử >= num_premises (chắc chắn là 1-based)
