@@ -634,6 +634,33 @@ def autofix_z3_declarations(code_str: str) -> str:
 
     tree = UnpackAssignments().visit(tree)
 
+    class LiteralAssignmentRewriter(ast.NodeTransformer):
+        def visit_Assign(self, node):
+            if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+                var_name = node.targets[0].id
+                is_str_literal = False
+                val = None
+                if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                    is_str_literal = True
+                    val = node.value.value
+                elif isinstance(node.value, ast.Str):
+                    is_str_literal = True
+                    val = node.value.s
+                    
+                if is_str_literal:
+                    new_node = ast.Assign(
+                        targets=node.targets,
+                        value=ast.Call(
+                            func=ast.Name(id='Const', ctx=ast.Load()),
+                            args=[ast.Constant(value=val), ast.Name(id='Entity', ctx=ast.Load())],
+                            keywords=[]
+                        )
+                    )
+                    return ast.copy_location(new_node, node)
+            return node
+
+    tree = LiteralAssignmentRewriter().visit(tree)
+
     declared_vars = {} # name -> (node, type_str)
     
     class DeclFinder(ast.NodeVisitor):
