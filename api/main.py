@@ -418,37 +418,48 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                 p_words = set(re.findall(r'\w+', p_lower))
                 if len(q_words.intersection(p_words)) >= 2:
                     unknown_indices.append(i)
-        # For Uncertain/Unknown answers, the premises_used should strictly be the uncertainty/absence premises
-        premises_used = sorted(list(set(unknown_indices)))
+        # For Uncertain/Unknown answers, the premises_used should strictly be the uncertainty/absence premises if they exist
+        if unknown_indices:
+            premises_used = sorted(list(set(unknown_indices)))
 
-    # For open-ended questions (text or number), perform heuristic premise expansion/refinement
+    # Coreference pronoun detector for open-ended questions
     if not request.options and answer and not is_uncertain_ans:
         ans_clean = str(answer).strip().lower()
         if len(ans_clean) >= 3 and ans_clean not in ('yes', 'no', 'unknown', 'uncertain'):
-            # Extract query keywords (excluding common stopwords)
-            q_words = set(re.findall(r'\w+', request.query.lower()))
-            stop_words = {
-                'who', 'what', 'where', 'when', 'why', 'how', 'which', 'whom',
-                'is', 'are', 'was', 'were', 'do', 'does', 'did', 'have', 'has', 'had',
-                'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'for', 'with', 'by',
-                'about', 'many', 'much', 'total', 'across', 'both', 'all', 'any', 'each'
-            }
-            q_keywords = {w for w in q_words if w not in stop_words and len(w) >= 3}
-            
-            heur_premises = []
+            # Find the premise index containing the answer
+            ans_idx = None
             for i, p in enumerate(request.premises or []):
                 p_lower = p.lower()
-                # Check if premise contains the answer
-                has_answer = (ans_clean in p_lower) or any(part in p_lower for part in ans_clean.split() if len(part) >= 3 and part not in ('professor', 'dr', 'mr', 'ms', 'study', 'project'))
-                # Check if premise contains key query words
-                p_words = set(re.findall(r'\w+', p_lower))
-                has_q_keywords = bool(q_keywords.intersection(p_words))
-                
-                if has_answer or has_q_keywords:
-                    heur_premises.append(i)
+                if ans_clean in p_lower or any(part in p_lower for part in ans_clean.split() if len(part) >= 3 and part not in ('professor', 'dr', 'mr', 'ms', 'study', 'project')):
+                    ans_idx = i
+                    break
             
-            if heur_premises:
-                premises_used = sorted(list(set(premises_used).union(heur_premises)))
+            if ans_idx is not None:
+                # Now, check if there is any other premise containing a pronoun ('she', 'he', 'it', 'they')
+                # AND containing key query terms (indicating it links the query to the pronoun)
+                q_words = set(re.findall(r'\w+', request.query.lower()))
+                stop_words = {
+                    'who', 'what', 'where', 'when', 'why', 'how', 'which', 'whom',
+                    'is', 'are', 'was', 'were', 'do', 'does', 'did', 'have', 'has', 'had',
+                    'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'for', 'with', 'by',
+                    'about', 'many', 'much', 'total', 'across', 'both', 'all', 'any', 'each'
+                }
+                q_keywords = {w for w in q_words if w not in stop_words and len(w) >= 3}
+                
+                for i, p in enumerate(request.premises or []):
+                    if i == ans_idx:
+                        continue
+                    p_lower = p.lower()
+                    words_in_p = set(re.findall(r'\w+', p_lower))
+                    has_pronoun = bool(words_in_p.intersection({'she', 'he', 'it', 'they'}))
+                    has_q_keywords = bool(q_keywords.intersection(words_in_p))
+                    
+                    if has_pronoun and has_q_keywords:
+                        if ans_idx not in premises_used:
+                            premises_used.append(ans_idx)
+                        if i not in premises_used:
+                            premises_used.append(i)
+                premises_used = sorted(list(set(premises_used)))
 
     log_pipeline_request(
         question=request.query, query_type="type1", answer=str(answer),
