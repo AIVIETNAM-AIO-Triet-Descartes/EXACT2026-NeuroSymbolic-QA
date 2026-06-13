@@ -339,7 +339,8 @@ STEP-BY-STEP REASONING:
 2. If the answer is DIRECTLY STATED in a premise (a fact), extract it immediately.
 3. If the answer requires derivation or arithmetic calculations (e.g. addition, subtraction, division, set intersection, logical math), write out each mathematical step and calculation explicitly.
 4. ⚠️ COREFERENCE RULE: If a premise uses a pronoun (e.g. "She", "He", "It", "They", "This project") referring to an entity in another premise, you MUST include BOTH the referring premise and the referent-defining premise in PREMISES USED.
-5. Output the specific name, number, or phrase. If not derivable, output "Unknown".
+5. ⚠️ STRICTLY MINIMAL PREMISES: Under 'PREMISES USED', ONLY list the indices of the premises that are ABSOLUTELY NECESSARY to derive or extract the answer. Do NOT include premises that mention other irrelevant entities or facts that do not contribute to the final answer.
+6. Output the specific name, number, or phrase. If not derivable, output "Unknown".
 
 You MUST write out the 'STEP-BY-STEP REASONING:' section first, and then output the 0-based indices of the premises you used and your final answer in EXACTLY this format on the last two lines:
 PREMISES USED: [comma-separated 0-based indices, e.g., [0, 2] or [] if answer is Unknown]
