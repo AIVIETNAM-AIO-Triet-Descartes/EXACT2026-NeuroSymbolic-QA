@@ -161,7 +161,17 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
     classifier = QuestionClassifier()
     classified_q = classifier.classify(request.query)
     
-    if request.options or classified_q.question_type == QuestionType.MCQ:
+    # Detect Yes/No/Uncertain options — treat as yes_no, NOT mcq, to avoid
+    # fragile letter-mapping chains (A→Yes→A→Yes) that break easily.
+    is_ynu_options = False
+    if request.options:
+        opt_vals = {o.strip().lower() for o in request.options}
+        if opt_vals <= {'yes', 'no', 'uncertain', 'unknown', 'true', 'false'}:
+            is_ynu_options = True
+    
+    if is_ynu_options:
+        q_type = "yes_no"
+    elif request.options or classified_q.question_type == QuestionType.MCQ:
         q_type = "mcq"
     else:
         # Check if the query is an open-ended logic question (who, what, how, how many, which, etc.)
@@ -278,13 +288,26 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                     pass
                                     
                             if z3_ans and z3_ans in ('Yes', 'No', 'A', 'B', 'C', 'D', 'Unknown'):
-                                if z3_ans != answer:
-                                    logger.info(f"[TYPE1] Z3 overrode answer: CoT={answer} -> Z3={z3_ans}")
+                                # Z3 is supplementary — only override CoT if Z3 agrees or
+                                # CoT had no answer at all. Unknown IS a confident answer
+                                # (it means "I reasoned and found insufficient information").
+                                cot_confident = bool(answer and answer.strip())
+                                z3_agrees = (z3_ans == answer)
+                                if z3_agrees:
+                                    # Z3 confirms CoT — merge premises
+                                    explanation = f"[Formal Verification] Formally verified by Z3. \n{explanation}"
+                                    if z3_premises_used:
+                                        premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
+                                elif not cot_confident:
+                                    # CoT had no answer or Unknown — accept Z3
+                                    logger.info(f"[TYPE1] Z3 filled empty CoT: CoT={answer} -> Z3={z3_ans}")
                                     answer = z3_ans
                                     explanation = f"[Formal Verification] Formally verified by Z3. \n{explanation}"
                                     if z3_premises_used:
-                                        premises_used = z3_premises_used
+                                        premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
                                 else:
+                                    # Z3 disagrees with confident CoT — trust CoT, log discrepancy
+                                    logger.warning(f"[TYPE1] Z3 disagrees with CoT (IGNORED): CoT={answer}, Z3={z3_ans}")
                                     if z3_premises_used:
                                         premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
                 except Exception as z3_err:
@@ -301,12 +324,13 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
 
     # Sanitize and snap answer to expected options or Yes/No/Unknown format
     options_dict = None
-    if request.options:
+    if request.options and not is_ynu_options:
+        # Build options_dict only for true MCQ (not for Yes/No/Uncertain options)
         options_dict = {}
         for opt in request.options:
             opt_str = opt.strip()
             # Match "A. Option Text" or similar
-            match = re.match(r'^([A-D])[\.\)\s]\s*(.*)$', opt_str, re.DOTALL | re.IGNORECASE)
+            match = re.match(r'^([A-D])[.\)\s]\s*(.*)$', opt_str, re.DOTALL | re.IGNORECASE)
             if match:
                 options_dict[match.group(1).upper()] = match.group(2).strip()
             else:
@@ -319,6 +343,14 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
             options_dict = {letters[i]: opt for i, opt in enumerate(request.options) if i < len(letters)}
 
     from pipeline.type1.question_classifier import sanitize_and_snap_answer
+    
+    # For Yes/No/Uncertain options, map letter answers (A/B/C) back to values first
+    if is_ynu_options and answer in ('A', 'B', 'C', 'D'):
+        letters = ['A', 'B', 'C', 'D']
+        idx = letters.index(answer)
+        if idx < len(request.options):
+            answer = request.options[idx].strip()
+    
     answer = sanitize_and_snap_answer(
         answer=answer,
         question_type=q_type,
@@ -327,12 +359,24 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
         query=request.query
     )
 
+    # For Yes/No/Uncertain options, map canonical answer to exact option string
+    # (e.g., "Unknown" → "Uncertain" if "Uncertain" is in options)
+    if is_ynu_options and request.options:
+        opt_lower_map = {o.strip().lower(): o.strip() for o in request.options}
+        ans_lower = answer.strip().lower()
+        if ans_lower in opt_lower_map:
+            answer = opt_lower_map[ans_lower]
+        elif ans_lower == 'unknown' and 'uncertain' in opt_lower_map:
+            answer = opt_lower_map['uncertain']
+        elif ans_lower == 'uncertain' and 'unknown' in opt_lower_map:
+            answer = opt_lower_map['unknown']
+
     # Map key ('A', 'B', 'C', 'D') back to the original option string to satisfy exactly-one-of-the-options rule
-    if request.options and answer in ('A', 'B', 'C', 'D'):
+    if request.options and not is_ynu_options and answer in ('A', 'B', 'C', 'D'):
         mapped_answer = None
         for opt in request.options:
             opt_str = opt.strip()
-            match = re.match(r'^([A-D])[\.\)\s]\s*(.*)$', opt_str, re.DOTALL | re.IGNORECASE)
+            match = re.match(r'^([A-D])[.\)\s]\s*(.*)$', opt_str, re.DOTALL | re.IGNORECASE)
             if match and match.group(1).upper() == answer:
                 mapped_answer = opt
                 break
