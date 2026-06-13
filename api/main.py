@@ -307,7 +307,14 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                         premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
                                 else:
                                     # Z3 disagrees with confident CoT — trust CoT, log discrepancy
-                                    logger.warning(f"[TYPE1] Z3 disagrees with CoT (IGNORED): CoT={answer}, Z3={z3_ans}")
+                                    # Exception: for Yes/No questions, if Z3 proved the state is Unknown, trust Z3
+                                    if is_ynu_options and z3_ans == 'Unknown':
+                                        logger.info(f"[TYPE1] Z3 overrode confident CoT with Unknown: CoT={answer} -> Z3=Unknown")
+                                        answer = 'Unknown'
+                                        if z3_premises_used:
+                                            premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
+                                    else:
+                                        logger.warning(f"[TYPE1] Z3 disagrees with CoT (IGNORED): CoT={answer}, Z3={z3_ans}")
                 except Exception as z3_err:
                     logger.error(f"[TYPE1] Z3 verification failed: {z3_err}")
                     
@@ -413,6 +420,35 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                     unknown_indices.append(i)
         # For Uncertain/Unknown answers, the premises_used should strictly be the uncertainty/absence premises
         premises_used = sorted(list(set(unknown_indices)))
+
+    # For open-ended questions (text or number), perform heuristic premise expansion/refinement
+    if not request.options and answer and not is_uncertain_ans:
+        ans_clean = str(answer).strip().lower()
+        if len(ans_clean) >= 3 and ans_clean not in ('yes', 'no', 'unknown', 'uncertain'):
+            # Extract query keywords (excluding common stopwords)
+            q_words = set(re.findall(r'\w+', request.query.lower()))
+            stop_words = {
+                'who', 'what', 'where', 'when', 'why', 'how', 'which', 'whom',
+                'is', 'are', 'was', 'were', 'do', 'does', 'did', 'have', 'has', 'had',
+                'a', 'an', 'the', 'of', 'in', 'on', 'at', 'to', 'for', 'with', 'by',
+                'about', 'many', 'much', 'total', 'across', 'both', 'all', 'any', 'each'
+            }
+            q_keywords = {w for w in q_words if w not in stop_words and len(w) >= 3}
+            
+            heur_premises = []
+            for i, p in enumerate(request.premises or []):
+                p_lower = p.lower()
+                # Check if premise contains the answer
+                has_answer = (ans_clean in p_lower) or any(part in p_lower for part in ans_clean.split() if len(part) >= 3 and part not in ('professor', 'dr', 'mr', 'ms', 'study', 'project'))
+                # Check if premise contains key query words
+                p_words = set(re.findall(r'\w+', p_lower))
+                has_q_keywords = bool(q_keywords.intersection(p_words))
+                
+                if has_answer or has_q_keywords:
+                    heur_premises.append(i)
+            
+            if heur_premises:
+                premises_used = sorted(list(set(premises_used).union(heur_premises)))
 
     log_pipeline_request(
         question=request.query, query_type="type1", answer=str(answer),
