@@ -111,6 +111,8 @@ def _solve_single(formula_str: str, given: dict, find: str) -> Optional[dict]:
     answer_float = _pick_root(solutions)   # prefer non-negative real root (magnitude)
     if answer_float is None:
         return None
+    if answer_float < 0 and find in _ALWAYS_POS:
+        answer_float = abs(answer_float)
 
     unit = _UNIT_MAP.get(find, "")
     steps = [
@@ -161,6 +163,8 @@ def _solve_multi_step(formulas: list[str], given: dict, find: str) -> Optional[d
         val = _pick_root(solutions)   # prefer non-negative real root (magnitude)
         if val is None:
             continue
+        if val < 0 and str(unknown) in _ALWAYS_POS:
+            val = abs(val)
 
         accumulated[str(unknown)] = val
         all_steps.append(f"Step {i+1} — {formula_str}: {unknown} = {val:.6g}")
@@ -344,6 +348,16 @@ def _llm_fallback_chain(state: dict, parsed: dict) -> Optional[dict]:
 # Main dispatch
 # ══════════════════════════════════════════════════════════════
 
+# Quantities that must be physically positive — take abs() if SymPy yields negative
+_ALWAYS_POS = frozenset({"R", "C", "L", "P", "E", "f", "e", "Z", "Z_L", "Z_C",
+                          "R_total", "R1", "R2", "R3"})
+
+# Hardcoded formula fallback for high-miss cases (LC resonance, self-induction EMF)
+_HARDCODED_FORMULAS: dict[str, list[str]] = {
+    "C": ["C = 1 / (4 * pi**2 * f**2 * L)"],
+    "e": ["e = L * delta_I / delta_t"],
+}
+
 _RESONANCE_CUE = _re.compile(r'\bresonan', _re.IGNORECASE)
 
 
@@ -422,6 +436,13 @@ def solve_physics(
                 result = _run_with_timeout(_solve_single, (formula_str, given, find), timeout)
                 if result:
                     break
+
+    if not result and find in _HARDCODED_FORMULAS:
+        for hf in _HARDCODED_FORMULAS[find]:
+            result = _run_with_timeout(_solve_single, (hf, given, find), timeout)
+            if result:
+                logger.info(f"[SYMPY_SOLVER] Solved via hardcoded formula for {find}: {hf}")
+                break
 
     if not result:
         logger.warning("SymPy solve failed — switching to llm_fallback", extra={"extra": {
