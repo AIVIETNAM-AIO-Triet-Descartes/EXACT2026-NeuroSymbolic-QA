@@ -126,10 +126,11 @@ _CHAIN_PAT = re.compile(
 # disambiguate correctly. U = hiệu điện thế, V = điện thế.
 _VERB_TARGET_MAP = {
     "potential energy": "W", "electric potential": "V", "potential difference": "U",
-    "voltage": "U", "energy": "E", "resistance": "R",
-    "current": "I", "power": "P", "charge": "Q", "capacitance": "C",
+    "voltage": "U", "induced EMF": "e", "self-induced": "e", "energy": "E",
+    "resistance": "R", "current": "I", "power": "P", "charge": "Q",
+    "capacitor needed": "C", "capacitance": "C",
     "force": "F", "frequency": "f", "inductance": "L",
-    "electric field": "E_field", "field strength": "E_field",
+    "electric field": "E_field", "field strength": "E_field", "intensity": "E_field",
     # reactance: VN convention Z_L (cảm kháng) / Z_C (dung kháng) / Z (tổng trở).
     # Specific kinds MUST precede the generic "reactance" (substring match order).
     "impedance": "Z", "inductive reactance": "Z_L", "capacitive reactance": "Z_C",
