@@ -4,9 +4,28 @@ Tài liệu này tổng hợp phân tích, phản biện và kế hoạch chi ti
 
 ---
 
+## Review & Đánh giá (2026-06-16) — CẬP NHẬT SAU P0
+
+### Kết quả sau khi hoàn thành Giai đoạn 0
+Chạy `demo_type2.py --limit 100` (no LLM, Ollama offline): **85.2% accuracy** (46/54 evaluable). 44 FALLBACK, 8 WRONG.
+Tăng từ baseline pre-P0 **83.6%** (46/55). P0 formulas mới (formula_054–060) đang contribute.
+
+### Bug phát hiện trong P0: `_solve_multi_step` alias fallback sai
+**Triệu chứng:** Accuracy giảm từ 83.6% → 47.8% ngay sau P0. 27 câu E_field electrostatics WRONG(100%).
+
+**Root cause:** Code alias fallback thêm vào `_solve_multi_step` có 2 lỗi:
+1. `for var, val in accumulated.items()` (inner loop) leak `val = <last given value>` ra ngoài scope
+2. `return {"answer": f"{val:.6g}"}` chạy **unconditionally** trên iteration đầu tiên của alias loop khi alias không tìm thấy trong accumulated → trả về garbage value thay vì `None`
+
+**Hệ quả:** Scalar solver trả về e.g. `E_field = 0.08` (giá trị `d_perp` từ given) thay vì `None` → vector_solver không được gọi (chỉ fallback khi `source == "llm_fallback"`).
+
+**Fix:** Xóa unconditional return, rename `val` → `alias_val` trong alias block. File: `pipeline/type2/sympy_solver.py` lines 192–216.
+
+---
+
 ## Review & Đánh giá (2026-06-15)
 
-### Kết quả baseline hiện tại
+### Kết quả baseline hiện tại (pre-P0)
 Chạy `demo_type2.py --limit 100` (no LLM): **83.6% accuracy** (46/55 evaluable). 43 FALLBACK, 9 WRONG.
 Bottleneck thực sự: **extraction + symbol mismatch**, không phải retrieval scoring.
 
@@ -38,50 +57,79 @@ Bottleneck thực sự: **extraction + symbol mismatch**, không phải retrieva
 
 ### [TIÊN QUYẾT] Symbol Registry — Single Source of Truth
 
-**Tạo `pipeline/type2/symbol_registry.py`** làm authoritative source cho toàn pipeline:
+**Tạo `pipeline/type2/symbol_registry.py`** làm authoritative source cho toàn pipeline để giải quyết sự lệch pha ký hiệu giữa RAG DB, Regex và Classifier:
 
 ```python
 # Canonical symbol cho mỗi đại lượng
 CANONICAL = {
-    "energy":               "W",       # W, không phải E (tránh đụng E_field)
+    "energy":               "W",       # Thống nhất năng lượng là W để tránh đụng E_field
     "capacitor_energy":     "W",
     "inductor_energy":      "W_L",
-    "emf":                  "e",
+    "emf":                  "e",       # Thống nhất suất điện động là e nhỏ
     "electric_field":       "E_field",
     "impedance":            "Z",
     "inductive_reactance":  "Z_L",
     "capacitive_reactance": "Z_C",
 }
 
-# Alias map: canonical → tất cả ký hiệu có thể gặp trong formulas
+# Alias map: canonical → tất cả ký hiệu có thể gặp trong formulas hoặc đề bài
 ALIASES: dict[str, list[str]] = {
     "W":       ["W", "E", "W_C", "U_E"],
     "W_L":     ["W_L", "W", "E"],
     "e":       ["e", "EMF", "emf", "ε"],
     "E_field": ["E_field", "E", "E0"],
+    "Z_L":     ["Z_L", "X_L"],
+    "Z_C":     ["Z_C", "X_C"],
+    "U":       ["U", "V"],
 }
+
+# Bản đồ lọc Alias theo Domain để giải quyết xung đột ý nghĩa của ký hiệu (Symbol Ambiguity)
+# Ví dụ: Ký hiệu "E" có thể là Điện trường (electrostatics) hoặc Năng lượng (ac_circuits)
+DOMAIN_ALIASES = {
+    "electrostatics": {
+        "E": "E_field",
+    },
+    "ac_circuits": {
+        "E": "W",
+    }
+}
+
+def get_aliases(symbol: str, domain: str = None) -> list[str]:
+    """Lấy danh sách các ký hiệu thay thế an toàn dựa trên Domain của bài toán."""
+    resolved_sym = symbol
+    if domain and domain in DOMAIN_ALIASES:
+        resolved_sym = DOMAIN_ALIASES[domain].get(symbol, symbol)
+    return [resolved_sym] + ALIASES.get(resolved_sym, [])
 ```
 
 **3 thay đổi đi kèm (thứ tự tăng dần risk):**
 
 | Bước | File | Nội dung | Risk |
 |------|------|----------|------|
-| A | `sympy_solver.py` | Alias fallback khi `solve()` rỗng | Thấp |
-| B | `physics_formulas.json` + rebuild FAISS | Normalize LHS → canonical | Trung bình |
-| C | `regex_extract.py`, `type2_classifier.py` | Import từ `symbol_registry` thay map riêng | Thấp |
+| A | `sympy_solver.py` | Domain-aware Alias fallback khi `solve()` rỗng | Thấp |
+| B | `physics_formulas.json` + rebuild FAISS | Normalize LHS → canonical + Tích hợp MD5 Drift Guard | Trung bình |
+| C | `regex_extract.py`, `type2_classifier.py` | Import từ `symbol_registry` thay vì định nghĩa map riêng | Thấp |
 
-**Bước A — alias fallback trong solver (~20 dòng):**
+**Bước A — alias fallback trong solver (~25 dòng):**
 ```python
-from pipeline.type2.symbol_registry import ALIASES
+from pipeline.type2.symbol_registry import get_aliases
 
-def _solve_with_aliases(eq, find: str):
-    for sym_name in [find] + ALIASES.get(find, []):
-        result = sp.solve(eq, sp.Symbol(sym_name))
+def _solve_with_aliases(eq, find: str, sym_dict: dict, domain: str = None):
+    # Lấy danh sách alias an toàn dựa trên domain để tránh xung đột E (điện trường) vs E (năng lượng)
+    aliases = get_aliases(find, domain)
+    for sym_name in aliases:
+        sym = sym_dict.get(sym_name) or sp.Symbol(sym_name)
+        result = sp.solve(eq, sym)
         if result:
             return result
     return []
 ```
-Fix được `find="E"` + `formula_052` dùng `W` mà không cần đụng DB.
+Fix được `find="E"` + `formula_052` dùng `W` mà không bị nhầm sang cường độ điện trường.
+
+**Bước B.2 — Rebuild FAISS & MD5 Drift Guard:**
+* Tích hợp cơ chế tự động ghi nhận mã MD5 của `physics_formulas.json` khi chạy `build_faiss_index.py`.
+* Khi hệ thống khởi chạy API, thực hiện kiểm tra mã MD5 của DB hiện tại với mã MD5 đã index để cảnh báo lập tức nếu lập trình viên chỉnh sửa công thức nhưng chưa build lại FAISS index.
+
 
 ---
 
@@ -119,12 +167,13 @@ Thực hiện đánh giá song song thay vì lọc tuần tự.
 
 ## 3. Kế hoạch triển khai (Phased Execution) — CẬP NHẬT
 
-### Giai đoạn 0 [MỚI]: Symbol Registry (Tiên quyết cho mọi thứ)
-- [ ] Tạo `pipeline/type2/symbol_registry.py` với `CANONICAL` + `ALIASES`
-- [ ] Bước A: alias fallback trong `sympy_solver.py`
-- [ ] Bước B: normalize LHS `physics_formulas.json` + rebuild FAISS
-- [ ] Bước C: `regex_extract.py` + `type2_classifier.py` import từ registry
-- [ ] Audit script: extract union của tất cả biến trong DB, đối chiếu aliases → coverage 100%
+### Giai đoạn 0 [DONE ✅]: Symbol Registry (Tiên quyết cho mọi thứ)
+- [x] Tạo `pipeline/type2/symbol_registry.py` với `CANONICAL` + `ALIASES`
+- [x] Bước A: alias fallback trong `sympy_solver.py` — **+bugfix unconditional return**
+- [x] Bước B: normalize LHS `physics_formulas.json` + rebuild FAISS (58 formulas, MD5 guard)
+- [x] Bước C: `regex_extract.py` + `type2_classifier.py` import từ registry
+- [x] Audit script `scripts/audit_db_formulas.py` + thêm 7 formulas mới (formula_054–060)
+- [x] Unit tests 4/4 PASS (`tests/unit_test_edge_cases.py`)
 
 ### Giai đoạn 1 [SỬA]: Nâng cấp Retrieval Score (Low Risk)
 > Chỉ bắt đầu sau khi Giai đoạn 0 xong và test 100-sample không regression.
@@ -148,11 +197,11 @@ Thực hiện đánh giá song song thay vì lọc tuần tự.
 
 | # | Item | Priority | Status |
 |---|------|----------|--------|
-| 1 | Symbol namespace (E vs W) → Symbol Registry | HIGH | ❌ chưa làm |
-| 2 | Gộp 2 detector thành `TARGET_SYMBOL_MAP` chung | MEDIUM | ❌ chưa làm |
-| 3 | Thêm `QUALITATIVE_PROPORTIONAL` question type | MEDIUM | ❌ chưa làm |
-| 4 | Thêm `e = L*delta_I/delta_t` vào RAG DB | MEDIUM | ❌ chưa làm (chỉ có hardcode fallback trong sympy_solver) |
+| 1 | Symbol namespace (E vs W) → Symbol Registry | HIGH | ✅ done — P0: `symbol_registry.py` + alias fallback |
+| 2 | Gộp 2 detector thành `TARGET_SYMBOL_MAP` chung | MEDIUM | ❌ chưa làm — `regex_extract` dùng `CANONICAL`, `type2_classifier._detect_target_variable` vẫn riêng |
+| 3 | Thêm `QUALITATIVE_PROPORTIONAL` question type | MEDIUM | ✅ done — triển khai là `QUALITATIVE` (line 31 `type2_classifier.py`); proportional keywords → QUALITATIVE |
+| 4 | Thêm `e = L*delta_I/delta_t` vào RAG DB | MEDIUM | ✅ done — `formula_055` trong `physics_formulas.json`; hardcode fallback vẫn giữ làm safety net |
 | 5a | Angular frequency `omega` extraction | LOW | ❌ chưa làm |
-| 5b | `electromotive force` → `e` (hiện map sang `EMF`, lệch với `_VERB_TARGET_MAP`) | LOW | ❌ bug nhỏ |
+| 5b | `electromotive force` → `e` (hiện map sang `EMF`, lệch với `_VERB_TARGET_MAP`) | LOW | ✅ done — `_PHRASAL_PATTERNS` lines 255–256 đổi `'EMF'` → `'e'` |
 | 6 | `nJ: 1e-9` trong `_EXPECTED_UNIT_SI` | LOW | ✅ done |
 | 7 | Z3 structured logging (JSON + z3_timeout) | LOW | ❌ chưa làm |
