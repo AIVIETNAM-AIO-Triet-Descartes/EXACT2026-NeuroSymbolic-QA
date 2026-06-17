@@ -2,10 +2,10 @@ llm:
   # Backend switch — đổi 1 dòng `active` để chuyển dev <-> prod.
   # Cả llama.cpp server (dev, GGUF) và vLLM (prod, FP16) đều nói OpenAI-compatible
   # /v1 API → code LLMReasoner không đổi, chỉ đổi endpoint + model_name ở đây.
-  active: dev                # dev | prod
+  active: dev # dev | prod | ollama
 
   # Shared cho mọi profile
-  api_key: "not-needed"      # cả llama.cpp lẫn vLLM không yêu cầu auth mặc định
+  api_key: "not-needed" # cả llama.cpp lẫn vLLM không yêu cầu auth mặc định
   temperature: 0.1
   max_tokens: 1024
 
@@ -15,19 +15,25 @@ llm:
     #     --alias Qwen/Qwen2.5-7B-Instruct
     dev:
       api_base: "http://localhost:8000/v1"
-      model_name: "Qwen/Qwen2.5-7B-Instruct"   # = --alias trên llama-server
+      model_name: "Qwen/Qwen2.5-7B-Instruct" # = --alias trên llama-server
 
     # Prod: vLLM phục vụ FP16 safetensors (VPS Linux, GPU >=24GB).
     #   vllm serve Qwen/Qwen2.5-7B-Instruct --host 127.0.0.1 --port 8001 --dtype float16
     #   vLLM nghe 8001 NỘI BỘ; FastAPI (api.port=8000) public + proxy /v1/models.
     #   model_name PHẢI khớp model_id thật (committee verify qua GET /v1/models).
     #   Khi deploy: đổi active: dev → prod (xem docs/deployment_plan.md §3).
+    # Ollama: Linux local, OpenAI-compatible /v1, systemd service port 11434.
+    #   ollama serve (systemd, luôn chạy). model_name = ollama tag, không phải HF id.
+    ollama:
+      api_base: "http://localhost:11434/v1"
+      model_name: "qwen2.5:7b"
+
     prod:
-      api_base: "http://localhost:8001/v1"      # vLLM nội bộ — KHÔNG đụng cổng 8000 của FastAPI
+      api_base: "http://localhost:8001/v1" # vLLM nội bộ — KHÔNG đụng cổng 8000 của FastAPI
       model_name: "Qwen/Qwen2.5-7B-Instruct"
 
 pipeline:
-  z3_timeout: 5            # seconds before Z3 fallback
+  z3_timeout: 5 # seconds before Z3 fallback
   sympy_timeout: 10
   retry_attempts: 2
 

@@ -38,7 +38,7 @@ from pipeline.type2.cot_builder import cot_builder_node
 from pipeline.type2.type2_validation import validate_sympy_result
 from pipeline.type2.regex_extract import extract_given, detect_find_from_verb
 
-CSV_PATH = "data/train/Physics_Problems_Text_Only.csv"
+DEFAULT_CSV_PATH = "data/train/Physics_Problems_Text_Only.csv"
 TOLERANCE = 0.02   # 2% relative tolerance for answer comparison
 
 # Convert expected-answer units to SI base for fair comparison with SymPy output
@@ -199,7 +199,7 @@ def _llm_explain(question: str, answer: str, unit: str, steps: list) -> str:
 # ══════════════════════════════════════════════════════════════
 
 def run_demo(limit: int = 20, use_llm: bool = False, output_path: Optional[str] = None,
-             ids: Optional[list] = None) -> None:
+             ids: Optional[list] = None, csv_path: Optional[str] = None) -> None:
     clf = PhysicsClassifier()
 
     # `ids` (if given) overrides `limit`: run ONLY those rows, scanning the whole
@@ -207,7 +207,7 @@ def run_demo(limit: int = 20, use_llm: bool = False, output_path: Optional[str] 
     # --use-llm (PAL/CoT) to see which the LLM rescues.
     rows: list[dict] = []
     id_set = set(ids) if ids else None
-    with open(CSV_PATH, encoding="utf-8", newline="") as f:
+    with open(csv_path or DEFAULT_CSV_PATH, encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):
             if id_set is not None:
                 if row["id"] in id_set:
@@ -363,6 +363,12 @@ def run_demo(limit: int = 20, use_llm: bool = False, output_path: Optional[str] 
             "source": source
         })
 
+        # Incremental save sau mỗi câu
+        if output_path:
+            os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+            with open(output_path, "w", encoding="utf-8") as f:
+                json.dump(predictions, f, ensure_ascii=False, indent=2)
+
     # -- Print main table ------------------------------------------
     W = 100
     print(f"\n{'-' * W}")
@@ -416,6 +422,9 @@ if __name__ == "__main__":
     parser.add_argument("--ids", type=str, default=None,
                         help="Chỉ chạy các id cụ thể, ngăn cách bởi dấu phẩy "
                              "(vd: LD010,LD014,LD016). Bỏ qua --limit khi có.")
+    parser.add_argument("--csv", type=str, default=None,
+                        help="Đường dẫn CSV khác (mặc định data/train/Physics_Problems_Text_Only.csv)")
     args = parser.parse_args()
     ids = [s.strip() for s in args.ids.split(",") if s.strip()] if args.ids else None
-    run_demo(args.limit, use_llm=args.use_llm, output_path=args.output, ids=ids)
+    run_demo(args.limit, use_llm=args.use_llm, output_path=args.output, ids=ids,
+             csv_path=args.csv)
