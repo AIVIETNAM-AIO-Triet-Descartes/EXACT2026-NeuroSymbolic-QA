@@ -11,6 +11,7 @@ Output: data/formula_index/index.faiss + data/formula_index/metadata.pkl
 import os
 import sys
 import pickle
+import hashlib
 
 import numpy as np
 
@@ -58,6 +59,16 @@ def build_formula_index(
 
     print(f"Saved FAISS index -> {index_path}")
     print(f"Saved metadata   -> {meta_path}")
+    # MD5 Drift Guard: save hash
+    db_path = "data/rag/physics_formulas.json"
+    if os.path.exists(db_path):
+        with open(db_path, "rb") as f:
+            md5 = hashlib.md5(f.read()).hexdigest()
+        md5_path = os.path.join(save_dir, "db_md5.txt")
+        with open(md5_path, "w") as f:
+            f.write(md5)
+        print(f"Saved DB MD5     -> {md5_path}")
+
     print(f"Index dimension  : {embeddings.shape[1]}")
     print(f"Total vectors    : {index.ntotal}")
 

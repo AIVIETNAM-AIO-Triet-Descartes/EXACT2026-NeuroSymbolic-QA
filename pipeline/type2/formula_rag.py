@@ -80,19 +80,25 @@ def _load_faiss_index(index_dir: str = "data/formula_index") -> tuple:
             docs = pickle.load(f)
         model = SentenceTransformer("all-MiniLM-L6-v2")
 
-        # Drift guard: JSON edited but index not rebuilt → new formulas invisible
-        # to FAISS Layer-2 (formula_rag_review §4). Warn loudly; don't crash.
-        try:
-            json_docs = load_formula_db()
-            if len(json_docs) != index.ntotal:
-                logger.warning(
-                    f"[FORMULA_RAG] MISMATCH: physics_formulas.json has "
-                    f"{len(json_docs)} valid formulas but FAISS index has "
-                    f"{index.ntotal} vectors. Run scripts/build_faiss_index.py "
-                    f"to rebuild — new formulas are NOT searchable until then."
+        # MD5 Drift Guard: strictly check if physics_formulas.json has been modified
+        # without rebuilding the FAISS index. Crash if so.
+        import hashlib
+        import os
+        db_path = "data/rag/physics_formulas.json"
+        md5_path = f"{index_dir}/db_md5.txt"
+        
+        if os.path.exists(db_path) and os.path.exists(md5_path):
+            with open(db_path, "rb") as f:
+                current_md5 = hashlib.md5(f.read()).hexdigest()
+            with open(md5_path, "r") as f:
+                saved_md5 = f.read().strip()
+                
+            if current_md5 != saved_md5:
+                raise RuntimeError(
+                    f"[MD5 DRIFT GUARD] ERROR: physics_formulas.json has been modified "
+                    f"but FAISS index was not rebuilt. \n"
+                    f"You MUST run `python scripts/build_faiss_index.py` before starting the pipeline."
                 )
-        except Exception:
-            pass  # mismatch check is best-effort
 
         logger.info(f"[FORMULA_RAG] FAISS index loaded ({len(docs)} entries)")
         return index, docs, model
