@@ -315,15 +315,15 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                     if z3_premises_used:
                                         premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
                                 else:
-                                    # Z3 disagrees with confident CoT — trust CoT, log discrepancy
-                                    # Exception: for Yes/No questions, if Z3 proved the state is Unknown, trust Z3
-                                    if is_ynu_options and z3_ans == 'Unknown':
-                                        logger.info(f"[TYPE1] Z3 overrode confident CoT with Unknown: CoT={answer} -> Z3=Unknown")
-                                        answer = 'Unknown'
-                                        if z3_premises_used:
-                                            premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
-                                    else:
-                                        logger.warning(f"[TYPE1] Z3 disagrees with CoT (IGNORED): CoT={answer}, Z3={z3_ans}")
+                                    # Z3 disagrees with confident CoT — trust CoT, log discrepancy.
+                                    # NOTE: we deliberately do NOT let Z3=Unknown downgrade a confident
+                                    # CoT answer. The Z3 codegen is the weak link (dropped premises, sort
+                                    # mismatch, malformed ForAll) → a Z3 "Unknown" almost always reflects
+                                    # broken generated code, not a genuine proof of insufficiency. In the
+                                    # Jun-14 submission this override turned 4 correct CoT answers into
+                                    # wrong "Uncertain"s. CoT already self-reports real uncertainty
+                                    # ("Uncertain") on its own, so this path is pure downside.
+                                    logger.warning(f"[TYPE1] Z3 disagrees with CoT (IGNORED): CoT={answer}, Z3={z3_ans}")
                 except Exception as z3_err:
                     logger.error(f"[TYPE1] Z3 verification failed: {z3_err}")
                     
