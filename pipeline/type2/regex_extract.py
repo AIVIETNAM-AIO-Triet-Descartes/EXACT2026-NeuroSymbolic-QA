@@ -124,18 +124,7 @@ _CHAIN_PAT = re.compile(
 # match. "potential energy" and "electric potential" must precede the looser
 # "potential"/"energy" cues so U (hiệu điện thế) vs V (điện thế) vs W (thế năng)
 # disambiguate correctly. U = hiệu điện thế, V = điện thế.
-_VERB_TARGET_MAP = {
-    "potential energy": "W", "electric potential": "V", "potential difference": "U",
-    "voltage": "U", "induced EMF": "e", "self-induced": "e", "energy": "E",
-    "resistance": "R", "current": "I", "power": "P", "charge": "Q",
-    "capacitor needed": "C", "capacitance": "C",
-    "force": "F", "frequency": "f", "inductance": "L",
-    "electric field": "E_field", "field strength": "E_field", "intensity": "E_field",
-    # reactance: VN convention Z_L (cảm kháng) / Z_C (dung kháng) / Z (tổng trở).
-    # Specific kinds MUST precede the generic "reactance" (substring match order).
-    "impedance": "Z", "inductive reactance": "Z_L", "capacitive reactance": "Z_C",
-    "reactance": "Z_L", "power factor": "cos_phi",
-}
+from pipeline.type2.symbol_registry import CANONICAL as _VERB_TARGET_MAP
 _VERB_PAT = re.compile(
     r'\b(?:calculate|find|determine|compute|what\s+is)\s+(?:the\s+)?'
     r'((?:[a-zA-Z]+\s+){0,2}[a-zA-Z]+)',
@@ -263,8 +252,8 @@ _PHRASAL_FIELDS: list[tuple[str, str, str]] = [
     (r'inductance',             'L',   _HENRY),
     (r'potential\s+difference', 'U',   _VOLT),
     (r'voltage',                'U',   _VOLT),
-    (r'electromotive\s+force',  'EMF', _VOLT),
-    (r'\bemf\b',                'EMF', _VOLT),
+    (r'electromotive\s+force',  'e', _VOLT),
+    (r'\bemf\b',                'e', _VOLT),
     (r'current',                'I',   _AMP),
     (r'frequency',              'f',   _HZ),
     (r'\bpower\b',              'P',   _WATT),

@@ -77,7 +77,7 @@ class PhysicsClassifier(QuestionClassifier):
         )
 
     def _detect_domain(self, question: str) -> str:
-        """Phân loại domain — 5 nhóm phủ 8 prefix dataset (docs/track2_data_info.md §2,
+        """Phân loại domain — 5 nhóm chính, giải phương trình và rút gọn biểu thức một cách chính xác tuyệt đối.m phủ 8 prefix dataset (docs/track2_data_info.md §2,
         canonical set tại docs/track2_formula_gaps.md §5).
 
         Thứ tự kiểm tra = ưu tiên (cụ thể → tổng quát):
@@ -233,28 +233,7 @@ class PhysicsClassifier(QuestionClassifier):
         # Thứ tự = ưu tiên match (first-match-wins). Cụm nhiều từ phải đặt TRƯỚC
         # từ đơn chứa nó: "electromotive force" trước "force", "power factor" trước
         # "power", "impedance" trước "resistance" (Z vs R).
-        mapping = {
-            "impedance": "Z",
-            "energy": "E",
-            "resistance": "R",
-            "voltage": "V",
-            "current": "I",
-            "power factor": "cos_phi",
-            "power": "P",
-            "charge": "Q",
-            "capacitance": "C",
-            "electromotive force": "EMF",
-            "emf": "EMF",
-            "electric field": "E_field",
-            "magnetic flux": "Φ",
-            "magnetic field": "B",
-            "force": "F",
-            "frequency": "f",
-            "period": "T",
-            "self-inductance": "L",
-            "inductance": "L",
-            "flux": "Φ",
-        }
+        from pipeline.type2.symbol_registry import CANONICAL as mapping
         q_lower = question.lower()
         for keyword, var in mapping.items():
             if keyword in q_lower:
