@@ -640,13 +640,13 @@ def autofix_z3_declarations(code_str: str) -> str:
                 var_name = node.targets[0].id
                 is_str_literal = False
                 val = None
+                # ast.Constant covers all literals on Python 3.8+; the legacy
+                # ast.Str/Num/NameConstant aliases were removed in 3.12 and raise
+                # AttributeError on 3.12+, so we no longer reference them.
                 if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
                     is_str_literal = True
                     val = node.value.value
-                elif isinstance(node.value, ast.Str):
-                    is_str_literal = True
-                    val = node.value.s
-                    
+
                 if is_str_literal:
                     new_node = ast.Assign(
                         targets=node.targets,
@@ -839,19 +839,12 @@ def autofix_z3_declarations(code_str: str) -> str:
                 for arg in node.args:
                     is_literal = False
                     val = None
+                    # ast.Constant covers num/str/bool/None literals on Python 3.8+;
+                    # the legacy ast.Num/Str/NameConstant aliases were removed in 3.12.
                     if isinstance(arg, ast.Constant):
                         is_literal = True
                         val = arg.value
-                    elif isinstance(arg, ast.Num):
-                        is_literal = True
-                        val = arg.n
-                    elif isinstance(arg, ast.Str):
-                        is_literal = True
-                        val = arg.s
-                    elif isinstance(arg, ast.NameConstant):
-                        is_literal = True
-                        val = arg.value
-                        
+
                     if is_literal:
                         new_arg = ast.Call(
                             func=ast.Name(id='Const', ctx=ast.Load()),

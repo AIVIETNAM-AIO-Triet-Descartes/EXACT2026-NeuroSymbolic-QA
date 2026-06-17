@@ -194,12 +194,19 @@ class TestPhysicsClassifier:
 		self.clf = PhysicsClassifier()
 
 	def test_detect_circuit_domain(self):
-		# "resistance" appears before "current" in classifier mapping, so R is returned
 		q = "A circuit has voltage 12V and resistance 4Ω. Calculate the current."
 		result = self.clf.classify_physics(q)
 		assert result.domain == "circuits"
-		# Classifier returns first matched keyword — "resistance" hits before "current"
-		assert result.target_variable == "R"
+
+	@pytest.mark.xfail(reason="TODO #2: _detect_target_variable is first-keyword-wins over "
+	                          "CANONICAL order ('voltage' precedes 'current'), so a question "
+	                          "ASKING for current returns U. Needs verb-aware target detection "
+	                          "(merge with regex_extract.detect_find_from_verb).", strict=True)
+	def test_detect_circuit_target_is_current(self):
+		# The question asks to *Calculate the current* → target should be I.
+		q = "A circuit has voltage 12V and resistance 4Ω. Calculate the current."
+		result = self.clf.classify_physics(q)
+		assert result.target_variable == "I"
 
 	def test_detect_target_current_unambiguous(self):
 		q = "Find the current flowing through the circuit."
@@ -211,7 +218,8 @@ class TestPhysicsClassifier:
 		q = "A capacitor with capacitance 4F is charged to 3V. Find the energy stored."
 		result = self.clf.classify_physics(q)
 		assert result.domain == "electrostatics"
-		assert result.target_variable == "E"
+		# P0 Symbol Registry unifies energy → canonical "W" (avoids E_field collision).
+		assert result.target_variable == "W"
 
 	def test_detect_single_formula_type(self):
 		q = "A resistor has resistance 5Ω and current 2A. Calculate power."
