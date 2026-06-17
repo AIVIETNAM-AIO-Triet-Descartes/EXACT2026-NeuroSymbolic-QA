@@ -88,14 +88,12 @@ def _pick_root(solutions) -> Optional[float]:
     return (nonneg or reals)[0]
 
 
-def _solve_single(formula_str: str, given: dict, find: str) -> Optional[dict]:
+def _solve_single(formula_str: str, given: dict, find: str, domain: str = None) -> Optional[dict]:
     """Solve one formula with known values; returns result dict or None."""
     parsed = _parse_formula(formula_str)
     if not parsed:
         return None
     eq, sym_names, sym_dict = parsed
-
-    find_sym = sym_dict.get(find) or symbols(find)
 
     # Substitute all known values using declared symbols (avoids I/E conflicts)
     eq_sub = eq
@@ -104,14 +102,25 @@ def _solve_single(formula_str: str, given: dict, find: str) -> Optional[dict]:
         if sym is not None:
             eq_sub = eq_sub.subs(sym, float(val))
 
-    solutions = solve(eq_sub, find_sym)
+    from pipeline.type2.symbol_registry import get_aliases
+    aliases = get_aliases(find, domain)
+    solutions = []
+    resolved_find = find
+    
+    for sym_name in aliases:
+        sym = sym_dict.get(sym_name) or symbols(sym_name)
+        solutions = solve(eq_sub, sym)
+        if solutions:
+            resolved_find = sym_name
+            break
+
     if not solutions:
         return None
 
     answer_float = _pick_root(solutions)   # prefer non-negative real root (magnitude)
     if answer_float is None:
         return None
-    if answer_float < 0 and find in _ALWAYS_POS:
+    if answer_float < 0 and resolved_find in _ALWAYS_POS:
         answer_float = abs(answer_float)
 
     unit = _UNIT_MAP.get(find, "")
@@ -119,7 +128,7 @@ def _solve_single(formula_str: str, given: dict, find: str) -> Optional[dict]:
         f"Given: {', '.join(f'{k}={v}' for k, v in given.items())}",
         f"Formula: {formula_str}",
         f"Substitute: {eq_sub}",
-        f"Solve for {find}: {find} = {solutions[0]}",
+        f"Solve for {resolved_find}: {resolved_find} = {solutions[0]}",
         f"Result: {find} = {answer_float:.6g} {unit}".strip(),
     ]
     return {
@@ -131,7 +140,7 @@ def _solve_single(formula_str: str, given: dict, find: str) -> Optional[dict]:
     }
 
 
-def _solve_multi_step(formulas: list[str], given: dict, find: str) -> Optional[dict]:
+def _solve_multi_step(formulas: list[str], given: dict, find: str, domain: str = None) -> Optional[dict]:
     """
     Chain formulas sequentially — step N output feeds step N+1 as known.
     First formula that yields `find` wins.
@@ -180,17 +189,21 @@ def _solve_multi_step(formulas: list[str], given: dict, find: str) -> Optional[d
                 "source": "sympy",
             }
 
-    # Check if find accumulated from intermediate steps
-    if find in accumulated:
-        val = accumulated[find]
-        unit = _UNIT_MAP.get(find, "")
-        return {
-            "answer": f"{val:.6g}",
-            "unit": unit,
-            "steps": all_steps + [f"Result: {find} = {val:.6g} {unit}".strip()],
-            "raw_expr": str(val),
-            "source": "sympy",
-        }
+    from pipeline.type2.symbol_registry import get_aliases
+    aliases = get_aliases(find, domain)
+
+    # Check if any alias of find was accumulated from intermediate steps
+    for sym_name in aliases:
+        if sym_name in accumulated:
+            alias_val = accumulated[sym_name]
+            unit = _UNIT_MAP.get(find, "")
+            return {
+                "answer": f"{alias_val:.6g}",
+                "unit": unit,
+                "steps": all_steps + [f"Result: {find} ({sym_name}) = {alias_val:.6g} {unit}".strip()],
+                "raw_expr": str(alias_val),
+                "source": "sympy",
+            }
 
     return None
 
@@ -402,6 +415,7 @@ def solve_physics(
     given = parsed.get("given", {})
     find = parsed.get("find", "")
     formulas = parsed.get("formulas", [])
+    domain = parsed.get("domain")
 
     if not find or not formulas:
         logger.warning(f"[SYMPY_SOLVER] Missing find='{find}' or formulas={formulas}")
@@ -410,7 +424,7 @@ def solve_physics(
     # Dependency chain injected by formula_rag (len > 1) → chain-solve first,
     # regardless of q_type (RLC, solenoid…). _solve_multi_step walks deps→target.
     if len(formulas) > 1:
-        chain_res = _run_with_timeout(_solve_multi_step, (formulas, given, find), timeout)
+        chain_res = _run_with_timeout(_solve_multi_step, (formulas, given, find, domain), timeout)
         if chain_res:
             logger.info(f"[SYMPY_SOLVER] Solved via chain ({len(formulas)} formulas) for {find}")
             return chain_res
@@ -423,23 +437,23 @@ def solve_physics(
         PhysicsQuestionType.ELECTROSTATIC,
     ):
         for formula_str in formulas:
-            result = _run_with_timeout(_solve_single, (formula_str, given, find), timeout)
+            result = _run_with_timeout(_solve_single, (formula_str, given, find, domain), timeout)
             if result:
                 logger.info(f"[SYMPY_SOLVER] Solved via {q_type.value}: {formula_str}")
                 break
 
     elif q_type in (PhysicsQuestionType.MULTI_STEP, PhysicsQuestionType.ELECTROMAGNETIC):
-        result = _run_with_timeout(_solve_multi_step, (formulas, given, find), timeout)
+        result = _run_with_timeout(_solve_multi_step, (formulas, given, find, domain), timeout)
         if not result:
             # Fallback: single-formula attempt
             for formula_str in formulas:
-                result = _run_with_timeout(_solve_single, (formula_str, given, find), timeout)
+                result = _run_with_timeout(_solve_single, (formula_str, given, find, domain), timeout)
                 if result:
                     break
 
     if not result and find in _HARDCODED_FORMULAS:
         for hf in _HARDCODED_FORMULAS[find]:
-            result = _run_with_timeout(_solve_single, (hf, given, find), timeout)
+            result = _run_with_timeout(_solve_single, (hf, given, find, domain), timeout)
             if result:
                 logger.info(f"[SYMPY_SOLVER] Solved via hardcoded formula for {find}: {hf}")
                 break
