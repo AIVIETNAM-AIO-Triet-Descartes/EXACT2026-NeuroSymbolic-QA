@@ -4,6 +4,56 @@ Tài liệu này tổng hợp phân tích, phản biện và kế hoạch chi ti
 
 ---
 
+## Review & Đánh giá (2026-06-19) — SAU VÒNG CHẤM 1 + RE-RUN
+
+> Chi tiết kết quả test: **`docs/docs_mtri/round1_eval_results.md`**. Deadline gia hạn: **~15h 21/06/2026** (~2 ngày).
+
+### Điểm chính thức vòng 1 (submission #28): **39.38**
+- Type1: 19.62/25 (answer **17/25**, premises Jaccard ~0.89)
+- Type2: 17.0/25 (answer **+ unit**)
+- base 36.62 + time bonus 2.75
+
+### Re-run sau Fix (server redeploy, tuần tự, 0 error)
+- Type1 answer **17 → 20/25** (+3 — Fix 1 Z3-override, verified deterministic: T1_0034/0042/0016)
+- Type2 full **17 → 18/25** (+1: T2_0007 energy `P=U²/R·t`, T2_0013 braking)
+- Latency avg **11.3s**, 0 câu >60s → time bonus an toàn
+- base ~38.9, total ~**41.6**
+
+### ⚠️ PHÁT HIỆN LỚN: BTC mở rộng domain ngoài điện/từ
+Vòng 1 BTC đưa vào **CƠ HỌC / NHIỆT / QUANG** (kinematics, thermodynamics, optics):
+- T2_0012-0016 kinematics (accel, braking, F=ma, projectile)
+- T2_0017-0019 thermo (Q=mcΔT, latent heat, ideal gas)
+- T2_0020 optics (thấu kính)
+
+Các domain này **KHÔNG có trong `physics_formulas.json`** (58 formula toàn điện/từ) và gần như
+không có trong 1352-câu CSV (scan keyword: kinematics 1, thermo 5, optics 0). Hiện chỉ "đúng nhờ
+PAL fallback" — không deterministic, rủi ro. **Đây là bottleneck điểm Type2 mới.**
+
+### Test mở rộng: `physics_test.csv` 100 câu (type2, tuần tự) — 2026-06-19
+Bộ "toàn diện" khó hơn btc_round1 nhiều: **answer 51/100, FULL (ans+unit) 39/100**.
+- **Unit emission là lỗ hổng lớn**: answer 51 vs full 39 → **12 câu đúng số nhưng sai/thiếu unit** (12% điểm bay).
+- **4 câu timeout 60s** (LD050, LD332, CH107, DT030) ngay cả khi chạy tuần tự — competition scored wrong.
+- Yếu nhất: DDT/DT 14%, LD 34% (vector Coulomb + multi-step). Khá hơn: NL 53%, CH/TD/THCB ~50%.
+
+### Reprioritize (2 ngày)
+| # | Việc | Mức | Ghi chú |
+|---|------|-----|---------|
+| P1-A | Bổ sung formula domain mới (kinematics/thermo/optics) + điện thiếu (resistivity, transformer) | **HIGH** | xem §5.1 |
+| P1-B | Symbol binding cho domain mới (extraction trả `initial_speed`/`braking_distance` → symbol formula) | **HIGH** | **blocker**: thêm formula vô ích nếu không bind (§5.2) |
+| P1-C | Type2 unit emission/convention (N/C, `Z_L`→ohm, optics cm) | **HIGH** ⬆ | đo được **12/100** câu mất điểm chỉ vì unit (§5.3) |
+| P1-F | Hard timeout safeguard (~45s) — trả best-effort thay vì để >60s | **HIGH** ⭐mới | 4/100 câu timeout đo được (§5.6) |
+| P1-D | Multi-step solver — Forward Chaining (§2.2), fix series capacitor | MED | T2_0006; DDT/DT/LD yếu (§5.4) |
+| P1-E | Type1 CoT reasoning (5 câu MCQ/yes-no sai) | LOW | ROI thấp, khó |
+
+### Test tooling sẵn sàng
+- `scripts/eval_server.py` — bắn cả 2 track vào `/predict`, scorer committee-faithful (prefix/sci-notation/single-letter), `--batch`.
+- `scripts/build_eval_set.py` → `data/eval/eval_set.json` (2160 câu: 808 t1 + 1352 t2).
+- `scripts/build_test_batches.py` → `data/eval/test_batches.json` (8 batch × 200, 50/50, stratified).
+- `data/eval/btc_round1.json` — 50 câu BTC vòng 1 + gold (regression set).
+- **Lưu ý**: batch từ 2160 chỉ test domain điện; cần thêm câu cơ/nhiệt/quang để test domain mới.
+
+---
+
 ## Review & Đánh giá (2026-06-16) — CẬP NHẬT SAU P0
 
 ### Kết quả sau khi hoàn thành Giai đoạn 0
@@ -205,3 +255,75 @@ Thực hiện đánh giá song song thay vì lọc tuần tự.
 | 5b | `electromotive force` → `e` (hiện map sang `EMF`, lệch với `_VERB_TARGET_MAP`) | LOW | ✅ done — `_PHRASAL_PATTERNS` lines 255–256 đổi `'EMF'` → `'e'` |
 | 6 | `nJ: 1e-9` trong `_EXPECTED_UNIT_SI` | LOW | ✅ done |
 | 7 | Z3 structured logging (JSON + z3_timeout) | LOW | ❌ chưa làm |
+
+---
+
+## 5. P1 — Mở rộng Domain + Fixes (từ phân tích vòng 1, 2026-06-19)
+
+### 5.1 [P1-A] Formula domain mới cần thêm vào `physics_formulas.json`
+Mỗi formula cần: `formula_sympy`, `variables` (description + unit), `keywords`, `domain`, example.
+Sau khi thêm → `python scripts/build_faiss_index.py` (rebuild FAISS + MD5 guard).
+
+**Kinematics** (domain `mechanics`):
+- `v = v0 + a*t`
+- `s = v0*t + 0.5*a*t**2`
+- `v**2 = v0**2 + 2*a*s`  ← braking distance (T2_0013), max height
+- `h = v0**2 / (2*g)`  ← projectile max height (T2_0016)
+- `F = m*a`  ← Newton 2 (T2_0015)
+- `N = m*(g + a)`  ← apparent weight trong thang máy (T2_0014)
+
+**Thermodynamics** (domain `thermodynamics`):
+- `Q = m*c*dT`  ← specific heat (T2_0017)
+- `Q = m*L`  ← latent heat melt/boil (T2_0018)
+- `P*V = n*R*T`  ← ideal gas (T2_0019)
+
+**Optics** (domain `optics`):
+- `1/f = 1/do + 1/di`  ← thin lens (T2_0020); chú ý đơn vị cm
+- `M = -di/do`  ← magnification
+
+**Điện còn thiếu**:
+- `R = rho*l/S`  ← resistivity (T2_0039 hiện sai 1000× do mm² → m² conversion)
+- `U2/U1 = N2/N1`  ← transformer (T2_0049, hiện đúng nhưng nên có formula chính thức)
+
+### 5.2 [P1-B] Symbol binding domain mới — BLOCKER
+Solver bind theo **tên symbol khớp chính xác** (`sym_dict.get(var)`). Extraction (regex + LLM)
+trả **tên dài, KHÔNG nhất quán**: `initial_speed` vs `initial_velocity`, `m` vs `mass`,
+`braking_distance`, `max_height`, `object_distance`. → formula `v**2=v0**2+2*a*s` không bind được.
+
+**Việc cần làm:**
+1. Mở rộng `symbol_registry.CANONICAL` cho đại lượng cơ/nhiệt/quang (vd `initial speed`→`v0`,
+   `acceleration`→`a`, `distance`→`s`, `mass`→`m`, `specific heat`→`c`, `focal length`→`f`,
+   `object distance`→`do`, `image distance`→`di`).
+2. Thêm `ALIASES` cho các symbol đó (gom các biến thể tên dài LLM hay sinh).
+3. Trong solver, normalize `given` keys + `find` qua registry TRƯỚC khi bind (hiện chỉ alias `find`).
+4. Test: ép các câu T2_0012-0020 đi qua **SymPy deterministic** (confidence 1.0), không rớt PAL.
+
+### 5.3 [P1-C] Unit emission / convention
+- `Z_L`, `Z_C` (inductive/capacitive reactance) phải emit unit `ohm` (T2_0011 hiện rỗng).
+- E-field: BTC dùng `N/C`, ta emit `V/m` → cần map `V/m`→`N/C` cho E-field point/charge (T2_0004).
+- Optics: trả `cm` (hoặc đảm bảo giá trị + unit khớp đề, T2_0020).
+- Đảm bảo mọi solver path set `unit` trong `_UNIT_MAP` / SolverResult.
+
+### 5.4 [P1-D] Multi-step (Forward Chaining, §2.2)
+Series capacitor T2_0006 (`C_eq = C1*C2/(C1+C2)` → `Q = C_eq*U`) hiện sai. Đây là case multi-step
+điển hình → triển khai Forward Chaining (§2.2) hoặc tối thiểu thêm formula series/parallel cap.
+
+### 5.5 [P1-F] Hard timeout safeguard — MỚI (rủi ro mất điểm)
+Đo trên physics_test 100: **4 câu vượt 60s** (LD050, LD332, CH107, DT030) ngay cả tuần tự
+→ competition (60s/câu, no retry) sẽ chấm SAI dù pipeline có thể ra đúng nếu kịp.
+
+Nguyên nhân nghi: LLM PAL/CoT fallback trên câu khó (vector Coulomb đa điện tích, multi-step)
+chạy lâu + có thể retry. SymPy/vector path nhanh (<1s); chậm là ở nhánh LLM.
+
+**Việc cần làm:**
+1. Đặt **deadline tổng ~45s/request** trong `/predict` (vd `asyncio.wait_for` / ThreadPool timeout
+   bọc cả pipeline), khi hết giờ → trả **best-effort hiện có** (kết quả solver tốt nhất, hoặc
+   answer rỗng + explanation hợp lệ) thay vì treo tới 60s.
+2. Giảm `retry_attempts`/`max_tokens` cho nhánh LLM Type2 khi gần deadline.
+3. Log thời gian từng node để xác định node nào ngốn (parser LLM vs PAL vs explainer).
+4. Cân nhắc: câu vector nặng nên ưu tiên `vector_solver` (deterministic, nhanh) trước khi rớt PAL.
+
+### 5.6 Regression check
+Sau mỗi thay đổi: `python scripts/eval_server.py --url <host> --input data/eval/btc_round1.json
+--workers 1` — phải KHÔNG regression trên 50 câu BTC, và Type2 full tăng dần. Backup: `demo_type2.py
+--limit 100` no-LLM không tụt.
