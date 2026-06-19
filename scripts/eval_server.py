@@ -33,40 +33,75 @@ TOLERANCE = 0.02  # 2% relative tolerance for numeric answers
 
 # ── matching helpers ─────────────────────────────────────────────
 def _parse_float(s):
+    # Handle plain floats AND the committee's scientific-notation strings
+    # ("3.38 × 10^-3", "1.25 × 10^5", "7.2 x 10^3") → 3.38e-3 etc.
+    txt = str(s).strip().lower().replace(",", ".")
+    txt = re.sub(r"\s*[×x]\s*10\s*\^?\s*", "e", txt)
+    txt = txt.replace("^", "")
     try:
-        return float(str(s).strip().replace(",", "."))
+        return float(txt)
     except Exception:
         return None
 
 
-def _answer_match(pred, gold, kind: str) -> bool:
+def _answer_match(pred, gold, kind: str, aliases=None) -> bool:
     pred, gold = str(pred).strip(), str(gold).strip()
     if kind == "type2":
         pf, gf = _parse_float(pred), _parse_float(gold)
         if pf is not None and gf is not None and gf != 0:
             return abs(pf - gf) / abs(gf) <= TOLERANCE
         return pred.lower() == gold.lower()
-    # type1: numeric answers exact-ish, else lenient substring (matches the
-    # competition harness — server may echo a letter or the full option text).
+    # type1: numeric answers exact-ish, else match against gold + any committee
+    # alias (the eval set carries expected.aliases, e.g. "A" / "Option A" / full text).
     pf, gf = _parse_float(pred), _parse_float(gold)
     if pf is not None and gf is not None:
         return abs(pf - gf) < 1e-6
-    pl, gl = pred.lower(), gold.lower()
+    pl = pred.lower()
     if not pl:
         return False
-    return pl == gl or gl in pl or pl in gl
+    cands = [str(c).strip().lower() for c in ([gold] + list(aliases or [])) if str(c).strip()]
+    # 1) exact match against gold or any alias (covers letters "B", "Yes", etc.)
+    if pl in cands:
+        return True
+    # 2) full-text match — ONLY when both sides are long enough to be a phrase, so a
+    #    single-letter pred ("c") can't spuriously substring into a full option text
+    #    (e.g. the letter c inside "connection").
+    if len(pl) >= 5:
+        for cl in cands:
+            if len(cl) >= 5 and (pl in cl or cl in pl):
+                return True
+    return False
 
 
-def _unit_match(pred, gold) -> bool:
-    # Match the ASCII-fication done by api/response_builder.build_response (and the
-    # committee's ASCII unit matching, spec §5): the served answer emits ASCII units
-    # (ohm, u, degree) while the dataset gold still holds Ω/μ/°. Normalize BOTH the
-    # same way so we don't under-report Type 2 full-score on a pure notation diff.
-    def norm(s):
-        s = str(s).strip().lower()
-        s = (s.replace("ω", "ohm").replace("μ", "u").replace("µ", "u").replace("°", "degree"))
-        return re.sub(r"\s+", "", s)
-    return norm(pred) == norm(gold)
+_PREFIX = {"p": 1e-12, "n": 1e-9, "u": 1e-6, "m": 1e-3, "c": 1e-2,
+           "k": 1e3, "M": 1e6, "G": 1e9}
+_BASE_UNITS = {"F", "J", "C", "H", "s", "A", "V", "W", "Hz", "m", "Pa",
+               "ohm", "N", "T", "Wb", "eV", "g", "mol", "K"}
+
+
+def _qty(value, unit):
+    """(SI-scaled value, base-unit symbol) — strips a metric prefix off the unit and
+    folds its scale into the value, mirroring how the committee normalizes prefixes
+    (e.g. "150 uF" and "0.00015 F" compare equal; "15 uJ" == "1.5e-5 J")."""
+    v = _parse_float(value)
+    u = str(unit).strip().replace("Ω", "ohm").replace("μ", "u").replace("µ", "u").replace("°", "degree")
+    scale, base = 1.0, u
+    if len(u) >= 2 and u[0] in _PREFIX and u[1:] in _BASE_UNITS:
+        scale, base = _PREFIX[u[0]], u[1:]
+    return (v * scale if v is not None else None), base.strip().lower()
+
+
+def _type2_scores(rec):
+    """(answer_ok, full_ok) for a Type 2 record, committee-faithful.
+    answer_ok = SI values within tolerance (prefix + sci-notation normalized).
+    full_ok   = answer_ok AND base-unit symbols match (V/m ≠ N/C stays wrong)."""
+    pv, pb = _qty(rec.get("pred_answer"), rec.get("pred_unit"))
+    gv, gb = _qty(rec.get("gold_answer"), rec.get("gold_unit"))
+    if pv is None or gv is None:
+        ans = str(rec.get("pred_answer", "")).strip().lower() == str(rec.get("gold_answer", "")).strip().lower()
+    else:
+        ans = gv != 0 and abs(pv - gv) / abs(gv) <= TOLERANCE
+    return ans, (ans and pb == gb)
 
 
 def _premises_score(pred, gold):
@@ -143,7 +178,7 @@ def _print_report(results):
 
     # ---- Type 1 ----
     if t1:
-        ans_ok = [r for r in t1 if _answer_match(r["pred_answer"], r["gold_answer"], "type1")]
+        ans_ok = [r for r in t1 if _answer_match(r["pred_answer"], r["gold_answer"], "type1", r.get("gold_aliases"))]
         prem = [_premises_score(r["pred_premises"], r["gold_premises_used"]) for r in t1]
         prem = [p for p in prem if p[0] is not None]
         exact = sum(1 for e, _ in prem if e)
@@ -159,25 +194,18 @@ def _print_report(results):
 
     # ---- Type 2 ----
     if t2:
-        ans_ok = [r for r in t2 if _answer_match(r["pred_answer"], r["gold_answer"], "type2")]
-        full = [r for r in ans_ok if _unit_match(r["pred_unit"], r["gold_unit"])]
+        ans_ok = [r for r in t2 if _type2_scores(r)[0]]
+        full = [r for r in t2 if _type2_scores(r)[1]]
         print(f"\n  ── TYPE 2 (physics) — {len(t2)} q ──")
         print(f"     Answer correct   : {len(ans_ok)}/{len(t2)} = {len(ans_ok)/len(t2):.1%}")
-        print(f"     Full (answer+unit): {len(full)}/{len(t2)} = {len(full)/len(t2):.1%}")
-        by = defaultdict(lambda: [0, 0])
-        for r in t2:
-            p = re.match(r"([A-Za-z]+)", r["query_id"])
-            p = p.group(1).upper() if p else "?"
-            by[p][0] += 1
-            if _answer_match(r["pred_answer"], r["gold_answer"], "type2"):
-                by[p][1] += 1
-        if len(by) > 1:
-            print(f"     by prefix: " + "  ".join(
-                f"{k}={v[1]}/{v[0]}" for k, v in sorted(by.items())))
+        print(f"     Full (answer+unit): {len(full)}/{len(t2)} = {len(full)/len(t2):.1%}  ← official Type 2 score")
 
     # ---- wrong cases ----
+    def _ok(r):
+        return _type2_scores(r)[1] if r["type"] == "type2" else \
+            _answer_match(r["pred_answer"], r["gold_answer"], "type1", r.get("gold_aliases"))
     for label, group, kind in (("TYPE 1", t1, "type1"), ("TYPE 2", t2, "type2")):
-        wrong = [r for r in group if not _answer_match(r["pred_answer"], r["gold_answer"], kind)]
+        wrong = [r for r in group if not _ok(r)]
         if wrong:
             print(f"\n  {'-'*W}\n  {label} WRONG ({len(wrong)}):")
             for r in wrong[:30]:
@@ -192,8 +220,12 @@ def _print_report(results):
 
 
 # ── driver ───────────────────────────────────────────────────────
-def run(url, input_path, output_path, limit, workers, timeout):
+def run(url, input_path, output_path, limit, workers, timeout, batch=None):
     recs = load_records(input_path)
+    if batch:
+        recs = [r for r in recs if r.get("batch") == batch]
+        if not recs:
+            raise SystemExit(f"No records with batch={batch!r} in {input_path}")
     if limit:
         recs = recs[:limit]
     n1 = sum(1 for r in recs if r["type"] == "type1")
@@ -209,9 +241,11 @@ def run(url, input_path, output_path, limit, workers, timeout):
             i = fut[future]
             r = results[i] = future.result()
             kind = r["type"]
+            ans_correct = (_type2_scores(r)[1] if kind == "type2"
+                           else _answer_match(r["pred_answer"], r["gold_answer"], kind, r.get("gold_aliases")))
             if r.get("_error"):
                 err += 1; tag = "ERR"
-            elif _answer_match(r["pred_answer"], r["gold_answer"], kind):
+            elif ans_correct:
                 ok += 1; tag = "OK "
             else:
                 bad += 1; tag = "BAD"
@@ -238,5 +272,6 @@ if __name__ == "__main__":
     ap.add_argument("--limit", type=int, default=0, help="Max questions (0 = all)")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--timeout", type=int, default=70, help="Per-request seconds (competition = 60s)")
+    ap.add_argument("--batch", default=None, help="Run only records with this batch label (test_batches.json)")
     args = ap.parse_args()
-    run(args.url.rstrip("/"), args.input, args.output, args.limit, args.workers, args.timeout)
+    run(args.url.rstrip("/"), args.input, args.output, args.limit, args.workers, args.timeout, args.batch)
