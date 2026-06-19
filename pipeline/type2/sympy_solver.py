@@ -376,7 +376,7 @@ def _llm_fallback_chain(state: dict, parsed: dict) -> Optional[dict]:
 
 # Quantities that must be physically positive — take abs() if SymPy yields negative
 _ALWAYS_POS = frozenset({"R", "C", "L", "P", "E", "f", "e", "Z", "Z_L", "Z_C",
-                          "R_total", "R1", "R2", "R3"})
+                          "R_total", "R1", "R2", "R3", "F", "s", "d", "h", "x", "d_i", "d_o"})
 
 # Hardcoded formula fallback for high-miss cases (LC resonance, self-induction EMF)
 _HARDCODED_FORMULAS: dict[str, list[str]] = {

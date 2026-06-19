@@ -170,8 +170,15 @@ def retrieve_formula(
         if d.get("domain") == domain and find and find in d.get("variables", {})
     ]
 
+    # Layer 1.1: If no same-domain candidates, search across all domains
+    if not candidates:
+        candidates = [
+            d for d in docs
+            if find and find in d.get("variables", {})
+        ]
+
     if len(candidates) == 1:
-        logger.info(f"[FORMULA_RAG] Layer 1 hit: {candidates[0]['id']}")
+        logger.info(f"[FORMULA_RAG] Layer 1.1 (all-domain) hit: {candidates[0]['id']}")
         return candidates[0]
 
     # Layer 1.5: solvability rerank (deterministic, beats fuzzy FAISS among

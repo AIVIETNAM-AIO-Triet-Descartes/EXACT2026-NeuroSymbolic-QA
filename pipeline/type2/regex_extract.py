@@ -51,6 +51,12 @@ _UNIT_FACTORS: dict[str, float] = {
     "Hz": 1.0, "kHz": 1e3, "MHz": 1e6,
     # Force
     "N": 1.0,
+    # Time
+    "s": 1.0, "ms": 1e-3, "us": 1e-6, "min": 60.0, "minute": 60.0, "minutes": 60.0, "h": 3600.0, "hour": 3600.0, "hours": 3600.0,
+    # Area
+    "mm2": 1e-6, "mm²": 1e-6, "mm^2": 1e-6, "cm2": 1e-4, "cm²": 1e-4, "cm^2": 1e-4,
+    # Velocity & Acceleration
+    "m/s": 1.0, "m/s2": 1.0, "m/s²": 1.0, "m/s^2": 1.0,
 }
 
 
@@ -241,6 +247,10 @@ _WATT = r'([umµμkM]?W)\b'
 _JOULE = r'([umµμk]?J)\b'
 _COUL = r'([numµμ]?C)\b'
 _TESLA = r'(m?T)\b'
+_M_S = r'(m/s)'
+_M_S2 = r'(m/s\^2|m/s²|m/s2)'
+_M = r'(m|cm|mm)\b'
+_SEC = r'(s|ms|us|min|minutes|minute|h|hour|hours)\b'
 
 _PHRASAL_FIELDS: list[tuple[str, str, str]] = [
     (r'inductive\s+reactance', 'Z_L', _OHM),
@@ -260,6 +270,12 @@ _PHRASAL_FIELDS: list[tuple[str, str, str]] = [
     (r'energy',                 'E',   _JOULE),
     (r'charge',                 'Q',   _COUL),
     (r'magnetic\s+field',       'B',   _TESLA),
+    (r'initial\s+velocity|initial\s+speed', 'u', _M_S),
+    (r'final\s+velocity|final\s+speed', 'v', _M_S),
+    (r'velocity|speed',         'v',   _M_S),
+    (r'acceleration',           'a',   _M_S2),
+    (r'distance|displacement|braking\s+distance', 's', _M),
+    (r'time|duration',          't',   _SEC),
 ]
 _PHRASAL_COMPILED = [
     (re.compile(noun + _PHRASAL_CONNECT + _PHRASAL_NUM + unit, re.IGNORECASE), sym)
@@ -435,7 +451,7 @@ def extract_given(question: str, return_phrasal: bool = False):
     normalized_q = question.replace("μ", "u").replace("µ", "u")
     bare_pattern = re.compile(
         r'\b([+-]?\d+(?:\.\d+)?)\s*(?:[x\*\xd7]\s*10\^?([=\-]?\d+))?\s*'
-        r'(uV|mV|V|kV|uA|mA|A|kA|mΩ|Ω|kΩ|MΩ|ohm|ohms|pF|nF|uF|mF|F|uH|mH|H|Hz|kHz|MHz|uW|mW|W|kW|MW|uJ|mJ|J|kJ|nC|uC|mC|C|N|mT|T)\b',
+        r'(uV|mV|V|kV|uA|mA|A|kA|mΩ|Ω|kΩ|MΩ|ohm|ohms|pF|nF|uF|mF|F|uH|mH|H|Hz|kHz|MHz|uW|mW|W|kW|MW|uJ|mJ|J|kJ|nC|uC|mC|C|N|mT|T|s|ms|us|min|minute|minutes|h|hour|hours|mm2|mm²|mm\^2|cm2|cm²|cm\^2|m/s|m/s2|m/s²|m/s\^2)\b',
         re.IGNORECASE
     )
     unit_to_sym = {
@@ -450,8 +466,20 @@ def extract_given(question: str, return_phrasal: bool = False):
         "C": "Q", "nC": "Q", "uC": "Q", "mC": "Q",
         "N": "F",
         "T": "B", "mT": "B",
+        "s": "t", "ms": "t", "us": "t", "min": "t", "minute": "t", "minutes": "t", "h": "t", "hour": "t", "hours": "t",
+        "mm2": "S", "mm²": "S", "mm^2": "S", "cm2": "S", "cm²": "S", "cm^2": "S",
+        "m/s": "v", "m/s2": "a", "m/s²": "a", "m/s^2": "a",
     }
     for m in bare_pattern.finditer(normalized_q):
+        # Compound unit guard: do not match simple units if they are part of a compound unit
+        # (e.g. followed or preceded by * or / or -)
+        start_idx = m.start()
+        end_idx = m.end()
+        if start_idx > 0 and normalized_q[start_idx-1] in ('*', '/', '·'):
+            continue
+        if end_idx < len(normalized_q) and normalized_q[end_idx] in ('*', '/', '·'):
+            continue
+
         mantissa = float(m.group(1))
         exp_str = m.group(2)
         unit = m.group(3)
@@ -485,6 +513,19 @@ def extract_given(question: str, return_phrasal: bool = False):
     for foreign, canon in (("X_L", "Z_L"), ("X_C", "Z_C")):
         if foreign in given:
             given.setdefault(canon, given.pop(foreign))
+
+    # Kinematics helper: map speed to initial/final velocity depending on stop/rest keywords
+    if "v" in given and any(stop_word in normalized_q.lower() for stop_word in ["rest", "stop", "stops"]):
+        # If the car comes to rest, the velocity given is the initial velocity 'u', and final velocity 'v' is 0
+        given["u"] = given.pop("v")
+        given["v"] = 0.0
+    elif any(stop_word in normalized_q.lower() for stop_word in ["from rest", "start from rest", "starts from rest"]):
+        # If the car starts from rest, 'u' is 0
+        given["u"] = 0.0
+
+    # Resistivity conversion helper: if rho is given in ohm*mm^2/m, scale by 1e-6 to convert to SI (ohm*m)
+    if "rho" in given and any(pat in normalized_q.lower() for pat in ["ohm*mm", "ohm·mm", "ohm mm"]):
+        given["rho"] = given["rho"] * 1e-6
 
     if return_phrasal:
         return given, phrasal_keys

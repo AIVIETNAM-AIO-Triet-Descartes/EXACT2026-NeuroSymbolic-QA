@@ -34,9 +34,9 @@ VLLM_BASE = os.getenv("VLLM_BASE", "http://127.0.0.1:8001")
 _FIND_TO_UNIT = {
     "E": "J", "W": "J", "KE": "J", "PE": "J", "U": "J",
     "X_L": "ohm", "X_C": "ohm", "Z": "ohm", "R": "ohm",
-    "R_total": "ohm", "R_eq": "ohm",
+    "R_total": "ohm", "R_eq": "ohm", "Z_L": "ohm", "Z_C": "ohm", "Z_eq": "ohm", "Z_total": "ohm",
     "v": "m/s", "u": "m/s", "a": "m/s^2",
-    "s": "m", "d": "m", "h": "m", "x": "m",
+    "s": "m", "d": "m", "h": "m", "x": "m", "d_i": "m", "d_o": "m",
     "t": "s", "T": "s",
     "f": "Hz", "F": "N",
     "P": "W", "I": "A", "V": "V", "Q": "C",
@@ -104,7 +104,11 @@ def _snap_and_convert(answer, unit: str, question: str, find_var: str):
     if not unit and find_var:
         # Clean find_var: remove trailing underscores, numbers
         clean_find = re.sub(r'_?\d+$', '', find_var).strip()
-        inferred = _FIND_TO_UNIT.get(clean_find) or _FIND_TO_UNIT.get(find_var)
+        # Optics focal length override: in optics, 'f' is focal length (meters), not frequency (Hz)
+        if clean_find == "f" and any(w in q_lower for w in ["lens", "mirror", "optics", "focal"]):
+            inferred = "m"
+        else:
+            inferred = _FIND_TO_UNIT.get(clean_find) or _FIND_TO_UNIT.get(find_var)
         if inferred:
             unit = inferred
             logger.info(f"[UNIT_SNAP] Inferred unit '{unit}' from find_var='{find_var}'")
@@ -117,6 +121,14 @@ def _snap_and_convert(answer, unit: str, question: str, find_var: str):
         if target_lower in q_lower or target in question:
             logger.info(f"[UNIT_SNAP] Equivalent unit swap: '{unit}' -> '{target}'")
             unit = target
+        else:
+            # Special equivalent snapping for electric field: V/m <-> N/C based on charge vs voltage keywords
+            if unit == "V/m" and any(c in q_lower for c in ["coulomb", "nc", "uc", "μc", "mc", " c"]) and not any(v in q_lower for v in ["potential", "voltage", "battery", " v"]):
+                logger.info(f"[UNIT_SNAP] Special electric field swap: 'V/m' -> 'N/C' (charge-based)")
+                unit = "N/C"
+            elif unit == "N/C" and any(v in q_lower for v in ["potential", "voltage", "battery", " v"]) and not any(c in q_lower for c in ["coulomb", "nc", "uc", "μc", "mc", " c"]):
+                logger.info(f"[UNIT_SNAP] Special electric field swap: 'N/C' -> 'V/m' (voltage-based)")
+                unit = "V/m"
 
     # 3. Scale SI value to question-expected unit
     for si_unit, keyword, target_unit, scale in _UNIT_SCALES:
@@ -470,10 +482,20 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                     if z3_premises_used:
                                         premises_used = z3_premises_used
                                 else:
-                                    # Z3=Unknown with confident CoT — keep CoT.
-                                    # Z3 "Unknown" usually reflects broken codegen, not
-                                    # genuine proof of insufficiency.
-                                    logger.warning(f"[TYPE1] Z3=Unknown, keeping CoT: CoT={answer}")
+                                    # Z3=Unknown with confident CoT.
+                                    # If the question asks about provability/guarantee/satisfying requirements,
+                                    # CoT is prone to hallucinate "Yes" by ignoring missing conditions.
+                                    # Trust Z3's inability to prove: override to "No".
+                                    q_lower = request.query.lower()
+                                    if any(w in q_lower for w in ["prove", "guarantee", "establish", "satisfy every", "ensure"]):
+                                        logger.warning(f"[TYPE1] Z3 logical insufficiency detected. Overriding CoT '{answer}' with 'No'")
+                                        answer = "No"
+                                        if z3_premises_used:
+                                            premises_used = z3_premises_used
+                                    else:
+                                        # Z3 "Unknown" usually reflects broken codegen, not
+                                        # genuine proof of insufficiency.
+                                        logger.warning(f"[TYPE1] Z3=Unknown, keeping CoT: CoT={answer}")
                 except Exception as z3_err:
                     logger.error(f"[TYPE1] Z3 verification failed: {z3_err}")
                     
