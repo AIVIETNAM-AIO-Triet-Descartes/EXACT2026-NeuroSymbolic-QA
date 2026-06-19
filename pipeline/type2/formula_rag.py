@@ -326,11 +326,33 @@ def build_formula_chain(
             return
         visiting.add(fs)
         for sym in _rhs_symbols(fs):
-            if sym in given_keys:
+            from pipeline.type2.symbol_registry import get_aliases
+            sym_aliases = get_aliases(sym)
+            if any(a in given_keys for a in sym_aliases):
                 continue
-            dep = by_lhs.get(sym)
-            if dep and dep != fs:
-                resolve(dep, depth + 1)
+            
+            # Find any formula that defines this symbol or its aliases
+            candidates = []
+            for a in sym_aliases:
+                if a in by_lhs:
+                    dep_fs = by_lhs[a]
+                    # Calculate number of unresolved RHS symbols
+                    rhs_syms = _rhs_symbols(dep_fs)
+                    unresolved = 0
+                    for r_sym in rhs_syms:
+                        r_aliases = get_aliases(r_sym)
+                        if not any(ra in given_keys for ra in r_aliases):
+                            if not any(ra in by_lhs for ra in r_aliases):
+                                unresolved += 100
+                            else:
+                                unresolved += 1
+                    candidates.append((unresolved, dep_fs))
+            
+            if candidates:
+                candidates.sort(key=lambda x: x[0])
+                dep = candidates[0][1]
+                if dep and dep != fs:
+                    resolve(dep, depth + 1)
         visiting.discard(fs)
         if fs not in chain:
             chain.append(fs)

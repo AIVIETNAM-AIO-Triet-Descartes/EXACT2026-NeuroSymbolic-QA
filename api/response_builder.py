@@ -9,7 +9,8 @@ def build_response(
     explanation: str,
     raw_unit: str = "",
     steps: Optional[List[str]] = None,
-    premises_used: Optional[List[int]] = None
+    premises_used: Optional[List[int]] = None,
+    logs: Optional[List[str]] = None
 ) -> UnifiedResponse:
     """
     Formats and packages the pipeline outputs into the official EXACT 2026 UnifiedResponse schema.
@@ -37,7 +38,8 @@ def build_response(
         unit=unit_ascii,
         explanation=explanation or f"The answer is {answer}.",
         premises_used=premises_used or [],
-        reasoning=reasoning
+        reasoning=reasoning,
+        logs=logs
     )
 
 

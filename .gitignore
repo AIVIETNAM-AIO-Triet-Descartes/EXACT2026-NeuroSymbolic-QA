@@ -64,5 +64,13 @@ docs/exact2026_pipeline.mermaid
 .ruff_cache/
 evaluate/*
 *.egg-info/
-.pytest_cache/
-.ruff_cache/
+
+# Competition & Submission Artifacts
+EXACT_Slides.pdf
+QA.pdf
+docs/btc_queries.md
+docs/context/QA.txt
+docs/dataset_bugs_report.md
+exact_eval_round1_Cay_Nha_La_Vuon.json
+submission/
+

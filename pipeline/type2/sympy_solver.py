@@ -98,9 +98,11 @@ def _solve_single(formula_str: str, given: dict, find: str, domain: str = None) 
     # Substitute all known values using declared symbols (avoids I/E conflicts)
     eq_sub = eq
     for var, val in given.items():
-        sym = sym_dict.get(var)
-        if sym is not None:
-            eq_sub = eq_sub.subs(sym, float(val))
+        from pipeline.type2.symbol_registry import get_aliases
+        for alias in get_aliases(var, domain):
+            sym = sym_dict.get(alias)
+            if sym is not None:
+                eq_sub = eq_sub.subs(sym, float(val))
 
     from pipeline.type2.symbol_registry import get_aliases
     aliases = get_aliases(find, domain)
@@ -156,9 +158,11 @@ def _solve_multi_step(formulas: list[str], given: dict, find: str, domain: str =
 
         eq_sub = eq
         for var, val in accumulated.items():
-            sym = sym_dict.get(var)
-            if sym is not None:
-                eq_sub = eq_sub.subs(sym, float(val))
+            from pipeline.type2.symbol_registry import get_aliases
+            for alias in get_aliases(var, domain):
+                sym = sym_dict.get(alias)
+                if sym is not None:
+                    eq_sub = eq_sub.subs(sym, float(val))
 
         remaining = eq_sub.free_symbols
         if len(remaining) != 1:

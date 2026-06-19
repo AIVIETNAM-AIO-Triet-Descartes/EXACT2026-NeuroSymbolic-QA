@@ -64,6 +64,8 @@ ALIASES: dict[str, list[str]] = {
     "Z_C":     ["Z_C", "X_C"],
     "U":       ["U", "V"],
     "Φ":       ["Φ", "Phi", "phi"],
+    "C":       ["C", "C_total"],
+    "R":       ["R", "R_total"],
 }
 
 # Bản đồ lọc Alias theo Domain để giải quyết xung đột ý nghĩa của ký hiệu
@@ -95,7 +97,14 @@ def get_aliases(symbol: str, domain: Optional[str] = None) -> list[str]:
         if alias not in result:
             result.append(alias)
             
-    # Đặc biệt, nếu resolved_sym không có trong ALIASES nhưng bản thân nó là một alias của thằng khác
-    # (Ví dụ: truyền vào "E", resolved_sym = "E_field", thì ALIASES["E_field"] sẽ có "E")
+    # Đặc biệt, nếu resolved_sym bản thân nó là một alias của canonical symbol khác
+    # (Ví dụ: truyền vào "E", resolved_sym = "E", thì ta tìm xem "E" thuộc ALIASES của key nào)
+    for canonical_sym, alias_list in ALIASES.items():
+        if resolved_sym in alias_list:
+            if canonical_sym not in result:
+                result.append(canonical_sym)
+            for a in alias_list:
+                if a not in result:
+                    result.append(a)
     
     return result

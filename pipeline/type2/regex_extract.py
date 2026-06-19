@@ -430,6 +430,49 @@ def extract_given(question: str, return_phrasal: bool = False):
     # win; only fills symbols still missing. Unit-dimension gated (see above).
     phrasal_keys = _extract_phrasal(question, given)
 
+    # Bare unit extraction (prose form: "across an 18 V battery", "connected to a 12 V source")
+    # Only maps units to their canonical symbols when the symbol is completely missing from given.
+    normalized_q = question.replace("μ", "u").replace("µ", "u")
+    bare_pattern = re.compile(
+        r'\b([+-]?\d+(?:\.\d+)?)\s*(?:[x\*\xd7]\s*10\^?([=\-]?\d+))?\s*'
+        r'(uV|mV|V|kV|uA|mA|A|kA|mΩ|Ω|kΩ|MΩ|ohm|ohms|pF|nF|uF|mF|F|uH|mH|H|Hz|kHz|MHz|uW|mW|W|kW|MW|uJ|mJ|J|kJ|nC|uC|mC|C|N|mT|T)\b',
+        re.IGNORECASE
+    )
+    unit_to_sym = {
+        "V": "U", "uV": "U", "mV": "U", "kV": "U",
+        "A": "I", "uA": "I", "mA": "I", "kA": "I",
+        "Ω": "R", "mΩ": "R", "kΩ": "R", "MΩ": "R", "ohm": "R", "ohms": "R",
+        "F": "C", "pF": "C", "nF": "C", "uF": "C", "mF": "C",
+        "H": "L", "uH": "L", "mH": "L",
+        "Hz": "f", "kHz": "f", "MHz": "f",
+        "W": "P", "uW": "P", "mW": "P", "kW": "P", "MW": "P",
+        "J": "W", "uJ": "W", "mJ": "W", "kJ": "W",
+        "C": "Q", "nC": "Q", "uC": "Q", "mC": "Q",
+        "N": "F",
+        "T": "B", "mT": "B",
+    }
+    for m in bare_pattern.finditer(normalized_q):
+        mantissa = float(m.group(1))
+        exp_str = m.group(2)
+        unit = m.group(3)
+        val = mantissa
+        if exp_str:
+            val *= 10 ** int(exp_str)
+        canonical_sym = unit_to_sym.get(unit.upper() if unit.upper() in unit_to_sym else unit)
+        if not canonical_sym:
+            u_norm = unit.lower()
+            if u_norm in ("ohm", "ohms"):
+                canonical_sym = "R"
+            elif u_norm == "μf" or u_norm == "uf":
+                canonical_sym = "C"
+            else:
+                continue
+        has_sym = any(k == canonical_sym or k.startswith(canonical_sym) and k[len(canonical_sym):].isdigit() for k in given)
+        if not has_sym:
+            given[canonical_sym] = val * _unit_factor(unit)
+            if return_phrasal:
+                phrasal_keys.add(canonical_sym)
+
     # Voltage symbol normalization: a question may write V for hiệu điện thế
     # (foreign convention). The RAG DB uses U for hiệu điện thế and reserves V
     # for điện thế (V = k*q/r). Remap V→U unless điện-thế context is present.

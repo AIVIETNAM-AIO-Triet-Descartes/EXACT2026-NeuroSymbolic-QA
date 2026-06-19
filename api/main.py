@@ -708,26 +708,49 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
 
 @app.post("/predict", response_model=list[UnifiedResponse])
 async def handle_predict(request: UnifiedRequest):
+    collect_logs = (request.logs is True)
+    token = None
+    if collect_logs:
+        from api.logger import request_logs
+        token = request_logs.set([])
+        
     try:
         query_type = request.type
 
         if query_type == "type2":
-            return [_run_type2_pipeline(request)]
+            responses = [_run_type2_pipeline(request)]
+        else:
+            responses = [_run_type1_pipeline(request)]
 
-        return [_run_type1_pipeline(request)]
+        if collect_logs:
+            from api.logger import request_logs
+            logs_captured = request_logs.get()
+            for res in responses:
+                res.logs = logs_captured
+
+        return responses
 
     except Exception as e:
         # Never 500 on a pipeline error — return a format-valid response so a single
         # failing query can't break committee parsing or the run; it is simply scored
         # wrong. query_id is echoed and explanation is non-empty (spec §4.2 / §9).
         logger.error(f"Pipeline error: {e}", exc_info=True)
-        return [build_response(
+        fallback_res = build_response(
             query_id=request.query_id,
             query_type=request.type,
             answer="Unknown",
             explanation="The system was unable to process this query.",
             premises_used=[],
-        )]
+        )
+        if collect_logs:
+            from api.logger import request_logs
+            fallback_res.logs = request_logs.get()
+        return [fallback_res]
+        
+    finally:
+        if token is not None:
+            from api.logger import request_logs
+            request_logs.reset(token)
 
 
 @app.get("/v1/models")

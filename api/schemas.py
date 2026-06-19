@@ -8,6 +8,7 @@ class UnifiedRequest(BaseModel):
     query: str
     premises: list[str] = []
     options: list[str] = []
+    logs: Optional[bool] = None
 
 
 class ReasoningBlock(BaseModel):
@@ -22,3 +23,5 @@ class UnifiedResponse(BaseModel):
     explanation: str
     premises_used: list[int]
     reasoning: Optional[ReasoningBlock] = None
+    logs: Optional[list[str]] = None
+

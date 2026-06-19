@@ -101,6 +101,19 @@ import json
 from datetime import datetime, timezone
 import sys
 from typing import Literal
+import contextvars
+from loguru import logger as loguru_logger
+
+# Context variable to hold logs for the current request
+request_logs = contextvars.ContextVar("request_logs", default=None)
+
+# Setup loguru sink to append to request_logs if active
+def loguru_sink(message):
+    logs_list = request_logs.get()
+    if logs_list is not None:
+        logs_list.append(str(message).strip())
+
+loguru_logger.add(loguru_sink, level="DEBUG")
 
 class JSONFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
@@ -135,7 +148,14 @@ class JSONFormatter(logging.Formatter):
         # Xóa triệt để từ khóa phụ 'extra' nếu còn sót lại trong object
         log_obj.pop("extra", None)
 
-        return json.dumps(log_obj, ensure_ascii=False)
+        formatted_log = json.dumps(log_obj, ensure_ascii=False)
+        
+        # Capture standard log if active
+        logs_list = request_logs.get()
+        if logs_list is not None:
+            logs_list.append(formatted_log)
+
+        return formatted_log
 
 
 def get_logger(name: str) -> logging.Logger:
