@@ -360,7 +360,7 @@ PREMISES (Natural Language):
 
 QUESTION: {question}
 
-You are provided with a Python environment where the following are PRE-DEFINED and PRE-IMPORTED:
+{exemplars}You are provided with a Python environment where the following are PRE-DEFINED and PRE-IMPORTED:
 - 'from z3 import *' (all Z3 functions/classes are available)
 - 'Entity = DeclareSort("Entity")' (default sort for all entities)
 - 'x', 'y', 'z' = pre-declared Z3 Consts of sort Entity (use 'x' as default variable for ForAll/Exists)

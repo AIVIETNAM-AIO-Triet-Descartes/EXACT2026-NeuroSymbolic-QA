@@ -34,6 +34,7 @@ from llm.prompt_templates import (
     PHYSICS_PAL_REFINE_PROMPT,
     PHYSICS_EXPLAIN_PROMPT,
 )
+from pipeline.type1.z3_rag import select_exemplars, format_exemplars_for_prompt
 
 
 class LLMReasoner:
@@ -277,10 +278,19 @@ class LLMReasoner:
             f"  {i+1}. {p}" for i, p in enumerate(premises_nl)
         )
 
+        # Retrieve RAG exemplars and format them
+        try:
+            selected_exs = select_exemplars(premises_nl, question, k=3)
+            exemplars_text = format_exemplars_for_prompt(selected_exs)
+        except Exception as e:
+            logger.warning(f"[Z3_GEN] RAG selection failed: {e}")
+            exemplars_text = ""
+
         prompt = Z3_CODE_GENERATION_PROMPT.format(
             premises_fol=fol_text,
             premises_nl=nl_text,
             question=question,
+            exemplars=exemplars_text,
         )
 
         code = self._chat(

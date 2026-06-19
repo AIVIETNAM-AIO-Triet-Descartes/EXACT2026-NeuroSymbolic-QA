@@ -30,6 +30,115 @@ VLLM_BASE = os.getenv("VLLM_BASE", "http://127.0.0.1:8001")
 # Track 2 pipeline
 # ══════════════════════════════════════════════════════════════
 
+# Unit inference map: variable name → default SI unit
+_FIND_TO_UNIT = {
+    "E": "J", "W": "J", "KE": "J", "PE": "J", "U": "J",
+    "X_L": "ohm", "X_C": "ohm", "Z": "ohm", "R": "ohm",
+    "R_total": "ohm", "R_eq": "ohm",
+    "v": "m/s", "u": "m/s", "a": "m/s^2",
+    "s": "m", "d": "m", "h": "m", "x": "m",
+    "t": "s", "T": "s",
+    "f": "Hz", "F": "N",
+    "P": "W", "I": "A", "V": "V", "Q": "C",
+    "C": "F", "L": "H", "B": "T",
+}
+
+# Equivalent unit pairs: (from, to) — bidirectional
+_EQUIVALENT_UNITS = {
+    "V/m": "N/C", "N/C": "V/m",
+    "J/C": "V", "V": "J/C",
+    "kg*m/s^2": "N", "N": "kg*m/s^2",
+    "A*s": "C", "C": "A*s",
+}
+
+# Unit scale conversions: (si_unit, question_keyword) → (target_unit, scale_factor)
+_UNIT_SCALES = [
+    # Length
+    ("m", "cm", "cm", 100.0),
+    ("m", "mm", "mm", 1000.0),
+    ("m", "km", "km", 0.001),
+    # Charge
+    ("C", "uC", "uC", 1e6),
+    ("C", "μC", "uC", 1e6),
+    ("C", "nC", "nC", 1e9),
+    ("C", "mC", "mC", 1e3),
+    # Capacitance
+    ("F", "uF", "uF", 1e6),
+    ("F", "μF", "uF", 1e6),
+    ("F", "nF", "nF", 1e9),
+    ("F", "pF", "pF", 1e12),
+    # Energy
+    ("J", "kJ", "kJ", 0.001),
+    ("J", "mJ", "mJ", 1e3),
+    ("J", "eV", "eV", 6.242e18),
+    # Resistance
+    ("ohm", "kohm", "kohm", 0.001),
+    ("ohm", "Mohm", "Mohm", 1e-6),
+    # Frequency
+    ("Hz", "kHz", "kHz", 0.001),
+    ("Hz", "MHz", "MHz", 1e-6),
+    # Voltage
+    ("V", "kV", "kV", 0.001),
+    ("V", "mV", "mV", 1e3),
+    # Time
+    ("s", "ms", "ms", 1e3),
+    ("s", "us", "us", 1e6),
+]
+
+
+def _snap_and_convert(answer, unit: str, question: str, find_var: str):
+    """
+    Post-process physics answer: infer missing unit, convert equivalent
+    units, and snap SI values to the unit system used in the question.
+
+    Returns (answer, unit) tuple.
+    """
+    try:
+        val = float(answer)
+    except (ValueError, TypeError):
+        return answer, unit
+
+    q_lower = question.lower()
+
+    # 1. Infer missing unit from find_var
+    if not unit and find_var:
+        # Clean find_var: remove trailing underscores, numbers
+        clean_find = re.sub(r'_?\d+$', '', find_var).strip()
+        inferred = _FIND_TO_UNIT.get(clean_find) or _FIND_TO_UNIT.get(find_var)
+        if inferred:
+            unit = inferred
+            logger.info(f"[UNIT_SNAP] Inferred unit '{unit}' from find_var='{find_var}'")
+
+    # 2. Check for equivalent unit preference in question text
+    if unit in _EQUIVALENT_UNITS:
+        target = _EQUIVALENT_UNITS[unit]
+        # Check if the question explicitly uses the target unit
+        target_lower = target.lower().replace("^", "")
+        if target_lower in q_lower or target in question:
+            logger.info(f"[UNIT_SNAP] Equivalent unit swap: '{unit}' -> '{target}'")
+            unit = target
+
+    # 3. Scale SI value to question-expected unit
+    for si_unit, keyword, target_unit, scale in _UNIT_SCALES:
+        if unit != si_unit:
+            continue
+        # Check if question mentions the target unit scale
+        if keyword.lower() in q_lower or keyword in question:
+            new_val = val * scale
+            # Format nicely: avoid unnecessary decimals
+            if new_val == int(new_val):
+                answer = str(int(new_val))
+            else:
+                answer = f"{new_val:g}"
+            logger.info(
+                f"[UNIT_SNAP] Scaled {val} {unit} -> {answer} {target_unit}"
+            )
+            unit = target_unit
+            return answer, unit
+
+    return answer, unit
+
+
 def _run_type2_pipeline(request: UnifiedRequest) -> UnifiedResponse:
     """
     Sequential execution of Type 2 nodes (physics pipeline).
@@ -123,6 +232,15 @@ def _run_type2_pipeline(request: UnifiedRequest) -> UnifiedResponse:
     solver_result = state.get("solver_result", {})
     solver_source = solver_result.get("source", "llm_fallback") if solver_result else "llm_fallback"
     raw_unit = solver_result.get("unit") or ""
+
+    # ── Unit Snapping ──
+    # Fix missing units, convert equivalent units, and snap SI values to
+    # the unit system expected by the question text.
+    parsed = state.get("parsed_physics", {}) or {}
+    find_var = parsed.get("find", "")
+    answer, raw_unit = _snap_and_convert(
+        answer, raw_unit, request.query, find_var
+    )
 
     log_pipeline_request(
         question=request.query,
@@ -296,34 +414,66 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                 except Exception:
                                     pass
                                     
+                            if q_type == "mcq" and p_match is None and z3_ans in ('A', 'B', 'C', 'D'):
+                                logger.info(
+                                    f"[TYPE1] Z3 MCQ answer '{z3_ans}' was a fallback (no proof) — treating as Unknown"
+                                )
+                                z3_ans = "Unknown"
+
                             if z3_ans and z3_ans in ('Yes', 'No', 'A', 'B', 'C', 'D', 'Unknown'):
-                                # Z3 is supplementary — only override CoT if Z3 agrees or
-                                # CoT had no answer at all. Unknown IS a confident answer
-                                # (it means "I reasoned and found insufficient information").
+                                # Type-safety guard: for yes_no questions, only accept
+                                # Yes/No/Unknown from Z3 (not MCQ letters A/B/C/D which
+                                # indicate the Z3 code misinterpreted the question type).
+                                z3_type_valid = True
+                                if q_type == "yes_no" and z3_ans in ('A', 'B', 'C', 'D'):
+                                    logger.warning(
+                                        f"[TYPE1] Z3 returned MCQ letter '{z3_ans}' for yes_no question — ignoring"
+                                    )
+                                    z3_type_valid = False
+                                elif q_type == "mcq" and z3_ans in ('Yes', 'No'):
+                                    logger.warning(
+                                        f"[TYPE1] Z3 returned Yes/No '{z3_ans}' for MCQ question — ignoring"
+                                    )
+                                    z3_type_valid = False
+
                                 cot_confident = bool(answer and answer.strip())
                                 z3_agrees = (z3_ans == answer)
-                                if z3_agrees:
-                                    # Z3 confirms CoT — merge premises
+
+                                # Determine if Z3 gives a CONCRETE (non-Unknown) answer
+                                z3_is_concrete = z3_ans in ('A', 'B', 'C', 'D', 'Yes', 'No')
+
+                                if not z3_type_valid:
+                                    # Z3 returned wrong answer type for this question — skip
+                                    logger.warning(f"[TYPE1] Z3 type mismatch (IGNORED): CoT={answer}, Z3={z3_ans}")
+                                elif z3_agrees:
+                                    # Z3 confirms CoT — use Z3's premises (minimal unsat core)
+                                    # instead of merging, because Z3 premises are more precise.
                                     explanation = f"[Formal Verification] Formally verified by Z3. \n{explanation}"
                                     if z3_premises_used:
-                                        premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
+                                        premises_used = z3_premises_used
+                                elif z3_is_concrete and cot_confident:
+                                    # Z3 gives a CONCRETE answer that DISAGREES with CoT.
+                                    # Trust Z3: formal verification is more reliable than
+                                    # CoT's pattern-matching for deductive logic tasks.
+                                    # (Round 1 evidence: T1_0025 CoT=B/Z3=C✓, T1_0035
+                                    #  CoT=B/Z3=D✓, T1_0007 CoT=C/Z3=B✓)
+                                    logger.warning(f"[TYPE1] Z3 OVERRIDES CoT: CoT={answer} -> Z3={z3_ans}")
+                                    answer = z3_ans
+                                    explanation = f"[Formal Verification] Z3 override: {explanation}"
+                                    if z3_premises_used:
+                                        premises_used = z3_premises_used
                                 elif not cot_confident:
-                                    # CoT had no answer or Unknown — accept Z3
+                                    # CoT had no answer — accept Z3 (even Unknown)
                                     logger.info(f"[TYPE1] Z3 filled empty CoT: CoT={answer} -> Z3={z3_ans}")
                                     answer = z3_ans
                                     explanation = f"[Formal Verification] Formally verified by Z3. \n{explanation}"
                                     if z3_premises_used:
-                                        premises_used = sorted(list(set(premises_used).union(z3_premises_used)))
+                                        premises_used = z3_premises_used
                                 else:
-                                    # Z3 disagrees with confident CoT — trust CoT, log discrepancy.
-                                    # NOTE: we deliberately do NOT let Z3=Unknown downgrade a confident
-                                    # CoT answer. The Z3 codegen is the weak link (dropped premises, sort
-                                    # mismatch, malformed ForAll) → a Z3 "Unknown" almost always reflects
-                                    # broken generated code, not a genuine proof of insufficiency. In the
-                                    # Jun-14 submission this override turned 4 correct CoT answers into
-                                    # wrong "Uncertain"s. CoT already self-reports real uncertainty
-                                    # ("Uncertain") on its own, so this path is pure downside.
-                                    logger.warning(f"[TYPE1] Z3 disagrees with CoT (IGNORED): CoT={answer}, Z3={z3_ans}")
+                                    # Z3=Unknown with confident CoT — keep CoT.
+                                    # Z3 "Unknown" usually reflects broken codegen, not
+                                    # genuine proof of insufficiency.
+                                    logger.warning(f"[TYPE1] Z3=Unknown, keeping CoT: CoT={answer}")
                 except Exception as z3_err:
                     logger.error(f"[TYPE1] Z3 verification failed: {z3_err}")
                     

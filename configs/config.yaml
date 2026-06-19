@@ -2,7 +2,7 @@ llm:
   # Backend switch — đổi 1 dòng `active` để chuyển dev <-> prod.
   # Cả llama.cpp server (dev, GGUF) và vLLM (prod, FP16) đều nói OpenAI-compatible
   # /v1 API → code LLMReasoner không đổi, chỉ đổi endpoint + model_name ở đây.
-  active: dev # dev | prod | ollama
+  active: prod # dev | prod | ollama
 
   # Shared cho mọi profile
   api_key: "not-needed" # cả llama.cpp lẫn vLLM không yêu cầu auth mặc định
@@ -26,7 +26,7 @@ llm:
     #   ollama serve (systemd, luôn chạy). model_name = ollama tag, không phải HF id.
     ollama:
       api_base: "http://localhost:11434/v1"
-      model_name: "qwen2.5:7b"
+      model_name: "qwen2.5:7b-instruct"
 
     prod:
       api_base: "http://localhost:8001/v1" # vLLM nội bộ — KHÔNG đụng cổng 8000 của FastAPI

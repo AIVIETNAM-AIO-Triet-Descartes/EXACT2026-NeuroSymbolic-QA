@@ -1,0 +1,135 @@
+[
+  {
+    "pattern_type": "conditional_chain_complete",
+    "description": "Full chain with all conditions satisfied → answer is the final conclusion",
+    "premises_nl": [
+      "If a package is medical and weighs under 2 kg, it receives priority status.",
+      "If a package has priority status and its route is clear, it can be dispatched.",
+      "If a package can be dispatched and weather is safe, it is eligible for aerial corridor.",
+      "Package Alpha is medical.",
+      "Package Alpha weighs under 2 kg.",
+      "Package Alpha's route is clear.",
+      "Weather is safe for Package Alpha."
+    ],
+    "question": "Which conclusion follows?\nA. Package Alpha receives priority status\nB. Package Alpha can be dispatched\nC. Package Alpha is eligible for aerial corridor\nD. Package Alpha is not medical",
+    "z3_code": "from z3 import *\nEntity = DeclareSort('Entity')\nx = Const('x', Entity)\ns = Solver()\nmedical = Function('medical', Entity, BoolSort())\nunder_2kg = Function('under_2kg', Entity, BoolSort())\npriority = Function('priority', Entity, BoolSort())\nroute_clear = Function('route_clear', Entity, BoolSort())\ndispatch = Function('dispatch', Entity, BoolSort())\nweather_safe = Function('weather_safe', Entity, BoolSort())\naerial = Function('aerial', Entity, BoolSort())\nAlpha = Const('Alpha', Entity)\n\ns.add(ForAll([x], Implies(And(medical(x), under_2kg(x)), priority(x))))\ns.add(ForAll([x], Implies(And(priority(x), route_clear(x)), dispatch(x))))\ns.add(ForAll([x], Implies(And(dispatch(x), weather_safe(x)), aerial(x))))\ns.add(medical(Alpha))\ns.add(under_2kg(Alpha))\ns.add(route_clear(Alpha))\ns.add(weather_safe(Alpha))\n\nsolve_mcq(s, {'A': priority(Alpha), 'B': dispatch(Alpha), 'C': aerial(Alpha), 'D': Not(medical(Alpha))})",
+    "expected_answer": "C",
+    "tags": ["chain", "mcq", "strongest_conclusion"]
+  },
+  {
+    "pattern_type": "missing_condition",
+    "description": "Chain broken by missing condition → answer is No/the earlier conclusion",
+    "premises_nl": [
+      "If a server is patched and logs reviewed, incident is contained.",
+      "If incident contained and passwords reset, account is secured.",
+      "If account secured and forensic report submitted, case is audit-ready.",
+      "If case is audit-ready and manager signs off, case can be closed.",
+      "Server Atlas is patched.",
+      "Atlas logs have been reviewed.",
+      "All affected passwords have been reset.",
+      "Atlas forensic report has been submitted."
+    ],
+    "question": "Can the Atlas case be formally closed?",
+    "z3_code": "from z3 import *\nEntity = DeclareSort('Entity')\nx = Const('x', Entity)\ns = Solver()\npatched = Function('patched', Entity, BoolSort())\nlogs_reviewed = Function('logs_reviewed', Entity, BoolSort())\ncontained = Function('contained', Entity, BoolSort())\npw_reset = Function('pw_reset', Entity, BoolSort())\nsecured = Function('secured', Entity, BoolSort())\nforensic = Function('forensic', Entity, BoolSort())\naudit_ready = Function('audit_ready', Entity, BoolSort())\nmanager_signoff = Function('manager_signoff', Entity, BoolSort())\nclosed = Function('closed', Entity, BoolSort())\nAtlas = Const('Atlas', Entity)\n\ns.add(ForAll([x], Implies(And(patched(x), logs_reviewed(x)), contained(x))))\ns.add(ForAll([x], Implies(And(contained(x), pw_reset(x)), secured(x))))\ns.add(ForAll([x], Implies(And(secured(x), forensic(x)), audit_ready(x))))\ns.add(ForAll([x], Implies(And(audit_ready(x), manager_signoff(x)), closed(x))))\ns.add(patched(Atlas))\ns.add(logs_reviewed(Atlas))\ns.add(pw_reset(Atlas))\ns.add(forensic(Atlas))\n\nsolve_yes_no(s, closed(Atlas))",
+    "expected_answer": "No",
+    "tags": ["missing_condition", "yes_no", "chain"]
+  },
+  {
+    "pattern_type": "negated_fact_blocks",
+    "description": "A negated fact prevents the chain from completing",
+    "premises_nl": [
+      "If a satellite has thermal sensors, it can monitor temperature.",
+      "If it can monitor temperature and has radar, it supports disaster mapping.",
+      "If it supports disaster mapping, it provides emergency data.",
+      "Vega has thermal sensors.",
+      "Vega does NOT have cloud-penetrating radar.",
+      "Vega has an optical camera.",
+      "All satellites with optical cameras can capture daytime images."
+    ],
+    "question": "Which is best supported?\nA. Vega supports disaster mapping\nB. Vega can monitor temperature and capture daytime images\nC. Vega provides emergency data\nD. Vega has radar",
+    "z3_code": "from z3 import *\nEntity = DeclareSort('Entity')\nx = Const('x', Entity)\ns = Solver()\nthermal = Function('thermal', Entity, BoolSort())\nmonitor_temp = Function('monitor_temp', Entity, BoolSort())\nradar = Function('radar', Entity, BoolSort())\ndisaster_map = Function('disaster_map', Entity, BoolSort())\nemergency_data = Function('emergency_data', Entity, BoolSort())\noptical_cam = Function('optical_cam', Entity, BoolSort())\ndaytime_img = Function('daytime_img', Entity, BoolSort())\nVega = Const('Vega', Entity)\n\ns.add(ForAll([x], Implies(thermal(x), monitor_temp(x))))\ns.add(ForAll([x], Implies(And(monitor_temp(x), radar(x)), disaster_map(x))))\ns.add(ForAll([x], Implies(disaster_map(x), emergency_data(x))))\ns.add(thermal(Vega))\ns.add(Not(radar(Vega)))\ns.add(optical_cam(Vega))\ns.add(ForAll([x], Implies(optical_cam(x), daytime_img(x))))\n\nsolve_mcq(s, {'A': disaster_map(Vega), 'B': And(monitor_temp(Vega), daytime_img(Vega)), 'C': emergency_data(Vega), 'D': radar(Vega)})",
+    "expected_answer": "B",
+    "tags": ["negation", "mcq", "chain_blocked"]
+  },
+  {
+    "pattern_type": "eligibility_vs_actuality",
+    "description": "Being 'eligible for X' does NOT mean 'has X' — a critical distinction",
+    "premises_nl": [
+      "If a member has valid ID and training, they can use equipment.",
+      "If a member can use equipment AND has a coach, they can book sessions.",
+      "If membership is 6+ months, they are eligible for a coach.",
+      "Alex has valid ID and training.",
+      "Alex has 8 months membership."
+    ],
+    "question": "Can Alex book sessions?",
+    "z3_code": "from z3 import *\nEntity = DeclareSort('Entity')\nx = Const('x', Entity)\ns = Solver()\nvalid_id = Function('valid_id', Entity, BoolSort())\ntraining = Function('training', Entity, BoolSort())\nuse_equip = Function('use_equip', Entity, BoolSort())\nhas_coach = Function('has_coach', Entity, BoolSort())\nbook_session = Function('book_session', Entity, BoolSort())\nmem_6plus = Function('mem_6plus', Entity, BoolSort())\neligible_coach = Function('eligible_coach', Entity, BoolSort())\nAlex = Const('Alex', Entity)\n\ns.add(ForAll([x], Implies(And(valid_id(x), training(x)), use_equip(x))))\ns.add(ForAll([x], Implies(And(use_equip(x), has_coach(x)), book_session(x))))\ns.add(ForAll([x], Implies(mem_6plus(x), eligible_coach(x))))\ns.add(valid_id(Alex))\ns.add(training(Alex))\ns.add(mem_6plus(Alex))\n\nsolve_yes_no(s, book_session(Alex))",
+    "expected_answer": "No",
+    "tags": ["eligibility_vs_actuality", "yes_no", "missing_condition"]
+  },
+  {
+    "pattern_type": "disjunctive_paths",
+    "description": "Multiple rules can derive the same goal — if ANY path is satisfied, the goal is provable",
+    "premises_nl": [
+      "If a student has honors and community service, they get a scholarship.",
+      "If a student has honors and faculty recommendation, they get a scholarship.",
+      "Alice has honors.",
+      "Alice completed community service."
+    ],
+    "question": "Does Alice get a scholarship?",
+    "z3_code": "from z3 import *\nEntity = DeclareSort('Entity')\nx = Const('x', Entity)\ns = Solver()\nhonors = Function('honors', Entity, BoolSort())\ncommunity = Function('community', Entity, BoolSort())\nfaculty_rec = Function('faculty_rec', Entity, BoolSort())\nscholarship = Function('scholarship', Entity, BoolSort())\nAlice = Const('Alice', Entity)\n\ns.add(ForAll([x], Implies(And(honors(x), community(x)), scholarship(x))))\ns.add(ForAll([x], Implies(And(honors(x), faculty_rec(x)), scholarship(x))))\ns.add(honors(Alice))\ns.add(community(Alice))\n\nsolve_yes_no(s, scholarship(Alice))",
+    "expected_answer": "Yes",
+    "tags": ["disjunction", "yes_no", "alternative_paths"]
+  },
+  {
+    "pattern_type": "contraposition",
+    "description": "If P→Q, then ¬Q→¬P (contrapositive reasoning)",
+    "premises_nl": [
+      "If a project is optimized, then it is fast.",
+      "The project is not fast."
+    ],
+    "question": "Which conclusion follows?\nA. The project is not optimized\nB. The project is optimized\nC. The project is slow",
+    "z3_code": "from z3 import *\nEntity = DeclareSort('Entity')\nx = Const('x', Entity)\ns = Solver()\noptimized = Function('optimized', Entity, BoolSort())\nfast = Function('fast', Entity, BoolSort())\nproject = Const('project', Entity)\n\ns.add(ForAll([x], Implies(optimized(x), fast(x))))\ns.add(Not(fast(project)))\n\nsolve_mcq(s, {'A': Not(optimized(project)), 'B': optimized(project), 'C': None})",
+    "expected_answer": "A",
+    "tags": ["contraposition", "mcq"]
+  },
+  {
+    "pattern_type": "personal_data_privacy",
+    "description": "Conditional requirement triggered, but completion step missing",
+    "premises_nl": [
+      "If a manuscript is scanned at 600 dpi and metadata is complete, it is preservation-ready.",
+      "If preservation-ready and rights cleared, eligible for public portal.",
+      "If eligible and OCR verified, searchable online.",
+      "If contains personal data, privacy review is required.",
+      "If privacy review required and redaction complete, safe for public release.",
+      "The Codex was scanned at 600 dpi.",
+      "The Codex metadata is complete.",
+      "The Codex rights are cleared.",
+      "The Codex OCR has been verified.",
+      "The Codex contains personal data."
+    ],
+    "question": "Is the Codex safe for public release?",
+    "z3_code": "from z3 import *\nEntity = DeclareSort('Entity')\nx = Const('x', Entity)\ns = Solver()\nscanned_600 = Function('scanned_600', Entity, BoolSort())\nmetadata_complete = Function('metadata_complete', Entity, BoolSort())\npreservation_ready = Function('preservation_ready', Entity, BoolSort())\nrights_cleared = Function('rights_cleared', Entity, BoolSort())\nportal_eligible = Function('portal_eligible', Entity, BoolSort())\nocr_verified = Function('ocr_verified', Entity, BoolSort())\nsearchable = Function('searchable', Entity, BoolSort())\npersonal_data = Function('personal_data', Entity, BoolSort())\nprivacy_review = Function('privacy_review', Entity, BoolSort())\nredaction_complete = Function('redaction_complete', Entity, BoolSort())\nsafe_release = Function('safe_release', Entity, BoolSort())\nCodex = Const('Codex', Entity)\n\ns.add(ForAll([x], Implies(And(scanned_600(x), metadata_complete(x)), preservation_ready(x))))\ns.add(ForAll([x], Implies(And(preservation_ready(x), rights_cleared(x)), portal_eligible(x))))\ns.add(ForAll([x], Implies(And(portal_eligible(x), ocr_verified(x)), searchable(x))))\ns.add(ForAll([x], Implies(personal_data(x), privacy_review(x))))\ns.add(ForAll([x], Implies(And(privacy_review(x), redaction_complete(x)), safe_release(x))))\ns.add(scanned_600(Codex))\ns.add(metadata_complete(Codex))\ns.add(rights_cleared(Codex))\ns.add(ocr_verified(Codex))\ns.add(personal_data(Codex))\n\nsolve_yes_no(s, safe_release(Codex))",
+    "expected_answer": "No",
+    "tags": ["missing_condition", "yes_no", "privacy", "chain"]
+  },
+  {
+    "pattern_type": "greenhouse_full_chain",
+    "description": "Multiple independent chains — pick the one that is fully satisfied",
+    "premises_nl": [
+      "If soil moisture is low and heatwave active, irrigation is needed.",
+      "If irrigation needed and reservoir has water, irrigation is scheduled.",
+      "If irrigation scheduled and sensor calibration current, autonomous watering allowed.",
+      "If pest risk high, pesticide review required.",
+      "If pesticide review required and agronomist approval given, chemical treatment allowed.",
+      "Plant has low soil moisture.",
+      "A heatwave is active.",
+      "Reservoir has water.",
+      "Sensor calibration is current.",
+      "Plant has high pest risk."
+    ],
+    "question": "Which conclusion is supported?\nA. The reservoir lacks water\nB. Chemical treatment is allowed\nC. Irrigation unnecessary because heatwave active\nD. Autonomous watering is allowed",
+    "z3_code": "from z3 import *\nEntity = DeclareSort('Entity')\nx = Const('x', Entity)\ns = Solver()\nlow_moisture = Function('low_moisture', Entity, BoolSort())\nheatwave = Function('heatwave', Entity, BoolSort())\nirrigation_needed = Function('irrigation_needed', Entity, BoolSort())\nreservoir_water = Function('reservoir_water', Entity, BoolSort())\nirrigation_scheduled = Function('irrigation_scheduled', Entity, BoolSort())\nsensor_current = Function('sensor_current', Entity, BoolSort())\nauto_watering = Function('auto_watering', Entity, BoolSort())\npest_high = Function('pest_high', Entity, BoolSort())\npesticide_review = Function('pesticide_review', Entity, BoolSort())\nagronomist_approval = Function('agronomist_approval', Entity, BoolSort())\nchemical_treatment = Function('chemical_treatment', Entity, BoolSort())\nPlant = Const('Plant', Entity)\n\ns.add(ForAll([x], Implies(And(low_moisture(x), heatwave(x)), irrigation_needed(x))))\ns.add(ForAll([x], Implies(And(irrigation_needed(x), reservoir_water(x)), irrigation_scheduled(x))))\ns.add(ForAll([x], Implies(And(irrigation_scheduled(x), sensor_current(x)), auto_watering(x))))\ns.add(ForAll([x], Implies(pest_high(x), pesticide_review(x))))\ns.add(ForAll([x], Implies(And(pesticide_review(x), agronomist_approval(x)), chemical_treatment(x))))\ns.add(low_moisture(Plant))\ns.add(heatwave(Plant))\ns.add(reservoir_water(Plant))\ns.add(sensor_current(Plant))\ns.add(pest_high(Plant))\n\nsolve_mcq(s, {'A': Not(reservoir_water(Plant)), 'B': chemical_treatment(Plant), 'C': Not(irrigation_needed(Plant)), 'D': auto_watering(Plant)})",
+    "expected_answer": "D",
+    "tags": ["multiple_chains", "mcq", "missing_condition"]
+  }
+]

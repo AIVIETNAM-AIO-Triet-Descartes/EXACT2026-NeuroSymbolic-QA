@@ -25,13 +25,22 @@ logger = logging.getLogger(__name__)
 
 # Display units for common physics symbols
 _UNIT_MAP: dict[str, str] = {
+    # Electrical
     "V": "V", "I": "A", "R": "Ω", "P": "W",
     "E": "J", "C": "F", "Q": "C", "F": "N",
     "f": "Hz", "L": "H", "B": "T",
-    "R_total": "Ω", "R1": "Ω", "R2": "Ω", "R3": "Ω",
-    # E_field is produced by vector_solver (Strategy F), not this scalar path,
-    # but map it too for safety so any future SymPy route emits a consistent unit.
+    "R_total": "Ω", "R_eq": "Ω",
+    "R1": "Ω", "R2": "Ω", "R3": "Ω", "R4": "Ω",
+    # Reactance / Impedance
+    "X_L": "Ω", "X_C": "Ω", "Z": "Ω", "Z_L": "Ω", "Z_C": "Ω",
+    # E-field
     "E_field": "V/m",
+    # Mechanics
+    "s": "m", "d": "m", "h": "m", "x": "m",
+    "v": "m/s", "u": "m/s", "a": "m/s²",
+    "t": "s", "T": "s",
+    # Energy / Work
+    "W": "J", "KE": "J", "PE": "J", "U": "J",
 }
 
 
