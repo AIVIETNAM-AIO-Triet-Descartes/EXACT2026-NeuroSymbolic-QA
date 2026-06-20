@@ -145,17 +145,40 @@ def send_one(url: str, rec: dict, timeout: int) -> dict:
 
 
 # ── input loading ────────────────────────────────────────────────
+def flatten_nested_records(recs: list[dict]) -> list[dict]:
+    if not recs or not isinstance(recs, list):
+        return recs
+    if isinstance(recs[0], dict) and "request_payload" in recs[0] and "expected" in recs[0]:
+        flattened = []
+        for item in recs:
+            payload = item.get("request_payload") or {}
+            expected = item.get("expected") or {}
+            flattened.append({
+                "query_id": item.get("query_id", ""),
+                "type": item.get("type", ""),
+                "query": payload.get("query", ""),
+                "premises": payload.get("premises", []),
+                "options": payload.get("options", []),
+                "gold_answer": expected.get("answer", ""),
+                "gold_unit": expected.get("unit", ""),
+                "gold_premises_used": expected.get("premises_used", []),
+                "gold_aliases": expected.get("aliases", []),
+            })
+        return flattened
+    return recs
+
+
 def load_records(path: str) -> list[dict]:
     if path.endswith(".json"):
         data = json.load(open(path, encoding="utf-8"))
         if isinstance(data, dict):
             for k in ("logs", "queries", "records", "data"):
                 if k in data and isinstance(data[k], list):
-                    return data[k]
+                    return flatten_nested_records(data[k])
             for v in data.values():
                 if isinstance(v, list):
-                    return v
-        return data
+                    return flatten_nested_records(v)
+        return flatten_nested_records(data)
     # legacy physics CSV → type2 records
     recs = []
     with open(path, encoding="utf-8", newline="") as f:
