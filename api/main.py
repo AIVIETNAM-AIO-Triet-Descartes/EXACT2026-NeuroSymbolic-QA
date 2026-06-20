@@ -439,6 +439,12 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                 z3_ans = "Unknown"
 
                             if z3_ans and z3_ans in ('Yes', 'No', 'A', 'B', 'C', 'D', 'Unknown'):
+                                # If it's a yes_no question but Z3 generated and solved it as MCQ
+                                if q_type == "yes_no" and z3_ans in ('A', 'B', 'C'):
+                                    mapped_ans = {'A': 'Yes', 'B': 'No', 'C': 'Unknown'}[z3_ans]
+                                    logger.info(f"[TYPE1] Mapped Z3 MCQ output '{z3_ans}' to yes_no '{mapped_ans}'")
+                                    z3_ans = mapped_ans
+
                                 # Type-safety guard: for yes_no questions, only accept
                                 # Yes/No/Unknown from Z3 (not MCQ letters A/B/C/D which
                                 # indicate the Z3 code misinterpreted the question type).
