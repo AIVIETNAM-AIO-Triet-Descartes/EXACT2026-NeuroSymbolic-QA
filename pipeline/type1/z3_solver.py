@@ -926,6 +926,9 @@ def execute_z3_code(code: str, timeout_sec: int = 30) -> Optional[str]:
                 return self._solver.unsat_core()
 
         def solve_yes_no(solver, goal):
+            if solver.check() == z3.unsat:
+                print("Unknown")
+                return
             # Check Yes (Goal is entailed)
             solver.push()
             solver.add(z3.Not(goal))
@@ -975,6 +978,9 @@ def execute_z3_code(code: str, timeout_sec: int = 30) -> Optional[str]:
             print("Unknown")
 
         def solve_mcq(solver, options_dict):
+            if solver.check() == z3.unsat:
+                print("Unknown")
+                return
             entailed = []
             cores = {}
             for key, expr in options_dict.items():

@@ -493,7 +493,7 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                     # CoT is prone to hallucinate "Yes" by ignoring missing conditions.
                                     # Trust Z3's inability to prove: override to "No".
                                     q_lower = request.query.lower()
-                                    if any(w in q_lower for w in ["prove", "guarantee", "establish", "satisfy every", "ensure"]):
+                                    if q_type == "yes_no" and any(w in q_lower for w in ["prove", "guarantee", "establish", "satisfy every", "ensure"]):
                                         logger.warning(f"[TYPE1] Z3 logical insufficiency detected. Overriding CoT '{answer}' with 'No'")
                                         answer = "No"
                                         if z3_premises_used:

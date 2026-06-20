@@ -503,8 +503,8 @@ def extract_given(question: str, return_phrasal: bool = False):
 
     # Voltage symbol normalization: a question may write V for hiệu điện thế
     # (foreign convention). The RAG DB uses U for hiệu điện thế and reserves V
-    # for điện thế (V = k*q/r). Remap V→U unless điện-thế context is present.
-    if "V" in given and not _POTENTIAL_CONTEXT_PAT.search(question):
+    # for điện thế (V = k*q/r). Remap V→U unless điện-thế context or volume context is present.
+    if "V" in given and not _POTENTIAL_CONTEXT_PAT.search(question) and not re.search(r'\bvolume\b|\bm3\b|\bm\^3\b|\bliter', question, re.IGNORECASE):
         v_val = given.pop("V")
         given.setdefault("U", v_val)   # keep an explicit U if one already exists
 
