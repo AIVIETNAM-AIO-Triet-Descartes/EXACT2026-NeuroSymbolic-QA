@@ -41,6 +41,12 @@ _FIND_TO_UNIT = {
     "f": "Hz", "F": "N",
     "P": "W", "I": "A", "V": "V", "Q": "C",
     "C": "F", "L": "H", "B": "T",
+    "image_distance": "m", "object_distance": "m", "focal_length": "m",
+    "distance": "m", "radius": "m", "diameter": "m", "length": "m",
+    "width": "m", "height": "m", "wavelength": "m",
+    "E_field": "V/m", "electric_field": "V/m",
+    "angle": "degree",
+    "resistance": "ohm", "resistivity": "ohm*m", "rho": "ohm*m",
 }
 
 # Equivalent unit pairs: (from, to) — bidirectional

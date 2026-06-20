@@ -876,6 +876,11 @@ def execute_z3_code(code: str, timeout_sec: int = 30) -> Optional[str]:
     Returns:
         Output text hoặc None nếu thất bại.
     """
+    # Remove imports from z3 to prevent overriding our custom Solver class
+    import re
+    code = re.sub(r'^\s*from\s+z3\s+import\s+.*$', '', code, flags=re.MULTILINE)
+    code = re.sub(r'^\s*import\s+z3\b.*$', '', code, flags=re.MULTILINE)
+
     # Auto-fix variable/function declarations (e.g. Bool vs Function)
     code = autofix_z3_declarations(code)
     # Capture stdout

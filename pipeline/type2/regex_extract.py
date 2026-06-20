@@ -85,14 +85,14 @@ _ASSIGN_PAT = re.compile(
     r'\b([A-Za-z_]\w*)\s*=\s*'              # symbol =
     r'([+-]?[\d.]+)'                         # mantissa (optional sign)
     r'(?:\s*[x\*\xd7]\s*10\^?([=\-]?\d+))?'  # × 10^exp (optional, hex \xd7 for ×)
-    r'\s*([μuμnmkMGp]?[A-Z\xd6a-z]{1,4})?'   # unit prefix+base (optional)
+    r'\s*([μuμnmkMGp]?[A-Za-z0-9\^²Ωμµ/]{1,6})?'   # unit prefix+base (optional)
 )
 
 # Bare power notation: SYM = MANTISSA^EXP UNIT  e.g. "q1 = 10^-8 C"
 _BARE_POWER_PAT = re.compile(
     r'\b([A-Za-z_]\w*)\s*=\s*'
     r'([+-]?[\d.]+)\^([+-]?\d+)'            # mantissa^exp (pure power, no ×10)
-    r'\s*([μuμnmkMGp]?[A-Z\xd6a-z]{1,4})?'
+    r'\s*([μuμnmkMGp]?[A-Za-z0-9\^²Ωμµ/]{1,6})?'
 )
 
 # "X cm apart" / "separated by X cm" → AB distance
@@ -122,7 +122,7 @@ _CHAIN_PAT = re.compile(
     r'\b([A-Za-z_]\w*(?:\s*=\s*[A-Za-z_]\w*)+)'  # q1 = q2 = q3
     r'\s*=\s*([-]?[\d.]+)'                          # = value
     r'(?:\s*[x\*\xd7]\s*10\^?([=\-]?\d+))?'
-    r'\s*([μuμnmkMGp]?[A-Z\xd6a-z]{1,4})?',
+    r'\s*([μuμnmkMGp]?[A-Za-z0-9\^²Ωμµ/]{1,6})?',
 )
 
 # Verb-context target detector: "calculate the energy" → "E"
@@ -162,7 +162,7 @@ _ANGLE_PHRASE_PAT = re.compile(
 _NEG_CHAIN_PAT = re.compile(
     r'\b([A-Za-z_]\w*)\s*=\s*-([A-Za-z_]\w*)\s*=\s*([+-]?[\d.]+)'
     r'(?:\^([+-]?\d+)|\s*[x\*\xd7]\s*10\^?([=\-]?\d+))?'  # bare ^exp OR ×10^exp
-    r'\s*([μuμnmkMGp]?[A-Z\xd6a-z]{1,4})?'
+    r'\s*([μuμnmkMGp]?[A-Za-z0-9\^²Ωμµ/]{1,6})?'
 )
 
 # Expression-valued assignment (fraction / sqrt / mixed scientific) that the
@@ -176,7 +176,7 @@ _NEG_CHAIN_PAT = re.compile(
 _EXPR_ASSIGN_PAT = re.compile(
     r'\b([A-Za-z_]\w*)\s*=\s*'
     r'((?:sqrt|[\d.+\-*/()^×x√])(?:sqrt|[\d.\s+\-*/()^×x√])*)'  # math blob
-    r'\s*([μuµnmkMGp]?[A-Za-zΩ]{1,4})?'                          # optional unit
+    r'\s*([μuµnmkMGp]?[A-Za-z0-9\^²Ωμµ/]{1,6})?'                          # optional unit
 )
 _EXPR_MARKERS = ('(', ')', '/', 'sqrt', '√')
 
@@ -278,7 +278,7 @@ _PHRASAL_FIELDS: list[tuple[str, str, str]] = [
     (r'time|duration',          't',   _SEC),
 ]
 _PHRASAL_COMPILED = [
-    (re.compile(noun + _PHRASAL_CONNECT + _PHRASAL_NUM + unit, re.IGNORECASE), sym)
+    (re.compile(f"(?:{noun}){_PHRASAL_CONNECT}{_PHRASAL_NUM}{unit}", re.IGNORECASE), sym)
     for noun, sym, unit in _PHRASAL_FIELDS
 ]
 
