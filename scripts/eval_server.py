@@ -147,7 +147,15 @@ def send_one(url: str, rec: dict, timeout: int) -> dict:
 # ── input loading ────────────────────────────────────────────────
 def load_records(path: str) -> list[dict]:
     if path.endswith(".json"):
-        return json.load(open(path, encoding="utf-8"))
+        data = json.load(open(path, encoding="utf-8"))
+        if isinstance(data, dict):
+            for k in ("logs", "queries", "records", "data"):
+                if k in data and isinstance(data[k], list):
+                    return data[k]
+            for v in data.values():
+                if isinstance(v, list):
+                    return v
+        return data
     # legacy physics CSV → type2 records
     recs = []
     with open(path, encoding="utf-8", newline="") as f:
