@@ -284,9 +284,235 @@ def _run_type2_pipeline(request: UnifiedRequest) -> UnifiedResponse:
     )
 
 
-# ══════════════════════════════════════════════════════════════
-# Track 1 pipeline (Logic) — single-query
-# ══════════════════════════════════════════════════════════════
+# Helper functions for Z3 AST analysis and semantic verification
+def run_ast_reachability(code: str, filtered_premises: list, z3_to_orig_index: dict) -> list:
+    import ast
+    try:
+        tree = ast.parse(code)
+    except Exception:
+        return list(z3_to_orig_index.values())
+        
+    s_adds = []
+    goal_container = [None]
+    
+    class Z3Visitor(ast.NodeVisitor):
+        def visit_Call(self, node):
+            if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id == 's' and node.func.attr == 'add':
+                s_adds.append(node.args[0])
+            elif isinstance(node.func, ast.Name) and node.func.id in ('solve_yes_no', 'solve_mcq'):
+                if node.func.id == 'solve_yes_no':
+                    goal_container[0] = node.args[1]
+                elif node.func.id == 'solve_mcq':
+                    if len(node.args) > 1:
+                        goal_container[0] = node.args[1]
+            self.generic_visit(node)
+            
+    Z3Visitor().visit(tree)
+    goal_node = goal_container[0]
+    
+    if not s_adds or goal_node is None:
+        return list(z3_to_orig_index.values())
+        
+    def get_calls(node):
+        calls = set()
+        for child in ast.walk(node):
+            if isinstance(child, ast.Call) and isinstance(child.func, ast.Name):
+                if child.func.id not in ('ForAll', 'Exists', 'Implies', 'And', 'Or', 'Not'):
+                    calls.add(child.func.id)
+        return calls
+
+    def parse_assertion(node):
+        inner = node
+        while isinstance(inner, ast.Call) and isinstance(inner.func, ast.Name) and inner.func.id in ('ForAll', 'Exists'):
+            inner = inner.args[1]
+        if isinstance(inner, ast.Call) and isinstance(inner.func, ast.Name) and inner.func.id == 'Implies':
+            ant = inner.args[0]
+            cons = inner.args[1]
+            return get_calls(cons), get_calls(ant), get_calls(inner)
+        else:
+            return set(), set(), get_calls(inner)
+
+    def get_goal_calls(node):
+        if isinstance(node, ast.Dict):
+            calls = set()
+            for val in node.values:
+                calls.update(get_calls(val))
+            return calls
+        return get_calls(node)
+
+    parsed_adds = []
+    for i, node in enumerate(s_adds):
+        cons, ant, all_calls = parse_assertion(node)
+        parsed_adds.append((i, cons, ant, all_calls))
+        
+    goal_calls = get_goal_calls(goal_node)
+    
+    reachable_indices = set()
+    target_predicates = set(goal_calls)
+    added = True
+    while added:
+        added = False
+        for i, cons, ant, all_calls in parsed_adds:
+            if i in reachable_indices:
+                continue
+            if cons:
+                if cons.intersection(target_predicates):
+                    reachable_indices.add(i)
+                    target_predicates.update(ant)
+                    added = True
+                    
+    for i, cons, ant, all_calls in parsed_adds:
+        if i in reachable_indices:
+            continue
+        if not cons:
+            if all_calls.intersection(target_predicates):
+                reachable_indices.add(i)
+                
+    orig_indices = []
+    for idx in reachable_indices:
+        if idx in z3_to_orig_index:
+            orig_indices.append(z3_to_orig_index[idx])
+    return sorted(list(set(orig_indices)))
+
+def validate_and_map_z3_premises(code: str, filtered_premises: list, z3_to_orig_index: dict) -> dict:
+    import ast
+    import re
+    mapping = {}
+    try:
+        tree = ast.parse(code)
+    except Exception:
+        return z3_to_orig_index
+        
+    s_adds = []
+    goal_container = [None]
+    
+    class Z3Visitor(ast.NodeVisitor):
+        def visit_Call(self, node):
+            if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id == 's' and node.func.attr == 'add':
+                s_adds.append(node.args[0])
+            elif isinstance(node.func, ast.Name) and node.func.id in ('solve_yes_no', 'solve_mcq'):
+                if node.func.id == 'solve_yes_no':
+                    goal_container[0] = node.args[1]
+                elif node.func.id == 'solve_mcq':
+                    if len(node.args) > 1:
+                        goal_container[0] = node.args[1]
+            self.generic_visit(node)
+            
+    Z3Visitor().visit(tree)
+    goal_node = goal_container[0]
+    
+    goal_exprs = []
+    if goal_node is not None:
+        if isinstance(goal_node, ast.Dict):
+            for val in goal_node.values:
+                goal_exprs.append(val)
+        else:
+            goal_exprs.append(goal_node)
+    
+    goal_exprs_str = []
+    for g in goal_exprs:
+        try:
+            goal_exprs_str.append(ast.dump(g))
+        except Exception:
+            pass
+
+    stop_words = {
+        'if', 'then', 'else', 'every', 'each', 'all', 'any', 'some', 'a', 'an', 'the',
+        'is', 'are', 'was', 'were', 'be', 'been', 'has', 'have', 'had', 'do', 'does', 'did',
+        'who', 'which', 'that', 'this', 'these', 'those', 'to', 'of', 'in', 'on', 'at', 'by',
+        'for', 'with', 'about', 'and', 'or', 'not', 'no', 'can', 'could', 'should', 'would',
+        'researcher', 'person', 'someone', 'individual', 'member', 'user', 'study', 'project',
+        'team', 'office', 'department', 'room'
+    }
+
+    def clean_words(text: str):
+        words = re.findall(r'[a-zA-Z0-9_]+', text.lower())
+        res = set()
+        for w in words:
+            parts = re.split(r' |_', w)
+            for p in parts:
+                subparts = re.sub(r'([A-Z])', r' \1', p).split()
+                for sp in subparts:
+                    sp_clean = sp.lower()
+                    if sp_clean not in stop_words and len(sp_clean) >= 2:
+                        res.add(sp_clean)
+        return res
+
+    def get_expr_keywords(node):
+        names = []
+        calls = []
+        for child in ast.walk(node):
+            if isinstance(child, ast.Name):
+                names.append(child.id)
+            elif isinstance(child, ast.Call) and isinstance(child.func, ast.Name):
+                calls.append(child.func.id)
+                
+        z3_keywords = {'ForAll', 'Exists', 'Implies', 'And', 'Or', 'Not', 'x', 'y', 'z', 's', 'add'}
+        constants = {n for n in names if n[0].isupper() and n not in z3_keywords}
+        functions = {c for c in calls if c not in z3_keywords}
+        
+        keywords = set()
+        for c in constants:
+            keywords.update(clean_words(c))
+        for f in functions:
+            keywords.update(clean_words(f))
+        return keywords, constants, functions
+
+    for i, expr_node in enumerate(s_adds):
+        is_goal = False
+        try:
+            expr_dump = ast.dump(expr_node)
+            for g_str in goal_exprs_str:
+                if expr_dump == g_str:
+                    is_goal = True
+                    break
+        except Exception:
+            pass
+            
+        if is_goal:
+            mapping[i] = None
+            continue
+            
+        expr_kws, expr_consts, expr_funcs = get_expr_keywords(expr_node)
+        best_idx = None
+        best_score = 0
+        for j, p in enumerate(filtered_premises):
+            p_lower = p.lower()
+            
+            c_matched = True
+            for c in expr_consts:
+                c_parts = re.split(r' |_', c)
+                c_part_matched = False
+                for part in c_parts:
+                    subparts = re.sub(r'([A-Z])', r' \1', part).split()
+                    for sp in subparts:
+                        if sp.lower() in p_lower:
+                            c_part_matched = True
+                if not c_part_matched:
+                    c_matched = False
+                    break
+            if not c_matched:
+                continue
+                
+            intersection = expr_kws.intersection(clean_words(p))
+            if not expr_kws:
+                score = 0.0
+            else:
+                score = len(intersection) / len(expr_kws)
+                
+            if score > best_score:
+                best_score = score
+                best_idx = j
+                
+        if best_idx is not None and best_score >= 0.2:
+            orig_idx = z3_to_orig_index.get(best_idx)
+            mapping[i] = orig_idx
+        else:
+            pos_orig = z3_to_orig_index.get(i)
+            mapping[i] = pos_orig
+            
+    return mapping
+
 
 def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
     """
@@ -431,6 +657,18 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                     z3_premises_used = [idx for idx in z3_premises_used if 0 <= idx < len(request.premises or [])]
                                 except Exception:
                                     pass
+                            
+                            # Detect goal hallucination via AST analysis
+                            has_goal_hallucination = False
+                            try:
+                                semantic_mapping = validate_and_map_z3_premises(code, filtered_premises, z3_to_orig_index)
+                                has_goal_hallucination = any(v is None for v in semantic_mapping.values())
+                                if has_goal_hallucination:
+                                    logger.warning(f"[TYPE1] Goal hallucination detected in Z3 code — discarding Z3 premises")
+                                    z3_premises_used = []  # Discard Z3 premises
+                            except Exception:
+                                pass
+
                                     
                             if q_type == "mcq" and p_match is None and z3_ans in ('A', 'B', 'C', 'D'):
                                 logger.info(
@@ -470,11 +708,19 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                     # Z3 returned wrong answer type for this question — skip
                                     logger.warning(f"[TYPE1] Z3 type mismatch (IGNORED): CoT={answer}, Z3={z3_ans}")
                                 elif z3_agrees:
-                                    # Z3 confirms CoT — use Z3's premises (minimal unsat core)
-                                    # instead of merging, because Z3 premises are more precise.
+                                    # Z3 confirms CoT — prefer Z3's formal premises.
+                                    # Only supplement with CoT if Z3's set is clearly too narrow
+                                    # (< 50% of what CoT found), suggesting Z3 lost some premises.
                                     explanation = f"[Formal Verification] Formally verified by Z3. \n{explanation}"
                                     if z3_premises_used:
-                                        premises_used = z3_premises_used
+                                        cot_premise_set = set(premises_used)
+                                        z3_premise_set = set(z3_premises_used)
+                                        if cot_premise_set and len(z3_premise_set) < len(cot_premise_set) * 0.5:
+                                            # Z3 too narrow — union for coverage
+                                            premises_used = sorted(list(cot_premise_set | z3_premise_set))
+                                        else:
+                                            # Z3 has good coverage — use Z3's precise set
+                                            premises_used = z3_premises_used
                                 elif z3_is_concrete and cot_confident:
                                     # Z3 gives a CONCRETE answer that DISAGREES with CoT.
                                     # Trust Z3: formal verification is more reliable than
@@ -495,15 +741,25 @@ def _run_type1_pipeline(request: UnifiedRequest) -> UnifiedResponse:
                                         premises_used = z3_premises_used
                                 else:
                                     # Z3=Unknown with confident CoT.
-                                    # If the question asks about provability/guarantee/satisfying requirements,
-                                    # CoT is prone to hallucinate "Yes" by ignoring missing conditions.
-                                    # Trust Z3's inability to prove: override to "No".
                                     q_lower = request.query.lower()
                                     if q_type == "yes_no" and any(w in q_lower for w in ["prove", "guarantee", "establish", "satisfy every", "ensure"]):
                                         logger.warning(f"[TYPE1] Z3 logical insufficiency detected. Overriding CoT '{answer}' with 'No'")
                                         answer = "No"
-                                        if z3_premises_used:
-                                            premises_used = z3_premises_used
+                                        # Use AST reachability for precise premise extraction
+                                        # when Z3 properly encoded the blocking chain.
+                                        # Only use AST result if it's a focused subset (≥3 and ≤50%),
+                                        # not a single vacuous trace or nearly-all premises.
+                                        try:
+                                            reachable = run_ast_reachability(code, filtered_premises, z3_to_orig_index)
+                                            n_all = len(request.premises or [])
+                                            if reachable and len(reachable) >= 3 and len(reachable) <= n_all * 0.5:
+                                                premises_used = reachable
+                                                logger.debug(f"[TYPE1] Logical insufficiency: Using AST reachable premises {premises_used}")
+                                            else:
+                                                # Keep existing premises_used from CoT (already set above)
+                                                logger.debug(f"[TYPE1] Logical insufficiency: Keeping existing premises (AST gave {len(reachable) if reachable else 0}/{n_all})")
+                                        except Exception as e:
+                                            logger.error(f"[TYPE1] AST reachability failed: {e}")
                                     else:
                                         # Z3 "Unknown" usually reflects broken codegen, not
                                         # genuine proof of insufficiency.
