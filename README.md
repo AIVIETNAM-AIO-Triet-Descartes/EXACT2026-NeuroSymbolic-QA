@@ -1,550 +1,256 @@
-# 🧠 NeuroSymbolic-QA: A Hybrid Neuro-Symbolic System for Explainable Logic-Based Question Answering
+# 🧠 NeuroSymbolic-QA — Explainable Educational & Physics Question Answering
 
-[![EXACT 2026](https://img.shields.io/badge/EXACT%202026-Logic%20QA-blue)]()
+[![EXACT 2026](https://img.shields.io/badge/EXACT%202026-IEEE%20IJCNN-blue)]()
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-green)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **Submission to EXACT 2026** — 2nd International XAI Challenge for Transparent Educational Question-Answering  
-> **Track:** Part 1 — Logic-Based Educational Queries
+> **Submission to EXACT 2026** — The 2nd International XAI Challenge for Transparent Educational Question-Answering (IEEE IJCNN / WCCI 2026, hosted by URA Research Group, HCMUT).
+> **Team:** *Cây Nhà Lá Vườn* · **Team Lead:** Trịnh Vỹ Triết.
 
----
+A hybrid **neuro-symbolic** QA system that answers both **logic-based educational** questions (Track 1) and **physics** problems (Track 2), with transparent step-by-step explanations, using only **open-source LLMs ≤ 8B parameters**.
 
-## Abstract
-
-We present **NeuroSymbolic-QA**, a hybrid neuro-symbolic reasoning system that combines a lightweight Large Language Model (Qwen 2.5 7B Instruct, ≤8B parameters) with the Z3 Theorem Prover and a novel **Logic Tree** inference structure for answering logic-based educational questions. Our architecture decomposes the problem into four stages: (1) FOL normalization and question classification, (2) Logic Tree construction via DAG-based forward/backward chaining, (3) formal verification through Z3 entailment checking with LLM-assisted translation, and (4) natural language explanation generation via structured Chain-of-Thought prompting. The system achieves guaranteed logical correctness through symbolic verification while maintaining natural language explainability through the neural component, addressing the core challenge of transparent educational QA.
-
-**Keywords:** Neuro-Symbolic AI, First-Order Logic, Z3 Theorem Prover, Explainable AI, Educational QA, Logic Tree, Chain-of-Thought
+> **Design philosophy:** *the LLM never does the arithmetic or the proof — it translates and explains; the math and logic are delegated to dedicated symbolic engines (Z3, SymPy) and verified code.*
 
 ---
 
 ## Table of Contents
-
-- [1. Introduction](#1-introduction)
-- [2. System Architecture](#2-system-architecture)
-- [3. Methodology](#3-methodology)
-- [4. Installation & Setup](#4-installation--setup)
-- [5. Usage](#5-usage)
-- [6. Project Structure](#6-project-structure)
-- [7. Evaluation](#7-evaluation)
-- [8. Technical Details](#8-technical-details)
-- [9. References](#9-references)
-
----
-
-## 1. Introduction
-
-### 1.1 Problem Statement
-
-The EXACT 2026 challenge requires building an educational QA system that:
-- Answers logic-based questions derived from First-Order Logic (FOL) premises
-- Generates transparent, step-by-step explanations
-- Uses only open-source LLMs with ≤8B parameters
-- Responds within 60 seconds per query
-
-### 1.2 Dataset Overview
-
-| Property | Value |
-|:---|:---|
-| Total Samples | 411 |
-| Total Questions | ~808 |
-| Question Types | MCQ (346), Yes/No (416), Unknown (43), Open (3) |
-| Premises per Sample | min=3, max=36, avg=10.9 |
-| FOL Operators | ∀, ∃, →, ∧, ∨, ¬, ↔, ≥, ≤ |
-
-### 1.3 Our Approach
-
-We adopt a **hybrid neuro-symbolic** approach inspired by Logic-LM (Pan et al., 2023) and LINC (Olausson et al., 2023), with three key innovations:
-
-1. **Logic Tree (DAG-based Inference):** A directed acyclic graph that models the deductive chain from premises to conclusions, supporting both forward and backward chaining with automated contraposition generation.
-
-2. **Multi-Strategy Reasoning:** A tiered solving strategy that prioritizes Z3 formal verification (highest confidence), falls back to Logic Tree heuristics, and uses LLM Chain-of-Thought as a final safety net.
-
-3. **Premise Tracking via Unsat Core:** Z3's unsatisfiable core extraction identifies the minimal set of premises required for each conclusion, directly optimizing the P3 (Reasoning Depth) evaluation metric.
+- [1. Overview](#1-overview)
+- [2. Architecture](#2-architecture)
+- [3. Track 1 — Logic](#3-track-1--logic-based-educational-qa)
+- [4. Track 2 — Physics](#4-track-2--physics-qa)
+- [5. LLM Backend](#5-llm-backend-vllm--llamacpp)
+- [6. API Contract](#6-api-contract-official-spec)
+- [7. Installation](#7-installation)
+- [8. Usage](#8-usage)
+- [9. Project Structure](#9-project-structure)
+- [10. Evaluation](#10-evaluation)
+- [11. References](#11-references)
 
 ---
 
-## 2. System Architecture
+## 1. Overview
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        📥 INPUT                                 │
-│           JSON: premises-NL, premises-FOL, questions            │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              STAGE 1: PREPROCESSING                             │
-│                                                                 │
-│   FOL Normalizer          Question Classifier                   │
-│   (Unicode → Unified)     (MCQ / Yes-No / Unknown)              │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                ┌───────────┼───────────┐
-                ▼           ▼           ▼
-┌───────────────────┐ ┌──────────┐ ┌──────────────────┐
-│ STAGE 2:          │ │ STAGE 3: │ │ STAGE 3-alt:     │
-│ Logic Tree (DAG)  │ │ Z3       │ │ LLM-Assisted Z3  │
-│                   │ │ Solver   │ │ Code Generation   │
-│ Forward Chaining  │ │ (Rule-   │ │ + Self-Refinement │
-│ Backward Chaining │ │  Based)  │ │ (Logic-LM style)  │
-│ Contraposition    │ │          │ │                    │
-└────────┬──────────┘ └────┬─────┘ └────────┬───────────┘
-         │                 │                 │
-         └─────────┬───────┴─────────────────┘
-                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              STAGE 4: LLM REASONING                             │
-│                                                                 │
-│   Explanation Generator    │    CoT Fallback Solver              │
-│   (Post-Z3: translate      │    (When Z3 fails: direct          │
-│    proof → NL)             │     LLM reasoning)                  │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        📤 OUTPUT                                │
-│         answer | explanation | idx (premises used)              │
-└─────────────────────────────────────────────────────────────────┘
-```
+The system is evaluated as a **single live HTTP endpoint** (`POST /predict`) that handles both query types, routed internally by a `type` field. The committee sends **50 queries** (25 Type 1 + 25 Type 2) sequentially during a one-hour grading slot, **60 s/query, no retries**, and verifies the served model via `GET /v1/models`.
+
+| | Track 1 — Logic | Track 2 — Physics |
+|---|---|---|
+| **Dataset** | 411 records / ~808 questions (FOL premises) | 1,352 problems, 8 families |
+| **Engines** | Logic Tree (DAG) + Z3 + LLM CoT (consensus) | Classifier → Formula RAG → SymPy + vector/specialized solvers → PAL |
+| **Scoring** | answer 50% + `premises_used` 50% | answer **and** unit 100% |
+| **Answer** | chosen option / number / text | numeric value + ASCII unit |
+
+**Compliance:** open-source LLM ≤ 8B (Qwen2.5-7B-Instruct), served via vLLM so the model id is verifiable; no closed-source API calls; symbolic tools / RAG / code execution do not count toward the parameter budget.
 
 ---
 
-## 3. Methodology
-
-### 3.1 FOL Normalization
-
-The dataset contains two distinct FOL notations:
-- **Unicode style:** `∀x (WT(x) → O(x))`
-- **Text style:** `ForAll(x, completed_courses(x) → eligible(x))`
-
-Our `FOLNormalizer` detects the notation style and converts all expressions to a unified format, extracting predicates, bound variables, and named constants for downstream processing.
-
-### 3.2 Logic Tree Construction
-
-We model the logical structure as a **Directed Acyclic Graph (DAG)** where:
-- **Leaf nodes** = atomic facts from premises
-- **Internal nodes** = derived propositions
-- **Edges** = inference rules (implications)
-
-The tree supports:
-- **Forward Chaining:** Derives all reachable conclusions from known facts (O(|R| × |F| × D))
-- **Backward Chaining:** Goal-directed proof search (O(|R|^D) worst case)
-- **Contraposition:** Automatically generates ¬B → ¬A from A → B
-- **Negation Handling:** Blocks inference paths when ¬P(x) is asserted
-
-### 3.3 Z3 Formal Verification
-
-We use the Z3 SMT solver for **entailment checking via proof by contradiction:**
+## 2. Architecture
 
 ```
-Given premises P and conclusion C:
-    If P ∧ ¬C is UNSATISFIABLE → C is entailed (answer: "Yes")
-    If P ∧ ¬C is SATISFIABLE   → C is not entailed (answer: "No")
-    If UNKNOWN                  → Insufficient information
-```
-
-Two translation strategies:
-1. **Rule-based:** Pattern matching for common FOL structures
-2. **LLM-assisted:** Qwen 2.5 generates Z3 Python code with self-refinement loop
-
-### 3.4 LLM Explanation Generation
-
-Post-verification, the LLM generates natural language explanations by receiving:
-- The verified correct answer
-- The proof trace (which premises were used)
-- A structured template enforcing premise references and logical step names
-
----
-
-## 4. Installation & Setup
-
-### 4.1 Prerequisites
-
-- Python 3.10+
-- CUDA-compatible GPU (recommended: 4GB+ VRAM for Qwen 2.5 7B)
-- Qwen 2.5 7B Instruct GGUF model files
-
-### 4.2 Installation
-
-```bash
-# Clone repository
-git clone https://github.com/your-org/EXACT2026-NeuroSymbolic-QA.git
-cd EXACT2026-NeuroSymbolic-QA
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 4.3 Model Setup
-
-Download the Qwen 2.5 7B Instruct GGUF model and place it in the project root:
-
-```bash
-# The model files should be:
-# ./qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf
-# ./qwen2.5-7b-instruct-q4_k_m-00002-of-00002.gguf
-```
-
----
-
-## 5. Usage
-
-### 5.1 Full Pipeline (Z3 + LLM)
-
-```bash
-# Run on full dataset with evaluation
-python -m src.main \
-    --input Logic_Based_Educational_Queries.json \
-    --output output/predictions.json \
-    --evaluate
-
-# Run on first 10 samples for testing
-python -m src.main \
-    --input Logic_Based_Educational_Queries.json \
-    --output output/test_predictions.json \
-    --max-samples 10 \
-    --evaluate \
-    --log-level DEBUG
-```
-
-### 5.2 Symbolic-Only Mode (No LLM)
-
-```bash
-# Use only Z3 + Logic Tree (faster, no GPU required)
-python -m src.main \
-    --input Logic_Based_Educational_Queries.json \
-    --output output/symbolic_only.json \
-    --no-llm \
-    --evaluate
-```
-
-### 5.3 LLM-Only Mode (No Z3)
-
-```bash
-# Use only LLM Chain-of-Thought (no Z3)
-python -m src.main \
-    --input Logic_Based_Educational_Queries.json \
-    --output output/llm_only.json \
-    --no-z3 \
-    --evaluate
-```
-
-### 5.4 Custom GPU Configuration
-
-```bash
-# Limit GPU layers for low-VRAM GPUs
-python -m src.main \
-    --input Logic_Based_Educational_Queries.json \
-    --output output/predictions.json \
-    --gpu-layers 20 \
-    --evaluate
-```
-
-### 5.5 CLI Options
-
-| Flag | Description | Default |
-|:---|:---|:---|
-| `--input, -i` | Path to input JSON dataset | `Logic_Based_Educational_Queries.json` |
-| `--output, -o` | Path to output predictions JSON | `output/predictions.json` |
-| `--model, -m` | Path to GGUF model file | `./qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf` |
-| `--max-samples, -n` | Max samples to process (None = all) | `None` |
-| `--no-llm` | Disable LLM component | `False` |
-| `--no-z3` | Disable Z3 solver | `False` |
-| `--gpu-layers` | Number of GPU layers (-1 = all) | `-1` |
-| `--evaluate` | Evaluate accuracy vs ground truth | `False` |
-| `--log-level` | Logging verbosity | `INFO` |
-
----
-
-## 6. Project Structure
-# 🧠 EXACT2026-NeuroSymbolic-QA
-
-Multimodal Neuro-Symbolic QA System for **EXACT 2026** (IEEE IJCNN 2026).
-Kết hợp LLM mã nguồn mở (≤ 8B tham số) với **Z3 Theorem Prover** & **SymPy** để tạo hệ thống hỏi đáp có khả năng giải thích (Explainable QA) cho bài toán logic giáo dục và vật lý.
-
-> **Triết lý:** "Không để LLM tự làm toán — LLM chỉ làm nhiệm vụ giao tiếp và dịch thuật, phần tính toán và suy luận logic giao cho các công cụ toán học chuyên dụng."
-
----
-
-## 📁 Cấu trúc thư mục dự án
-
-```
-EXACT2026-NeuroSymbolic-QA/
-│
-├── src/                                # Source code
-│   ├── __init__.py
-│   ├── main.py                         # Main pipeline & CLI entry point
-│   │
-│   ├── preprocessor/                   # Stage 1: Preprocessing
-│   │   ├── fol_normalizer.py           # FOL notation normalization
-│   │   └── question_classifier.py      # Question type classification
-│   │
-│   ├── reasoning/                      # Stage 2 & 3: Symbolic Reasoning
-│   │   ├── logic_tree.py               # Logic Tree DAG construction
-│   │   └── z3_solver.py                # Z3 translation & entailment
-│   │
-│   └── llm/                            # Stage 4: Neural Reasoning
-│       ├── llm_reasoner.py             # Qwen 2.5 wrapper via llama-cpp
-│       └── prompt_templates.py         # Structured prompt templates
-│
-├── docs/                               # Design documentation (skills)
-│   ├── 00_pipeline_overview.md         # Architecture overview
-│   ├── 01_data_analysis.md             # Dataset analysis
-│   ├── 02_fol_normalizer.md            # FOL normalizer design
-│   ├── 03_logic_tree.md                # Logic Tree algorithms
-│   ├── 04_z3_solver.md                 # Z3 integration guide
-│   ├── 05_llm_reasoning.md             # Prompt engineering
-│   ├── 06_pipeline_implementation.md   # Implementation guide
-│   ├── 07_evaluation_strategy.md       # Scoring optimization
-│   └── 08_project_structure.md         # Project organization
-│
-├── tests/                              # Unit tests
-├── output/                             # Pipeline outputs
-├── logs/                               # Execution logs
-│
-├── Logic_Based_Educational_Queries.json # Input dataset
-├── requirements.txt                    # Python dependencies
-├── .gitignore                          # Git ignore rules
-└── README.md                           # This file
-│── .env.example          # ⚙️ Template biến môi trường — copy thành .env và điền giá trị riêng
-│── .env                  # 🔒 Biến môi trường cục bộ (model path, device, port...) — KHÔNG commit lên Git
-│── .gitignore            # 🚫 Danh sách file/thư mục bị loại khỏi Git (models/, .env, data/...)
-│── CLAUDE.md             # 🤖 Hướng dẫn cho AI agent (Claude Code) khi làm việc với repo này
-│── LICENSE               # 📄 Giấy phép MIT — bản quyền Trịnh Vỹ Triết 2026
-│── README.md             # 📖 Tài liệu tổng quan dự án (file này)
-│── requirements.txt      # 📦 Danh sách thư viện Python cần thiết cho production
-│── requirements-dev.txt  # 🧪 Thư viện bổ sung cho development (pytest, black, ruff)
-│
-├── api/                  # 🌐 [API GATEWAY] — Tầng giao tiếp HTTP, điểm vào duy nhất của hệ thống
-│   ├── __init__.py       #     Đánh dấu api/ là Python package
-│   ├── main.py           #     🚀 Entry point FastAPI — định nghĩa endpoint POST /query và GET /health
-│   │                     #        Nhận request JSON, gọi pipeline xử lý, trả response
-│   ├── schemas.py        #     📋 Pydantic models — định nghĩa schema cho QueryRequest & QueryResponse
-│   │                     #        Đảm bảo validate input (question, premises) và output (answer, explanation)
-│   ├── router.py         #     🔀 Router Agent — phân loại query thành Type 1 (Logic) hoặc Type 2 (Physics)
-│   │                     #        Dựa vào: có premises → Type 1, physics keywords → Type 2, default → Type 1
-│   └── logger.py         #     📝 Module logging JSON — ghi log mỗi request phục vụ debug và demo live
-│                         #        Format JSON: level, name, message (hỗ trợ phân tích lỗi pipeline)
-│
-├── pipeline/             # ⚡ [CORE PIPELINE] — Toàn bộ logic xử lý Neuro-Symbolic, chia 2 track
-│   ├── __init__.py       #     Đánh dấu pipeline/ là Python package
-│   │
-│   ├── type1/            # 🧩 [TRACK 1: LOGIC] — Xử lý bài toán suy luận logic / giáo dục (FOL + Z3)
-│   │   ├── __init__.py   #     Đánh dấu type1/ là Python package
-│   │   ├── nl_to_fol.py  #     🔤 Text Parser Agent — chuyển đổi premises ngôn ngữ tự nhiên (NL) sang
-│   │   │                 #        First-Order Logic (FOL) bằng LLM ≤ 8B. Bước ③a trong pipeline
-│   │   ├── z3_solver.py  #     🔬 Z3 Solver Node — nhận FOL đã validate, dùng Z3 Theorem Prover để
-│   │   │                 #        chứng minh/bác bỏ từng answer option. Trả answer + proof_steps. Bước ⑤a
-│   │   └── explainer.py  #     💬 Explainer Agent — nhận SolverResult từ Z3, dùng LLM sinh explanation
-│   │                     #        bằng ngôn ngữ tự nhiên. Bước ⑦ (shared với Type 2)
-│   │
-│   └── type2/            # ⚡ [TRACK 2: PHYSICS] — Xử lý bài toán tính toán vật lý (SymPy)
-│       ├── __init__.py   #     Đánh dấu type2/ là Python package
-│       ├── physics_parser.py  # 🔍 Physics Parser Agent — dùng LLM trích xuất biến số (given),
-│       │                      #    đại lượng cần tìm (find), xác định domain và công thức. Bước ③b
-│       ├── sympy_solver.py    # 🧮 SymPy Solver Node — giải phương trình, tính toán symbolic chính xác
-│       │                      #    tuyệt đối (không bị hallucination số). Trả answer + unit + steps. Bước ⑤b
-│       └── cot_builder.py     # 🔗 CoT Builder — xây dựng Chain-of-Thought từ các bước giải SymPy,
-│                              #    tạo chuỗi suy luận có cấu trúc cho explanation. Bước ⑥b
-│
-├── llm/                  # 🤖 [LLM MODULE] — Quản lý load model và inference cho toàn bộ hệ thống
-│   ├── __init__.py       #     Đánh dấu llm/ là Python package
-│   ├── loader.py         #     📥 Model Loader — load LLM ≤ 8B (Qwen2.5-7B, LLaMA-3.1-8B) vào RAM/VRAM
-│   │                     #        Hỗ trợ quantization 4-bit (BitsAndBytes) và adapter QLoRA (PEFT)
-│   └── inference.py      #     🧠 Inference Wrapper — gọi LLM generate text, hỗ trợ 2 backend:
-│                         #        transformers (local dev) hoặc vLLM (production Linux + GPU)
-│
-├── configs/              # ⚙️ [CONFIGURATION] — Cấu hình mặc định dùng chung cả team
-│   └── config.yaml       #     📋 Config chính — model name, timeout (Z3: 5s, SymPy: 10s),
-│                         #        temperature, API host/port, logging level. Commit lên Git
-│
-├── data/                 # 📊 [DATASET] — Dữ liệu huấn luyện và đánh giá
-│   ├── train/            #     🏋️ Dữ liệu training — Type 1 (464 records) + Type 2 (5,520 records)
-│   └── eval/             #     📏 Dữ liệu evaluation — dùng để đánh giá hiệu năng pipeline
-│
-├── models/               # 💾 [MODEL WEIGHTS] — Thư mục lưu trọng số model LLM đã download
-│                         #     (vd: models/qwen2.5-7b/) — KHÔNG commit lên Git (file lớn)
-│
-├── tests/                # ✅ [TESTING] — Bộ test tự động kiểm tra tính đúng đắn của hệ thống
-│   ├── test_api.py       #     🌐 Test API endpoints — kiểm tra POST /query và GET /health
-│   ├── test_type1.py     #     🧩 Test Track 1 — kiểm tra pipeline Logic (NL→FOL→Z3→Explanation)
-│   └── test_type2.py     #     ⚡ Test Track 2 — kiểm tra pipeline Physics (Parser→SymPy→CoT)
-│
-└── docs/                 # 📚 [DOCUMENTATION] — Tài liệu kỹ thuật và nghiên cứu
-    ├── SYSTEM.md         #     🏗️ SSOT — kiến trúc pipeline + bối cảnh cuộc thi (gộp CONTEXT):
-    │                     #        state schema, tech stack, fallback, API schema, dev rules, spec thi
-    ├── TODO.md           #     ✅ Worklist Track 2 + weakness tracker (gộp)
-    ├── track2_reference.md #   📊 Data analysis + formula format + gaps + impl plan (gộp 4 file)
-    ├── handoff.md        #     🔄 Session handoff — đọc trước khi nối tiếp việc
-    ├── proposals.md      #     💡 PAL code-gen fallback + formula_rag review (gộp)
-    └── teammates/        #     👥 Task-handoff cho teammate khác (eval harness)
-```
-
----
-
-## 7. Evaluation
-
-### 7.1 Scoring Criteria (EXACT 2026)
-
-| Criterion | Weight | Our Strategy |
-|:---|:---|:---|
-| **P1: Correctness** | High | Z3 formal verification ensures logical soundness |
-| **P2: Explanation Quality** | Medium | Structured LLM prompts with premise references |
-| **P3: Reasoning Depth** | Supplementary | Z3 unsat core / Logic Tree proof trace for `idx` |
-
-### 7.2 Solving Strategy Priority
-
-| Priority | Method | Confidence | Speed |
-|:---|:---|:---|:---|
-| 1st | LLM-Assisted Z3 | 0.9 | ~10-20s |
-| 2nd | Logic Tree (Forward/Backward) | 0.7 | <1s |
-| 3rd | LLM Chain-of-Thought | 0.5 | ~5-15s |
-| Fallback | Default "Unknown" | 0.0 | instant |
-
-### 7.3 Running Evaluation
-
-```bash
-python -m src.main \
-    --input Logic_Based_Educational_Queries.json \
-    --output output/predictions.json \
-    --evaluate
-
-# Output includes:
-# - output/predictions.json   (formatted for submission)
-# - output/evaluation.json    (accuracy metrics by method)
-# - logs/pipeline_*.log       (detailed execution log)
-## 🔄 Luồng xử lý (Pipeline Flow)
-
-```
-HTTP Request → API Gateway (FastAPI) → Router Agent
+                          POST /predict  { query_id, type, query, premises, options }
                                          │
-                    ┌────────────────────┴────────────────────┐
-                    ▼                                         ▼
-              TRACK 1: Logic                           TRACK 2: Physics
-              NL → FOL Parser                          Physics Parser
-                    ↓                                         ↓
-              Logic Evaluator                          Formula RAG (FAISS)
-              (retry ≤ 3 lần)                                 ↓
-                    ↓                                   SymPy Solver
-               Z3 Solver                                      ↓
-                    │                                   CoT Builder
-                    └────────────────────┬────────────────────┘
-                                         ▼
-                                   Explainer Agent
-                                         ↓
-                                   Response Builder
-                                         ↓
-                                   HTTP Response JSON
-                                { answer, explanation, ... }
+                               route by  │  type
+                    ┌────────────────────┴─────────────────────┐
+                    ▼                                           ▼
+        ════ TRACK 1 — LOGIC ════                  ════ TRACK 2 — PHYSICS ════
+        Preprocess (FOL norm, classify)            PhysicsClassifier
+                    │                                           │
+        Logic Tree (DAG: fwd/bwd chaining,         Formula RAG (keyword + FAISS)
+        negation, contraposition)                              │
+                    │                              SymPy solver  ─┐
+        Z3 Theorem Prover (entailment)             vector solver  ├─ symbolic
+                    │                              resonance/error/circuit/chain ─┘
+        LLM Chain-of-Thought                                     │
+                    │                              PAL fallback (LLM writes Python →
+        Consensus Hybridization                    sandbox exec + self-repair)
+                    │                              → CoT fallback
+                    └─────────────────────┬─────────────────────┘
+                                          ▼
+                          Explainer + Response Builder (ASCII units)
+                                          ▼
+            [ { query_id, answer, unit, explanation, premises_used, reasoning } ]
 ```
 
----
-
-## ⚙️ Tech Stack
-
-| Thành phần | Thư viện | Vai trò |
-|------------|----------|---------|
-| API Server | FastAPI + Uvicorn | HTTP endpoint, validate input/output |
-| Orchestration | LangGraph | State Graph pipeline, conditional edges, retry loop |
-| LLM | Transformers / vLLM | Inference LLM ≤ 8B (Qwen2.5, LLaMA 3.1) |
-| Logic Solver | Z3-Solver | Theorem prover — chứng minh/bác bỏ FOL |
-| Math Solver | SymPy | Tính toán symbolic chính xác tuyệt đối |
-| RAG | FAISS + Sentence-Transformers | Truy xuất công thức vật lý từ Vector DB |
-| Config | YAML + python-dotenv | Cấu hình dùng chung + cấu hình riêng từng máy |
+Nodes share a single `PipelineState` (`pipeline/state.py`) and run sequentially (LangGraph-style, no orchestration runtime). Every solver populates a unified `SolverResult` before the explainer. **All LLM calls go through one config-driven OpenAI-client singleton** (`llm/__init__.py::get_shared_reasoner`).
 
 ---
 
-## 🚀 Quick Start
+## 3. Track 1 — Logic-Based Educational QA
+
+A **consensus hybrid** over three reasoners:
+
+1. **Logic Tree (DAG)** — forward/backward chaining over FOL facts + rules, with negation handling, automatic contraposition, negation proof (`can_prove_negation` → real "No" answers) and missing-condition detection. Sub-millisecond, deterministic.
+2. **Z3 Theorem Prover** — formal entailment via proof by contradiction (`P ∧ ¬C` UNSAT → entailed), with LLM-assisted Z3 code generation + self-refinement.
+3. **LLM Chain-of-Thought** — Qwen2.5-7B for semantic reasoning + explanation when symbolic paths are insufficient.
+
+**Consensus:** Logic Tree ∩ CoT agree → high confidence; on conflict, **trust the Logic Tree**; Z3 as fallback; ultimate fallback `"Unknown"`. `premises_used` (50% of the Track-1 score) is recovered from the Logic Tree / Z3 proof trace.
+
+- **Offline batch** (full symbolic consensus over the dataset's `premises-FOL`): `scripts/run_track1.py`.
+- **Live `/predict`**: runs LLM CoT over the NL premises (the live request carries no `premises-FOL`).
+
+Full Track-1 guide: [`docs/readme_track1.md`](docs/readme_track1.md). Dataset label-fix report (33 mismatches found & corrected): [`docs/logic_dataset_analysis_report.md`](docs/logic_dataset_analysis_report.md).
+
+---
+
+## 4. Track 2 — Physics QA
+
+A neuro-symbolic pipeline, **symbolic-first, LLM as last resort**:
+
+```
+PhysicsClassifier → regex/LLM parse (given, find, domain)
+  → Formula RAG (keyword + FAISS over 53 formulas, 5 domains)
+  → SymPy solver  ┐
+    vector solver │  multi-charge Coulomb / E-field geometry (strategies A–F)
+    resonance     │  CHLT Yes/No (f₀ = 1/2π√LC)
+    error solver  │  THCB measurement error + propagation + multi-answer
+    circuit solver│  parallel networks (per-branch I, R_p, P, KCL)
+    multi-step    ┘  dependency-chain solving (e.g. RLC: ω→Z_L→Z_C→Z)
+  → PAL fallback (LLM writes sympy/math code → hardened sandbox executes + 1 self-repair retry)
+  → CoT fallback → Self-Verifier → CoT Builder → Explainer
+```
+
+**Highlights**
+- **53-formula knowledge base** (5 domains: circuits, electrostatics, ac_circuits, electromagnetism, measurement), hybrid keyword + FAISS retrieval with solvability re-ranking. Sources documented in [`docs/formula_sources.md`](docs/formula_sources.md).
+- **PAL (Program-Aided LM)** — the LLM emits Python; a deny-listed / whitelisted-import sandbox executes it, eliminating arithmetic hallucination. Vector-aware prompt + error-driven self-repair.
+- **Deterministic floor:** with the LLM off, the symbolic pipeline alone answers **401 / 1,352** problems correctly (measured before/after every change with a strict zero-regression gate).
+- Units emitted as **ASCII** (`ohm`, `uF`, `nC`, `V/m`, …) per the official matching rules.
+
+Reference: [`docs/docs_vytriet/track2_reference.md`](docs/docs_vytriet/track2_reference.md).
+
+---
+
+## 5. LLM Backend (vLLM / llama.cpp)
+
+Inference is **not** loaded in-process. The pipeline calls an **OpenAI-compatible HTTP server** via the `openai` client, so the served model is verifiable through `GET /v1/models`.
+
+| Profile | Server | Use |
+|---|---|---|
+| `prod` | **vLLM** (FP16 safetensors) | production / grading (GPU ≥ 24 GB) |
+| `dev`  | **llama.cpp** (Q4_K_M GGUF) | local dev / Colab (≈ 4.5 GB VRAM) |
+
+Switching backend = flip **one line** `llm.active: dev → prod` in `configs/config.yaml` — no code change. Current served model: **Qwen/Qwen2.5-7B-Instruct** (DeepSeek-R1-8B was evaluated and rejected — always-on reasoning risked the 60 s budget).
+
+Production serve (RunPod GPU): `bash scripts/serve.sh` — launches vLLM (internal `:8002`) + FastAPI (public `:8000`, which proxies `/v1/models`). See [`docs/deployment_plan.md`](docs/deployment_plan.md) and [`docs/restart_runbook.md`](docs/restart_runbook.md).
+
+---
+
+## 6. API Contract (official spec)
+
+**Request** — one unified JSON object (every field always present):
+```json
+{ "query_id": "T2_0001", "type": "type2",
+  "query": "Two resistors R1=4 ohm and R2=6 ohm in parallel across 12V. Find total current.",
+  "premises": [], "options": [] }
+```
+
+**Response** — a JSON **list** (one object per query):
+```json
+[{ "query_id": "T2_0001", "answer": "5", "unit": "A",
+   "explanation": "Two resistors in parallel give 2.4 ohm; 12V / 2.4 = 5 A.",
+   "premises_used": [], "reasoning": { "type": "cot", "steps": ["1/Req=1/4+1/6", "Req=2.4 ohm", "I=12/2.4=5 A"] } }]
+```
+
+- `answer`/`explanation` always present; `unit` ASCII (`""` for Type 1); `premises_used` = 0-based indices (Type 1) / `[]` (Type 2); `reasoning` optional (`null` if absent).
+- Endpoints: `POST /predict` (both types), `GET /v1/models` (proxied to vLLM), `GET /health`.
+- Pipeline errors return a **valid 200 response** (never a 500) so a single failing query can't break the run.
+
+---
+
+## 7. Installation
 
 ```bash
-# 1. Tạo môi trường ảo
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-
-# 2. Cài đặt dependencies
+source .venv/bin/activate         # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-pip install -r requirements-dev.txt   # cho development
+pip install -r requirements-dev.txt   # dev only (pytest, etc.)
+cp .env.example .env              # if needed
+```
 
-# 3. Cấu hình môi trường
-cp .env.example .env          # Chỉnh sửa .env theo máy local
+Key deps: `fastapi uvicorn z3-solver sympy openai sentence-transformers faiss-cpu transformers pyyaml loguru`. The `openai` package is only the HTTP transport to the local vLLM/llama.cpp server — **not** a closed-source API call.
 
-# 4. Download model (lần đầu)
-huggingface-cli download Qwen/Qwen2.5-7B-Instruct --local-dir models/qwen2.5-7b
+---
 
-# 5. Chạy API server
-uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+## 8. Usage
 
-# 6. Chạy tests
-pytest tests/ -v
+```bash
+# ── API server (both tracks) ─────────────────────────────────────
+uvicorn api.main:app --host 0.0.0.0 --port 8000
+
+# ── Track 2 — physics demo + accuracy eval (primary dev loop) ────
+python scripts/demo_type2.py --limit 100            # symbolic only (no LLM)
+python scripts/demo_type2.py --limit 100 --use-llm  # + LLM augment / PAL / explain
+python scripts/demo_type2.py --ids LD010,CH001     # run specific problem ids
+
+# ── Track 1 — logic batch runner (full symbolic consensus) ───────
+python scripts/run_track1.py -n 5 --evaluate        # quick 5-sample check
+python scripts/run_track1.py --no-llm --evaluate    # symbolic-only (no GPU)
+
+# ── Evaluation / index ───────────────────────────────────────────
+python scripts/evaluate.py --pred output/preds.json --truth data/physics/...csv
+python scripts/build_faiss_index.py                 # rebuild formula index
+
+# ── Tests (99 passing) ───────────────────────────────────────────
+python -m pytest tests/ -v
+
+# ── Production serve (RunPod / Linux GPU) ────────────────────────
+bash scripts/serve.sh
+```
+
+`--use-llm` / live LLM paths require a reachable server at `llm.profiles[active].api_base`.
+
+---
+
+## 9. Project Structure
+
+```
+api/                    # FastAPI: /predict (unified), /v1/models proxy, /health
+  ├── main.py           #   type-routed pipelines + graceful error handling
+  ├── schemas.py        #   UnifiedRequest / UnifiedResponse / ReasoningBlock
+  └── response_builder.py  #   official schema + ASCII-unit conversion
+pipeline/
+  ├── state.py          # shared PipelineState + SolverResult contract
+  ├── type1/            # Logic: logic_tree, z3_solver, fol_normalizer, preprocessing, classifier
+  └── type2/            # Physics: classifier, physics_parser, formula_rag, sympy_solver,
+                        #          vector_solver (A–F), resonance/error/circuit solvers,
+                        #          regex_extract, type2_validation, cot_builder, explainer
+llm/                    # get_shared_reasoner() singleton (OpenAI client → vLLM/llama.cpp),
+                        # llm_reasoner (CoT, Z3 codegen, PAL codegen + self-repair), prompts
+scripts/                # run_track1.py · demo_type2.py · evaluate*.py · build_faiss_index.py · serve.sh
+configs/config.yaml     # LLM profiles (dev/prod) + pipeline/api config
+data/                   # train/ (datasets) · physics/ (stratified split) · rag/ (formulas) · formula_index/
+evaluation/             # answer comparison + metrics harness
+docs/                   # SYSTEM.md, official_spec_gaps.md, deployment_plan.md, restart_runbook.md,
+                        # formula_sources.md, readme_track1.md, docs_vytriet/ (Track-2 working notes)
+tests/                  # test_type2.py, test_api.py, test_pipeline.py, test_eval.py
+Logic_Based_Educational_Queries.json   # Track-1 input dataset (run_track1 default)
+run_track1_colab.ipynb  # Colab runner for Track 1
 ```
 
 ---
 
-## 8. Technical Details
+## 10. Evaluation
 
-### 8.1 FOL Operator Support
+| | Method | Notes |
+|---|---|---|
+| Track 1 | `scripts/run_track1.py --evaluate` | accuracy by solver source (Z3 / Logic Tree / CoT) + `premises_used` |
+| Track 2 | `scripts/demo_type2.py` → `scripts/evaluate.py` | accuracy by prefix / kind / source; SI-normalized comparison |
 
-| Operator | Unicode | Text | Z3 Mapping |
-|:---|:---|:---|:---|
-| Universal Quantifier | `∀` | `ForAll` | `z3.ForAll([x], ...)` |
-| Existential Quantifier | `∃` | `Exists` | `z3.Exists([x], ...)` |
-| Implication | `→` | `->` | `z3.Implies(a, b)` |
-| Conjunction | `∧` | `&` | `z3.And(a, b)` |
-| Disjunction | `∨` | `\|` | `z3.Or(a, b)` |
-| Negation | `¬` | `~` | `z3.Not(a)` |
-| Biconditional | `↔` | `<->` | `a == b` |
-
-### 8.2 Hardware Requirements
-
-| Component | Minimum | Recommended |
-|:---|:---|:---|
-| GPU VRAM | 4 GB | 8 GB |
-| RAM | 8 GB | 16 GB |
-| Storage | 10 GB (model files) | 10 GB |
-| GPU | NVIDIA GTX 1060 | NVIDIA RTX 3050+ |
-
-### 8.3 Constraints & Limitations
-
-- **Model size:** ≤8B parameters (Qwen 2.5 7B Instruct)
-- **Response time:** <60 seconds per query
-- **No closed-source APIs:** No GPT-4, Claude, or Gemini
-- **FOL ambiguity:** Some premises have inconsistent FOL ↔ NL mappings
+Engineering discipline: every solver/pipeline change is measured **before/after** on the full set and gated for **zero regression**; root causes are diagnosed rather than overfit to individual samples.
 
 ---
 
-## 9. References
+## 11. References
 
-1. **Logic-LM:** Pan, A., et al. "Logic-LM: Empowering Large Language Models with Symbolic Solvers for Faithful Logical Reasoning." *Findings of ACL 2023*.
-
-2. **LINC:** Olausson, T., et al. "LINC: A Neurosymbolic Approach for Logical Reasoning by Combining Language Models with First-Order Logic Provers." *EMNLP 2023*.
-
-3. **Tree-of-Thought:** Yao, S., et al. "Tree of Thoughts: Deliberate Problem Solving with Large Language Models." *NeurIPS 2023*.
-
-4. **Chain-of-Thought:** Wei, J., et al. "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models." *NeurIPS 2022*.
-
-5. **Z3 Theorem Prover:** de Moura, L. & Bjørner, N. "Z3: An Efficient SMT Solver." *TACAS 2008*.
-
-6. **ProofWriter:** Tafjord, O., et al. "ProofWriter: Generating Implications, Proofs, and Abductive Statements over Natural Language." *Findings of ACL 2021*.
-
-7. **SAFE:** Liu, H., et al. "Towards Rigorous Verification of LLM Reasoning via Step-Aware Formal Proofs." *ACL 2025*.
-
-8. **Qwen 2.5:** Bai, J., et al. "Qwen Technical Report." *arXiv 2024*.
+1. Pan et al. **Logic-LM** — Empowering LLMs with Symbolic Solvers. *Findings of ACL 2023.*
+2. Olausson et al. **LINC** — Neurosymbolic Logical Reasoning with FOL Provers. *EMNLP 2023.*
+3. Gao et al. **PAL** — Program-Aided Language Models. *ICML 2023.*
+4. Wei et al. **Chain-of-Thought Prompting.** *NeurIPS 2022.*
+5. de Moura & Bjørner. **Z3: An Efficient SMT Solver.** *TACAS 2008.*
+6. Qwen Team. **Qwen2.5 Technical Report.** *2024.*
 
 ---
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+MIT License — Copyright (c) 2026 Trịnh Vỹ Triết / Team *Cây Nhà Lá Vườn*. See [LICENSE](LICENSE).
 
-## Acknowledgments
-
-- EXACT 2026 Organizing Committee
-- Microsoft Research for Z3 Theorem Prover
-- Alibaba Cloud for Qwen 2.5 model
-## 📜 License
-
-MIT License — Copyright (c) 2026 Trịnh Vỹ Triết
+**Acknowledgments:** EXACT 2026 Organizing Committee (URA Research Group, HCMUT) · Microsoft Research (Z3) · Alibaba Cloud (Qwen2.5).
