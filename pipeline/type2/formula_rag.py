@@ -155,6 +155,8 @@ def _load_faiss_index(index_dir: str = "data/formula_index") -> tuple:
 
 def _ensure_faiss_loaded(index_dir: str = "data/formula_index") -> None:
     global _faiss_index, _faiss_docs, _faiss_model
+    if os.environ.get("FORMULA_RAG_DISABLE_SEMANTIC") == "1":
+        return
     if _faiss_index is None:
         _faiss_index, _faiss_docs, _faiss_model = _load_faiss_index(index_dir)
 

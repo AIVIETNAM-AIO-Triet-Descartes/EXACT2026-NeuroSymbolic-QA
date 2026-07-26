@@ -5246,9 +5246,11 @@ def prepare_semantic_rag_on_cpu(
     embedding_model_revision: str,
 ) -> dict[str, Any]:
     if disabled:
+        os.environ["FORMULA_RAG_DISABLE_SEMANTIC"] = "1"
         logger.warning("Semantic FAISS retrieval disabled; keyword retrieval remains.")
         return {"enabled": False, "status": "disabled_by_cli"}
     try:
+        os.environ.pop("FORMULA_RAG_DISABLE_SEMANTIC", None)
         os.environ["FORMULA_RAG_EMBEDDING_MODEL"] = embedding_model
         os.environ["FORMULA_RAG_EMBEDDING_REVISION"] = embedding_model_revision
         from pipeline.type2 import formula_rag
@@ -5387,6 +5389,15 @@ def run_self_tests(repo_root: Path) -> None:
     assert encoder_manifest["model"] == DEFAULT_EMBEDDING_MODEL
     assert encoder_manifest["revision"] == DEFAULT_EMBEDDING_REVISION
     assert encoder_manifest["embedding_dimension"] == 384
+    from pipeline.type2 import formula_rag
+
+    os.environ["FORMULA_RAG_DISABLE_SEMANTIC"] = "1"
+    formula_rag._faiss_index = None
+    formula_rag._faiss_docs = None
+    formula_rag._faiss_model = None
+    formula_rag._ensure_faiss_loaded("/path/that/must/not/be/read")
+    assert formula_rag._faiss_index is None
+    os.environ.pop("FORMULA_RAG_DISABLE_SEMANTIC", None)
     assert all(
         item.options == ["Yes", "No", "Uncertain"]
         for item in t1
