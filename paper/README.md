@@ -5,6 +5,23 @@ official Round 1/2 logs, runs the public-data ablation matrix, records component
 telemetry, profiles uncached latency, selects public case studies, and creates
 paper-ready tables and an architecture figure.
 
+## T4 Colab notebook
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AIVIETNAM-AIO-Triet-Descartes/EXACT2026-NeuroSymbolic-QA/blob/main/paper/EXACT2026_Paper_Experiments_T4_Colab.ipynb)
+
+[`EXACT2026_Paper_Experiments_T4_Colab.ipynb`](EXACT2026_Paper_Experiments_T4_Colab.ipynb)
+guides the complete T4 workflow: clone/pull and pin the validated code commit,
+mount Drive, upload the two private organizer logs, lock dependencies and model
+revisions, download Qwen2.5-7B-Instruct plus the semantic encoder, run
+preflight/smoke checks, execute the full matrix, resume checkpoints, and inspect
+paper-ready artifacts. It requires a T4, uses 4-bit NF4, keeps checkpoints on
+Drive, and defaults the roughly 15 GB model cache to ephemeral `/content` so a
+free 15 GB Drive is not exhausted.
+
+The notebook validates the supplied organizer logs by SHA-256. Keep
+`MyDrive/EXACT2026-paper-inputs` private; share only aggregated experiment
+outputs.
+
 ## Google Colab
 
 Open the cloned repository in Colab, select a GPU runtime, then run one command:
@@ -60,6 +77,15 @@ choosing a run directory. GPU identity, code/prompt/config hashes, public-data
 hashes, official-log hashes, retrieval mode, model condition and timeouts are
 also part of the experiment identity; a changed condition cannot silently mix
 with an earlier checkpoint.
+
+The canonical T4 notebook fixes Qwen to
+`a09a35458c702b33eeacc393d103063234e8bc28` and the semantic encoder
+`sentence-transformers/all-MiniLM-L6-v2` to
+`1110a243fdf4706b3f48f1d95db1a4f5529b4d41`. The FAISS index carries an
+`encoder.json` provenance manifest; model ID, revision and embedding dimension
+must match before a semantic-RAG run can start. Before smoke inference, the
+notebook also re-encodes all 58 formula records and numerically compares them
+with the checked-in FAISS vectors.
 
 ## Model backends
 
