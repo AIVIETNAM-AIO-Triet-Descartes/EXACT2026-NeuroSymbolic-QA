@@ -10,7 +10,7 @@ NOTEBOOK = (
     / "paper"
     / "EXACT2026_BTC_Test_Replay_T4_Colab.ipynb"
 )
-RUNNER_COMMIT = "31e6d9aff1c6e3c81fefdc423bbb1fbf4cdf6391"
+RUNNER_COMMIT = "031298bc63e3a3d48c24b10a1de53ed90becd9f7"
 
 
 class PaperBtcNotebookTests(unittest.TestCase):
