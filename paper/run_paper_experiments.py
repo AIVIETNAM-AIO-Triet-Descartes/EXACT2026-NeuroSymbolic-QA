@@ -3,11 +3,16 @@
 One-file, Colab-friendly experiment harness for the EXACT 2026 paper.
 
 Default behaviour:
-  1. aggregate the two official round logs without copying hidden questions;
-  2. run controlled public-data ablations;
+  1. aggregate the two official round logs;
+  2. replay the 100 organizer test records through controlled ablations;
   3. capture structured Z3/PAL/self-repair telemetry;
-  4. run an uncached latency profile;
-  5. generate paper-ready CSV/Markdown/LaTeX tables, case studies, and figures.
+  4. preserve the organizer-reported latency as the official timing evidence;
+  5. generate paper-ready aggregate CSV/Markdown/LaTeX tables and figures.
+
+The replay is explicitly post-hoc: the organizer logs contain labels, so its
+ablation values are not a second official result or a blind unseen-test score.
+Gold fields are used only after inference for scoring. Hidden questions are
+never copied into publication case-study artifacts.
 
 The harness deliberately does not change the public /predict schema or any
 production module. Generated Z3/PAL programs are executed in scrubbed child
@@ -62,11 +67,27 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Iterator, Optional
 
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
 DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 DEFAULT_EMBEDDING_REVISION = "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
 DEFAULT_SEEDS = (2026, 2027, 2028)
+EVALUATION_BTC_ROUNDS = "btc-rounds"
+EVALUATION_PUBLIC = "public"
+BTC_ROUND_IDENTITIES = {
+    "round1": {
+        "filename": "exact_eval_round1_Cay_Nha_La_Vuon.json",
+        "sha256": "6d5e7a86a5e0a7ed1e1c3e9f43b7228bd930d0e4a7a6133f62ad302483b7fd4b",
+        "sample_version": "eval-round1-type1-type2-v2",
+        "score": 39.38,
+    },
+    "round2": {
+        "filename": "exact_eval_round2_Cay_Nha_La_Vuon.json",
+        "sha256": "03032ec92f384d3c0ccf76e9f7801cf0b107452805b97115b00061e9c6fdc813",
+        "sample_version": "eval-round2-type1-type2-v3",
+        "score": 44.8,
+    },
+}
 TYPE1_VARIANTS = (
     "t1_cot_only",
     "t1_cot_z3_no_repair",
@@ -479,7 +500,7 @@ def code_source_manifest(repo_root: Path) -> dict[str, Any]:
                 and path.suffix.lower() in {".py", ".json", ".yaml", ".yml", ".toml"}
             )
     for relative in (
-        "data/z3_examples.json",
+        "data/z3_exemplars.json",
         "requirements.txt",
         "pyproject.toml",
     ):
@@ -822,12 +843,12 @@ def score_answer_component(
     return correct, "qualitative", {}
 
 
-def score_type2(
+def _score_type2_candidate(
     predicted_answer: Any,
     predicted_unit: Any,
     gold_answer: Any,
     gold_unit: Any,
-    rel_tol: float = 0.02,
+    rel_tol: float,
 ) -> dict[str, Any]:
     gold_parts = split_semicolon(gold_answer)
     pred_parts = split_semicolon(predicted_answer)
@@ -872,6 +893,46 @@ def score_type2(
     }
 
 
+def score_type2(
+    predicted_answer: Any,
+    predicted_unit: Any,
+    gold_answer: Any,
+    gold_unit: Any,
+    rel_tol: float = 0.02,
+    gold_aliases: Optional[Iterable[str]] = None,
+) -> dict[str, Any]:
+    candidates = [str(gold_answer or "")]
+    candidates.extend(
+        str(alias)
+        for alias in (gold_aliases or [])
+        if str(alias) not in candidates
+    )
+    scored = [
+        _score_type2_candidate(
+            predicted_answer,
+            predicted_unit,
+            candidate,
+            gold_unit,
+            rel_tol,
+        )
+        for candidate in candidates
+    ]
+    best_index, best = max(
+        enumerate(scored),
+        key=lambda pair: (
+            bool(pair[1].get("strict_correct")),
+            bool(pair[1].get("answer_correct")),
+            bool(pair[1].get("unit_correct")),
+            -pair[0],
+        ),
+    )
+    return {
+        **best,
+        "matched_gold_candidate": candidates[best_index],
+        "used_gold_alias": best_index > 0,
+    }
+
+
 def premise_prf(
     predicted: Iterable[int], gold: Optional[Iterable[int]]
 ) -> dict[str, Optional[float]]:
@@ -905,7 +966,15 @@ def premise_prf(
 
 def normalize_logic_answer(value: Any) -> str:
     text = str(value or "").strip()
-    match = re.match(r"^([A-D])(?:[.)\s]|$)", text, re.IGNORECASE)
+    match = re.fullmatch(r"([A-D])(?:[.)])?", text, re.IGNORECASE)
+    if not match:
+        match = re.match(r"^([A-D])[.)]\s+", text, re.IGNORECASE)
+    if not match:
+        match = re.match(
+            r"^(?:answer|option|choice)\s*[:=-]?\s*([A-D])(?:[.)\s]|$)",
+            text,
+            re.IGNORECASE,
+        )
     if match:
         return match.group(1).upper()
     lowered = text.lower()
@@ -922,15 +991,46 @@ def normalize_logic_answer(value: Any) -> str:
     return mapping.get(lowered, text)
 
 
+def logic_answer_matches(
+    predicted: Any,
+    gold_answer: Any,
+    gold_aliases: Optional[Iterable[str]] = None,
+) -> bool:
+    pred_norm = normalize_logic_answer(predicted)
+    candidates = [gold_answer, *(gold_aliases or [])]
+    accepted_answers = {normalize_logic_answer(candidate) for candidate in candidates}
+    if pred_norm in accepted_answers:
+        return True
+    # The organizer accepts a long textual option/alias inside a short answer
+    # sentence. Requiring both sides to have at least five characters prevents
+    # single-letter MCQ labels from becoming accidental substring matches.
+    pred_phrase = re.sub(r"\s+", " ", str(predicted or "").strip().lower())
+    return any(
+        len(pred_phrase) >= 5
+        and len(candidate_phrase) >= 5
+        and (
+            pred_phrase in candidate_phrase
+            or candidate_phrase in pred_phrase
+        )
+        for candidate_phrase in (
+            re.sub(r"\s+", " ", str(candidate or "").strip().lower())
+            for candidate in candidates
+        )
+    )
+
+
 def score_type1(
     predicted_answer: Any,
     predicted_premises: Iterable[int],
     gold_answer: Any,
     gold_premises: Optional[Iterable[int]],
+    gold_aliases: Optional[Iterable[str]] = None,
 ) -> dict[str, Any]:
     pred_norm = normalize_logic_answer(predicted_answer)
     gold_norm = normalize_logic_answer(gold_answer)
-    answer_correct = pred_norm == gold_norm
+    answer_correct = logic_answer_matches(
+        predicted_answer, gold_answer, gold_aliases
+    )
     premise = premise_prf(predicted_premises, gold_premises)
     combined = (
         0.5 * float(answer_correct) + 0.5 * float(premise["premise_f1"])
@@ -962,7 +1062,30 @@ class PublicExample:
     gold_answer: str
     gold_unit: str = ""
     gold_premises: Optional[list[int]] = None
+    gold_aliases: list[str] = dataclasses.field(default_factory=list)
     metadata: dict[str, Any] = dataclasses.field(default_factory=dict)
+
+
+def type1_z3_eligible(
+    question: str,
+    premises: Iterable[str],
+    options: Iterable[str],
+) -> bool:
+    """Mirror the production Type-1 gate without consulting a gold label."""
+    question_text = str(question)
+    has_options = bool(list(options)) or bool(
+        re.search(r"(?m)^\s*A[.)]\s+", question_text)
+        and re.search(r"(?m)^\s*B[.)]\s+", question_text)
+    )
+    open_prefix = bool(
+        re.match(
+            r"^(who|what|which|how|where|when|whose|whom|find|calculate|"
+            r"determine|identify|list|give|state)\b",
+            question_text.strip(),
+            re.IGNORECASE,
+        )
+    )
+    return len(list(premises)) <= 12 and (has_options or not open_prefix)
 
 
 def load_type1_public(path: Path) -> list[PublicExample]:
@@ -1020,7 +1143,9 @@ def load_type1_public(path: Path) -> list[PublicExample]:
                             else "ynu_options"
                         ),
                         "premise_annotation_available": gold_premises is not None,
-                        "z3_eligible": len(premises) <= 12,
+                        "z3_eligible": type1_z3_eligible(
+                            question, premises, options
+                        ),
                     },
                 )
             )
@@ -1052,6 +1177,249 @@ def load_type2_public(path: Path) -> list[PublicExample]:
                 )
             )
     return examples
+
+
+def load_btc_test_replay(
+    paths: Iterable[Path],
+    *,
+    verify_known_identity: bool = True,
+) -> tuple[list[PublicExample], list[PublicExample]]:
+    """Load organizer round requests and labels for a private post-hoc replay.
+
+    Only ``request_payload`` is mapped to inference inputs. ``expected`` is
+    retained separately in the gold fields and is consumed by the scorers only
+    after a response has been produced. Historical ``model_response`` and
+    ``result`` fields are deliberately ignored.
+    """
+
+    sources: dict[str, tuple[Path, dict[str, Any]]] = {}
+    seen_digests: set[str] = set()
+    for source_path in paths:
+        path = Path(source_path)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        round_name = str(payload.get("eval_round") or "").strip()
+        if round_name not in BTC_ROUND_IDENTITIES:
+            raise ValueError(
+                f"{path.name}: eval_round must be round1 or round2"
+            )
+        if round_name in sources:
+            raise ValueError(f"Duplicate organizer source for {round_name}")
+        digest = sha256_file(path)
+        if digest in seen_digests:
+            raise ValueError("The same organizer log was supplied more than once")
+        seen_digests.add(digest)
+        identity = BTC_ROUND_IDENTITIES[round_name]
+        if verify_known_identity:
+            mismatches: list[str] = []
+            if digest != identity["sha256"]:
+                mismatches.append("sha256")
+            if payload.get("sample_version") != identity["sample_version"]:
+                mismatches.append("sample_version")
+            summary = payload.get("summary") or {}
+            try:
+                recorded_score = summary.get(
+                    "score", summary.get("total_points")
+                )
+                score_matches = (
+                    float(recorded_score) == float(identity["score"])
+                )
+            except (TypeError, ValueError):
+                score_matches = False
+            if not score_matches:
+                mismatches.append("total_points")
+            if mismatches:
+                raise ValueError(
+                    f"{path.name}: organizer log identity mismatch: "
+                    + ", ".join(mismatches)
+                )
+        sources[round_name] = (path, payload)
+
+    if set(sources) != set(BTC_ROUND_IDENTITIES):
+        missing = sorted(set(BTC_ROUND_IDENTITIES) - set(sources))
+        raise ValueError("Missing organizer round source(s): " + ", ".join(missing))
+
+    by_track: dict[str, list[PublicExample]] = {"type1": [], "type2": []}
+    for round_name in ("round1", "round2"):
+        path, payload = sources[round_name]
+        logs = payload.get("logs")
+        if not isinstance(logs, list):
+            raise ValueError(f"{path.name}: logs must be a list")
+        seen_round_ids: set[str] = set()
+        for record_index, row in enumerate(logs):
+            if not isinstance(row, dict):
+                raise ValueError(
+                    f"{path.name}: logs[{record_index}] must be an object"
+                )
+            request = row.get("request_payload")
+            expected = row.get("expected")
+            if not isinstance(request, dict) or not isinstance(expected, dict):
+                raise ValueError(
+                    f"{path.name}: logs[{record_index}] lacks request_payload/expected"
+                )
+            raw_query_id = str(row.get("query_id") or "").strip()
+            request_query_id = str(request.get("query_id") or "").strip()
+            track = str(row.get("type") or "").strip()
+            request_track = str(request.get("type") or "").strip()
+            if not raw_query_id or raw_query_id != request_query_id:
+                raise ValueError(
+                    f"{path.name}: logs[{record_index}] query_id mismatch"
+                )
+            if track not in by_track or track != request_track:
+                raise ValueError(
+                    f"{path.name}: logs[{record_index}] type mismatch"
+                )
+            if raw_query_id in seen_round_ids:
+                raise ValueError(
+                    f"{path.name}: duplicate query_id at logs[{record_index}]"
+                )
+            seen_round_ids.add(raw_query_id)
+
+            question = request.get("query")
+            premises = request.get("premises", [])
+            options = request.get("options", [])
+            gold_answer = expected.get("answer")
+            gold_unit = expected.get("unit", "")
+            gold_premises = expected.get("premises_used", [])
+            gold_aliases = expected.get("aliases", [])
+            if not isinstance(question, str) or not question.strip():
+                raise ValueError(
+                    f"{path.name}: logs[{record_index}] query must be non-empty text"
+                )
+            if (
+                not isinstance(premises, list)
+                or not all(isinstance(value, str) for value in premises)
+                or not isinstance(options, list)
+                or not all(isinstance(value, str) for value in options)
+            ):
+                raise ValueError(
+                    f"{path.name}: logs[{record_index}] premises/options schema invalid"
+                )
+            if not isinstance(gold_answer, str) or not isinstance(gold_unit, str):
+                raise ValueError(
+                    f"{path.name}: logs[{record_index}] expected answer/unit invalid"
+                )
+            if (
+                not isinstance(gold_aliases, list)
+                or not all(isinstance(value, str) for value in gold_aliases)
+            ):
+                raise ValueError(
+                    f"{path.name}: logs[{record_index}] expected aliases invalid"
+                )
+            if (
+                not isinstance(gold_premises, list)
+                or not all(
+                    isinstance(value, int) and not isinstance(value, bool)
+                    for value in gold_premises
+                )
+                or len(set(gold_premises)) != len(gold_premises)
+                or any(value < 0 or value >= len(premises) for value in gold_premises)
+            ):
+                raise ValueError(
+                    f"{path.name}: logs[{record_index}] expected premises invalid"
+                )
+            if track == "type2" and gold_premises:
+                raise ValueError(
+                    f"{path.name}: logs[{record_index}] Type-2 premises must be empty"
+                )
+
+            option_count = len(options)
+            if track == "type1":
+                format_name = {
+                    0: "open",
+                    3: "categorical",
+                    4: "mcq",
+                }.get(option_count, f"options_{option_count}")
+            else:
+                format_name = "physics"
+            canonical_id = f"{round_name}:{raw_query_id}"
+            by_track[track].append(
+                PublicExample(
+                    track=track,
+                    query_id=canonical_id,
+                    question=question,
+                    premises=list(premises),
+                    options=list(options),
+                    gold_answer=gold_answer,
+                    gold_unit=gold_unit,
+                    gold_premises=(
+                        list(gold_premises) if track == "type1" else None
+                    ),
+                    gold_aliases=list(gold_aliases),
+                    metadata={
+                        "evaluation_data": EVALUATION_BTC_ROUNDS,
+                        "privacy": "organizer_hidden_test",
+                        "round": round_name,
+                        "sample_version": str(payload.get("sample_version") or ""),
+                        "source_filename": path.name,
+                        "source_sha256": sha256_file(path),
+                        "record_index": record_index,
+                        "original_query_id": raw_query_id,
+                        "format": format_name,
+                        "prefix": f"{round_name}:{track}",
+                        "premise_annotation_available": track == "type1",
+                        "z3_eligible": (
+                            track == "type1"
+                            and type1_z3_eligible(question, premises, options)
+                        ),
+                    },
+                )
+            )
+
+    return by_track["type1"], by_track["type2"]
+
+
+def preflight_btc_test_data(
+    type1: list[PublicExample],
+    type2: list[PublicExample],
+) -> dict[str, Any]:
+    all_examples = [*type1, *type2]
+    per_round_track = Counter(
+        (str(item.metadata.get("round")), item.track) for item in all_examples
+    )
+    observed = {
+        "total": len(all_examples),
+        "type1_total": len(type1),
+        "type2_total": len(type2),
+        "round1_total": sum(
+            count
+            for (round_name, _), count in per_round_track.items()
+            if round_name == "round1"
+        ),
+        "round2_total": sum(
+            count
+            for (round_name, _), count in per_round_track.items()
+            if round_name == "round2"
+        ),
+        "round1_type1": per_round_track[("round1", "type1")],
+        "round1_type2": per_round_track[("round1", "type2")],
+        "round2_type1": per_round_track[("round2", "type1")],
+        "round2_type2": per_round_track[("round2", "type2")],
+        "type1_z3_eligible": sum(
+            bool(item.metadata.get("z3_eligible")) for item in type1
+        ),
+        "unique_canonical_ids": len({item.query_id for item in all_examples}),
+    }
+    expected = {
+        "total": 100,
+        "type1_total": 50,
+        "type2_total": 50,
+        "round1_total": 50,
+        "round2_total": 50,
+        "round1_type1": 25,
+        "round1_type2": 25,
+        "round2_type1": 25,
+        "round2_type2": 25,
+        "type1_z3_eligible": 42,
+        "unique_canonical_ids": 100,
+    }
+    mismatches = {
+        key: {"expected": value, "observed": observed.get(key)}
+        for key, value in expected.items()
+        if observed.get(key) != value
+    }
+    if mismatches:
+        raise AssertionError(f"BTC test replay invariants changed: {mismatches}")
+    return observed
 
 
 def public_dataset_manifest(repo_root: Path) -> dict[str, Any]:
@@ -1088,6 +1456,57 @@ def public_dataset_manifest(repo_root: Path) -> dict[str, Any]:
     }
 
 
+def btc_test_dataset_manifest(
+    repo_root: Path,
+    paths: Iterable[Path],
+    type1: list[PublicExample],
+    type2: list[PublicExample],
+) -> dict[str, Any]:
+    sources: list[dict[str, Any]] = []
+    for path in paths:
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        logs = payload.get("logs") or []
+        sources.append(
+            {
+                "filename": Path(path).name,
+                "sha256": sha256_file(Path(path)),
+                "bytes": Path(path).stat().st_size,
+                "eval_round": payload.get("eval_round"),
+                "sample_version": payload.get("sample_version"),
+                "records": len(logs),
+                "type1_records": sum(row.get("type") == "type1" for row in logs),
+                "type2_records": sum(row.get("type") == "type2" for row in logs),
+            }
+        )
+    formula_db = repo_root / "data/rag/physics_formulas.json"
+    index = repo_root / "data/formula_index/index.faiss"
+    metadata = repo_root / "data/formula_index/metadata.pkl"
+    encoder = repo_root / "data/formula_index/encoder.json"
+    return {
+        "evaluation_data": EVALUATION_BTC_ROUNDS,
+        "label": "post-hoc organizer-test replay; labels available after evaluation",
+        "labels_known": True,
+        "blind_test": False,
+        "privacy": "private organizer logs; aggregate publication artifacts only",
+        "loader_schema": "request_payload->inference; expected->post-inference scoring",
+        "sources": sorted(sources, key=lambda row: str(row["eval_round"])),
+        "type1_examples": len(type1),
+        "type2_examples": len(type2),
+        "formula_db": {
+            "path": str(formula_db.relative_to(repo_root)),
+            "sha256": sha256_file(formula_db),
+        },
+        "formula_index": {
+            "index_sha256": sha256_file(index) if index.exists() else None,
+            "metadata_sha256": sha256_file(metadata) if metadata.exists() else None,
+            "encoder_sha256": sha256_file(encoder) if encoder.exists() else None,
+        },
+        "hidden_round_data_policy": (
+            "raw replay audit files stay private; publication tables are aggregate"
+        ),
+    }
+
+
 def official_round_metrics(path: Path) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
     logs = list(data.get("logs") or [])
@@ -1106,11 +1525,28 @@ def official_round_metrics(path: Path) -> dict[str, Any]:
     p2_t1 = [float(field(item, "p2_score", 0.0)) / 100 for item in by_type["type1"]]
     p1_t2 = [float(field(item, "p1_score", 0.0)) / 100 for item in by_type["type2"]]
 
-    # Regression check: official Type-1 P2 is set-F1, not Jaccard.
+    # Regression checks protect the organizer answer/alias and premise contracts.
+    t1_mismatches: list[dict[str, Any]] = []
     p2_mismatches: list[dict[str, Any]] = []
     for item in by_type["type1"]:
         expected = item.get("expected") or {}
         response = item.get("model_response") or {}
+        recomputed_answer = score_type1(
+            response.get("answer"),
+            [],
+            expected.get("answer"),
+            None,
+            expected.get("aliases") or [],
+        )["answer_correct"]
+        official_answer = float(field(item, "p1_score", 0.0)) >= 100
+        if bool(recomputed_answer) != bool(official_answer):
+            t1_mismatches.append(
+                {
+                    "query_id": item.get("query_id"),
+                    "recomputed": bool(recomputed_answer),
+                    "official": bool(official_answer),
+                }
+            )
         gold = expected.get("premises_used")
         predicted = response.get("premises_used") or []
         if gold is None:
@@ -1134,6 +1570,7 @@ def official_round_metrics(path: Path) -> dict[str, Any]:
             response.get("unit"),
             expected.get("answer"),
             expected.get("unit"),
+            gold_aliases=expected.get("aliases") or [],
         )["strict_correct"]
         official = float(field(item, "p1_score", 0.0)) >= 100
         if bool(recomputed) != bool(official):
@@ -1267,6 +1704,7 @@ def official_round_metrics(path: Path) -> dict[str, Any]:
         "latency_type1": latency_stats(durations_t1),
         "latency_type2": latency_stats(durations_t2),
         "latency_p1_correct": latency_stats(correct_durations),
+        "type1_regression_mismatches": t1_mismatches,
         "p2_regression_mismatches": p2_mismatches,
         "type2_regression_mismatches": t2_mismatches,
     }
@@ -2417,7 +2855,9 @@ def run_type1_pipeline(
         return safe_z3_execute(repo_root, code, code_timeout, cache)
 
     request = UnifiedRequest(
-        query_id=example.query_id,
+        query_id=str(
+            example.metadata.get("original_query_id") or example.query_id
+        ),
         type="type1",
         query=example.question,
         premises=example.premises,
@@ -2435,6 +2875,7 @@ def run_type1_pipeline(
         response.get("premises_used") or [],
         example.gold_answer,
         example.gold_premises,
+        example.gold_aliases,
     )
     trace.z3["task_correct"] = scores["answer_correct"]
     trace.z3["task_correct_among_accepted"] = bool(
@@ -2443,18 +2884,20 @@ def run_type1_pipeline(
     trace.z3["helpful_override"] = bool(
         trace.z3.get("final_accepted")
         and trace.z3.get("affected_final_answer")
-        and not (
-            normalize_logic_answer(trace.artifacts.get("cot_answer"))
-            == normalize_logic_answer(example.gold_answer)
+        and not logic_answer_matches(
+            trace.artifacts.get("cot_answer"),
+            example.gold_answer,
+            example.gold_aliases,
         )
         and scores["answer_correct"]
     )
     trace.z3["harmful_override"] = bool(
         trace.z3.get("final_accepted")
         and trace.z3.get("affected_final_answer")
-        and (
-            normalize_logic_answer(trace.artifacts.get("cot_answer"))
-            == normalize_logic_answer(example.gold_answer)
+        and logic_answer_matches(
+            trace.artifacts.get("cot_answer"),
+            example.gold_answer,
+            example.gold_aliases,
         )
         and not scores["answer_correct"]
     )
@@ -2469,7 +2912,9 @@ def run_type1_pipeline(
 def initial_type2_state(example: PublicExample) -> dict[str, Any]:
     return {
         "question": example.question,
-        "query_id": example.query_id,
+        "query_id": str(
+            example.metadata.get("original_query_id") or example.query_id
+        ),
         "options": [],
         "premises": [],
         "query_type": "type2",
@@ -2827,7 +3272,9 @@ def run_type2_pipeline(
             parsed.get("find", ""),
         )
         response_obj = build_response(
-            query_id=example.query_id,
+            query_id=str(
+                example.metadata.get("original_query_id") or example.query_id
+            ),
             query_type="type2",
             answer=answer,
             explanation=explanation,
@@ -2851,6 +3298,7 @@ def run_type2_pipeline(
         response.get("unit"),
         example.gold_answer,
         example.gold_unit,
+        gold_aliases=example.gold_aliases,
     )
     source = (state.get("solver_result") or {}).get("source", "llm_fallback")
     trace.artifacts["solver_source"] = source
@@ -2867,7 +3315,7 @@ def run_type2_pipeline(
     return response, {**scores, **timing, "solver_source": source}
 
 
-def public_input_payload(example: PublicExample) -> dict[str, Any]:
+def evaluation_input_payload(example: PublicExample) -> dict[str, Any]:
     return {
         "question": example.question,
         "premises": example.premises,
@@ -2877,6 +3325,19 @@ def public_input_payload(example: PublicExample) -> dict[str, Any]:
         ).hexdigest(),
         "metadata": example.metadata,
     }
+
+
+def example_dataset_source(example: PublicExample) -> str:
+    if example.metadata.get("evaluation_data") == EVALUATION_BTC_ROUNDS:
+        return (
+            f"{example.metadata.get('round')} organizer log/"
+            f"{example.metadata.get('source_filename')}"
+        )
+    return (
+        "Logic_Based_Educational_Queries.json"
+        if example.track == "type1"
+        else "data/physics/physics_dev.csv"
+    )
 
 
 def result_record(
@@ -2900,19 +3361,22 @@ def result_record(
         "repeat": trace.repeat,
         "seed": trace.seed,
         "query_id": trace.query_id,
-        "dataset_source": (
-            "Logic_Based_Educational_Queries.json"
-            if trace.track == "type1"
-            else "data/physics/physics_dev.csv"
+        "dataset_source": example_dataset_source(example),
+        "evidence_label": (
+            "post_hoc_organizer_test_replay"
+            if example.metadata.get("evaluation_data") == EVALUATION_BTC_ROUNDS
+            else "retrospective_public_data"
         ),
+        "privacy": example.metadata.get("privacy", "public"),
         "status": status,
         "attempt": attempt,
         "error": error,
-        "input": public_input_payload(example),
+        "input": evaluation_input_payload(example),
         "gold": {
             "answer": example.gold_answer,
             "unit": example.gold_unit,
             "premises_used": example.gold_premises,
+            "aliases": example.gold_aliases,
         },
         "response": response,
         "scores": scores,
@@ -3346,11 +3810,12 @@ def current_records(path: Path, config_hash: str) -> list[dict[str, Any]]:
 
 def expected_experiment_jobs(
     args: argparse.Namespace,
-    *,
-    type1_total: int = 808,
-    type2_total: int = 200,
 ) -> list[dict[str, Any]]:
     """Return the exact logical job matrix used by the completeness gate."""
+    if args.evaluation_data == EVALUATION_BTC_ROUNDS:
+        type1_total, type2_total = 50, 50
+    else:
+        type1_total, type2_total = 808, 200
     t1_n = min(args.type1_limit or type1_total, type1_total)
     t2_n = min(args.type2_limit or type2_total, type2_total)
     rows: list[dict[str, Any]] = []
@@ -3450,8 +3915,9 @@ def experiment_completeness(
             }
         )
 
-    full_paper_scope = (
+    public_paper_scope = (
         args.mode == "full"
+        and args.evaluation_data == EVALUATION_PUBLIC
         and args.tracks == "both"
         and args.type1_limit == 0
         and args.type2_limit == 0
@@ -3459,6 +3925,18 @@ def experiment_completeness(
         and args.deterministic_repeats == 1
         and args.latency_samples >= 50
     )
+    btc_replay_scope = (
+        args.mode == "full"
+        and args.evaluation_data == EVALUATION_BTC_ROUNDS
+        and args.tracks == "both"
+        and args.type1_limit == 0
+        and args.type2_limit == 0
+        and args.repeats == 1
+        and args.deterministic_repeats == 1
+        and args.latency_samples == 0
+        and args.temperature == 0
+    )
+    full_paper_scope = public_paper_scope or btc_replay_scope
     complete = bool(matrix) and all(row["complete"] for row in matrix)
     infrastructure_failed = sum(
         row["infrastructure_failed"] for row in matrix
@@ -3467,6 +3945,12 @@ def experiment_completeness(
     return {
         "complete_for_requested_subset": complete,
         "full_paper_scope": full_paper_scope,
+        "btc_replay_scope": btc_replay_scope,
+        "protocol": (
+            "btc_rounds_post_hoc_replay"
+            if args.evaluation_data == EVALUATION_BTC_ROUNDS
+            else "retrospective_public_ablation"
+        ),
         "complete": complete,
         "paper_ready": full_paper_scope
         and complete
@@ -3653,6 +4137,22 @@ def aggregate_ablation(per_repeat: list[dict[str, Any]]) -> list[dict[str, Any]]
             result[metric + "_mean"] = mean
             result[metric + "_std"] = std
         output.append(result)
+    return output
+
+
+def roundwise_replay_ablation(
+    records: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    output: list[dict[str, Any]] = []
+    for round_name in ("round1", "round2"):
+        subset = [
+            row
+            for row in records
+            if (row.get("input") or {}).get("metadata", {}).get("round")
+            == round_name
+        ]
+        for row in aggregate_ablation(per_repeat_metrics(subset)):
+            output.append({"round": round_name, **row})
     return output
 
 
@@ -4786,6 +5286,12 @@ def generate_reports(
         )
     official = [official_round_metrics(path) for path in official_paths]
     for round_data in official:
+        if round_data["type1_regression_mismatches"]:
+            raise AssertionError(
+                f"Official Type-1 answer regression failed for round "
+                f"{round_data['round']}: "
+                f"{round_data['type1_regression_mismatches'][:3]}"
+            )
         if round_data["p2_regression_mismatches"]:
             raise AssertionError(
                 f"Official P2 regression failed for round {round_data['round']}: "
@@ -4819,15 +5325,21 @@ def generate_reports(
     )
 
     records = current_records(output_dir / "predictions.jsonl", config_hash)
+    is_btc_replay = args.evaluation_data == EVALUATION_BTC_ROUNDS
     completeness = experiment_completeness(records, args)
     repeat_rows = per_repeat_metrics(records)
     aggregate = aggregate_ablation(repeat_rows)
+    roundwise_replay = (
+        roundwise_replay_ablation(records) if is_btc_replay else []
+    )
     components = component_statistics(records)
     latency = latency_summary(records)
     comparisons = bootstrap_comparisons(
         records, samples=args.bootstrap_samples, seed=args.seed
     )
-    overlap_sensitivity = type2_overlap_sensitivity(records)
+    overlap_sensitivity = (
+        [] if is_btc_replay else type2_overlap_sensitivity(records)
+    )
 
     summary = {
         "schema_version": SCHEMA_VERSION,
@@ -4836,6 +5348,7 @@ def generate_reports(
         "official_rounds": official,
         "per_repeat": repeat_rows,
         "ablation": aggregate,
+        "roundwise_replay_ablation": roundwise_replay,
         "components": components,
         "latency": latency,
         "paired_bootstrap": comparisons,
@@ -4853,14 +5366,24 @@ def generate_reports(
         },
         "evidence_policy": {
             "official_rounds": "organizer-provided aggregate logs",
-            "ablation": "retrospective public development-set experiment",
+            "ablation": (
+                "post-hoc organizer-test replay; labels were available after "
+                "the official evaluation; not an official or blind test result"
+                if is_btc_replay
+                else "retrospective public development-set experiment"
+            ),
             "other_teams": "omitted; no organizer-published leaderboard supplied",
-            "hidden_case_studies": "forbidden",
+            "hidden_case_studies": (
+                "not exported; organizer permission required"
+                if is_btc_replay
+                else "not applicable"
+            ),
         },
     }
     atomic_json(metrics_dir / "summary.json", summary)
     write_csv(metrics_dir / "per_repeat.csv", repeat_rows)
     write_csv(metrics_dir / "ablation.csv", aggregate)
+    write_csv(metrics_dir / "replay_by_round.csv", roundwise_replay)
     write_csv(metrics_dir / "component_stats.csv", components)
     write_csv(metrics_dir / "latency.csv", latency)
     write_csv(metrics_dir / "paired_bootstrap.csv", comparisons)
@@ -4932,6 +5455,50 @@ def generate_reports(
             "Strict SD (pp)",
         ],
     )
+    roundwise_rows = [
+        {
+            "Round": row.get("round"),
+            "Track": row.get("track"),
+            "Variant": row.get("variant"),
+            "N": row.get("n_per_repeat_min"),
+            "Answer (%)": (
+                100 * row["answer_accuracy_mean"]
+                if row.get("answer_accuracy_mean") is not None
+                else None
+            ),
+            "Premise F1 (%)": (
+                100 * row["premise_f1_mean"]
+                if row.get("premise_f1_mean") is not None
+                else None
+            ),
+            "Combined (%)": (
+                100 * row["combined_score_mean"]
+                if row.get("combined_score_mean") is not None
+                else None
+            ),
+            "Strict (%)": (
+                100 * row["strict_accuracy_mean"]
+                if row.get("strict_accuracy_mean") is not None
+                else None
+            ),
+        }
+        for row in roundwise_replay
+    ]
+    if is_btc_replay:
+        write_table_bundle(
+            tables_dir / "replay_by_round",
+            roundwise_rows,
+            [
+                "Round",
+                "Track",
+                "Variant",
+                "N",
+                "Answer (%)",
+                "Premise F1 (%)",
+                "Combined (%)",
+                "Strict (%)",
+            ],
+        )
     write_table_bundle(
         tables_dir / "solver_statistics",
         components,
@@ -4992,21 +5559,111 @@ def generate_reports(
         ],
     )
 
-    cases = select_case_studies(records)
-    atomic_json(cases_dir / "case_studies.json", cases)
-    (cases_dir / "case_studies.md").write_text(
-        case_studies_markdown(cases), encoding="utf-8"
-    )
+    if is_btc_replay:
+        cases: list[dict[str, Any]] = []
+        atomic_json(cases_dir / "case_studies.json", cases)
+        (cases_dir / "case_studies.md").write_text(
+            "# Organizer-test Case Studies\n\n"
+            "Raw organizer test questions, premises, gold answers, generated "
+            "programs, and model text are intentionally not exported into "
+            "publication artifacts. Select or reproduce a case only after "
+            "receiving explicit organizer permission.\n",
+            encoding="utf-8",
+        )
+    else:
+        cases = select_case_studies(records)
+        atomic_json(cases_dir / "case_studies.json", cases)
+        (cases_dir / "case_studies.md").write_text(
+            case_studies_markdown(cases), encoding="utf-8"
+        )
     generate_architecture(output_dir, logger)
 
     readiness_banner = (
-        "> **PAPER-READY:** the full requested matrix is complete and has no "
+        "> **REPLAY-READY:** the canonical 100-question post-hoc BTC replay is "
+        "complete and has no failed/infrastructure-failed jobs."
+        if completeness["paper_ready"] and is_btc_replay
+        else "> **PAPER-READY:** the full requested matrix is complete and has no "
         "failed/infrastructure-failed jobs."
         if completeness["paper_ready"]
         else "> **NOT PAPER-READY:** the requested full matrix is incomplete, "
         "is only a smoke/dry subset, or contains failed jobs. Resume/fix the run "
         "before copying controlled-experiment tables into the paper."
     )
+    if is_btc_replay:
+        evidence_lines = [
+            "- Official round values are recomputed only from the original "
+            "organizer-provided logs.",
+            "- Ablations are a deterministic post-hoc replay of 100 organizer "
+            "test records (50 Type 1 + 50 Type 2). Labels were available after "
+            "the competition; these are not official or blind unseen-test results.",
+            "- Gold answers/aliases are isolated from inference and used only by "
+            "the post-response scorers.",
+            "- Other-team comparison is omitted because no organizer-published "
+            "leaderboard was supplied.",
+            "- Hidden questions are not exported into case-study/publication artifacts.",
+        ]
+        t1_denominator_note = (
+            "Type-1 replay metrics use N=50 pooled across Round 1 and Round 2; "
+            "all 50 records include premise annotations."
+        )
+        reproducibility_lines = [
+            "- The replay uses organizer test logs after labels became available; "
+            "it is a post-hoc component analysis, not an independent test.",
+            "- The canonical replay uses one deterministic greedy run per variant "
+            "and paired bootstrap intervals over questions; no across-seed SD is claimed.",
+            "- Raw `predictions.jsonl`, `events.jsonl`, `errors.jsonl`, and stage "
+            "cache may contain hidden material and must remain private.",
+            "- The paper runner uses validated, scrubbed child processes with a hard "
+            "timeout; these are not a security sandbox.",
+            "- A 4-bit Colab run is a non-parity model condition and must be labeled as such.",
+        ]
+        case_reference = (
+            "Raw case studies are disabled for organizer-test replay. See "
+            "`cases/case_studies.md` for the privacy policy and "
+            "`figures/architecture.{png,pdf,mmd}` for the architecture."
+        )
+        controlled_latency_note = (
+            "No separate controlled latency profile is scheduled in the canonical "
+            "replay. The organizer-reported end-to-end timing above is the official "
+            "latency evidence; the private audit trace still records stage and LLM "
+            "durations during accuracy replay."
+        )
+    else:
+        evidence_lines = [
+            "- Official round values are recomputed only from organizer-provided aggregate logs.",
+            "- Ablations are retrospective public-data experiments: an undeclared-split "
+            "Type-1 corpus and the public Type-2 dev split, not unseen-test results.",
+            "- Other-team comparison is omitted because no organizer-published leaderboard was supplied.",
+            "- Hidden evaluation questions are never copied into case-study artifacts.",
+        ]
+        t1_denominator_note = (
+            "Type-1 answer accuracy uses N=808 per full repeat. Premise F1, "
+            "combined score, and full-correct use only the N=797 public records "
+            "with non-empty premise annotations."
+        )
+        reproducibility_lines = [
+            "- Type 1 public data has no declared train/dev/test split.",
+            "- Type 2 metrics retain every public dev example in the denominator.",
+            "- Formula KB example text exactly overlaps public dev item DDT361; "
+            "the main denominator remains 200 and a with/without-DDT361 sensitivity "
+            "table is generated.",
+            "- The paper runner uses validated, scrubbed child processes with a hard "
+            "timeout; these are not a security sandbox. The official production "
+            "snapshot used different in-process/thread executors.",
+            "- A 4-bit Colab run is a non-parity model condition and must be labeled as such.",
+        ]
+        case_reference = (
+            "See `cases/case_studies.md` and "
+            "`figures/architecture.{png,pdf,mmd}`."
+        )
+        controlled_latency_note = (
+            "Accuracy runs may reuse paired cached neural stages across variants. "
+            "The latency table uses one separate uncached, no-retry stratified "
+            "profile with telemetry buffered until the pipeline timer stops. It is "
+            "application-pipeline latency, not model-only inference latency. "
+            "`sla_over_60_rate` is merely the share of successful records exceeding "
+            "60 s; observed timeouts are counted separately."
+        )
     report_lines = [
         "# EXACT 2026 Paper Experiment Results",
         "",
@@ -5019,11 +5676,7 @@ def generate_reports(
         "",
         "## Evidence labels",
         "",
-        "- Official round values are recomputed only from organizer-provided aggregate logs.",
-        "- Ablations are retrospective public-data experiments: an undeclared-split "
-        "Type-1 corpus and the public Type-2 dev split, not unseen-test results.",
-        "- Other-team comparison is omitted because no organizer-published leaderboard was supplied.",
-        "- Hidden evaluation questions are never copied into case-study artifacts.",
+        *evidence_lines,
         "",
         "## Official results",
         "",
@@ -5069,9 +5722,7 @@ def generate_reports(
                 "Full correct (%)",
             ],
         ),
-        "Type-1 answer accuracy uses N=808 per full repeat. Premise F1, "
-        "combined score, and full-correct use only the N=797 public records "
-        "with non-empty premise annotations.",
+        t1_denominator_note,
         "## Type 2 ablation",
         "",
         markdown_table(
@@ -5085,6 +5736,27 @@ def generate_reports(
                 "Strict mean (%)",
                 "Strict SD (pp)",
             ],
+        ),
+        *(
+            [
+                "## Post-hoc replay by organizer round",
+                "",
+                markdown_table(
+                    roundwise_rows,
+                    [
+                        "Round",
+                        "Track",
+                        "Variant",
+                        "N",
+                        "Answer (%)",
+                        "Premise F1 (%)",
+                        "Combined (%)",
+                        "Strict (%)",
+                    ],
+                ),
+            ]
+            if is_btc_replay
+            else []
         ),
         "## Component statistics",
         "",
@@ -5155,26 +5827,13 @@ def generate_reports(
                 "observed_timeout_n",
             ],
         ),
-        "Accuracy runs may reuse paired cached neural stages across variants. "
-        "The latency table uses one separate uncached, no-retry stratified "
-        "profile with telemetry buffered until the pipeline timer stops. It is "
-        "application-pipeline latency, not model-only inference latency. "
-        "`sla_over_60_rate` is merely the share of successful records exceeding "
-        "60 s; observed timeouts are counted separately.",
+        controlled_latency_note,
         "",
         "## Reproducibility caveats",
         "",
-        "- Type 1 public data has no declared train/dev/test split.",
-        "- Type 2 metrics retain every public dev example in the denominator.",
-        "- Formula KB example text exactly overlaps public dev item DDT361; "
-        "the main denominator remains 200 and a with/without-DDT361 sensitivity "
-        "table is generated.",
-        "- The paper runner uses validated, scrubbed child processes with a hard "
-        "timeout; these are not a security sandbox. The official production "
-        "snapshot used different in-process/thread executors.",
-        "- A 4-bit Colab run is a non-parity model condition and must be labeled as such.",
+        *reproducibility_lines,
         "",
-        "See `cases/case_studies.md` and `figures/architecture.{png,pdf,mmd}`.",
+        case_reference,
         "",
     ]
     (output_dir / "paper_results.md").write_text(
@@ -5183,11 +5842,24 @@ def generate_reports(
     ready_marker = output_dir / "PAPER_READY"
     if completeness["paper_ready"]:
         ready_marker.write_text(
-            "Full matrix complete; see metrics/quality_gate.json.\n",
+            (
+                "Canonical 100-question BTC post-hoc replay complete; "
+                "see metrics/quality_gate.json.\n"
+                if is_btc_replay
+                else "Full matrix complete; see metrics/quality_gate.json.\n"
+            ),
             encoding="utf-8",
         )
+        if is_btc_replay:
+            (output_dir / "TEST_REPLAY_READY").write_text(
+                "350/350 canonical replay jobs complete with zero failures.\n",
+                encoding="utf-8",
+            )
     elif ready_marker.exists():
         ready_marker.unlink()
+    replay_marker = output_dir / "TEST_REPLAY_READY"
+    if not completeness["paper_ready"] and replay_marker.exists():
+        replay_marker.unlink()
     return summary
 
 
@@ -5383,6 +6055,23 @@ def run_self_tests(repo_root: Path) -> None:
     t1 = load_type1_public(repo_root / "Logic_Based_Educational_Queries.json")
     t2 = load_type2_public(repo_root / "data/physics/physics_dev.csv")
     preflight_public_data(t1, t2)
+    btc_t1, btc_t2 = load_btc_test_replay(
+        [
+            repo_root / BTC_ROUND_IDENTITIES["round1"]["filename"],
+            repo_root / BTC_ROUND_IDENTITIES["round2"]["filename"],
+        ]
+    )
+    btc_invariants = preflight_btc_test_data(btc_t1, btc_t2)
+    assert btc_invariants["total"] == 100
+    assert btc_invariants["type1_total"] == 50
+    assert btc_invariants["type2_total"] == 50
+    assert btc_invariants["type1_z3_eligible"] == 42
+    assert all(
+        item.query_id.startswith(
+            f"{item.metadata.get('round')}:"
+        )
+        for item in [*btc_t1, *btc_t2]
+    )
     encoder_manifest = json.loads(
         (repo_root / "data/formula_index/encoder.json").read_text(encoding="utf-8")
     )
@@ -5419,12 +6108,20 @@ def run_self_tests(repo_root: Path) -> None:
     assert round2["total_score"] == 44.8
     assert abs(float(round1["type1_answer_accuracy"]) - 0.68) < 1e-12
     assert abs(float(round2["type1_answer_accuracy"]) - 0.88) < 1e-12
+    assert not round1["type1_regression_mismatches"]
+    assert not round2["type1_regression_mismatches"]
     assert not round1["p2_regression_mismatches"]
     assert not round2["p2_regression_mismatches"]
     assert not round1["type2_regression_mismatches"]
     assert not round2["type2_regression_mismatches"]
     assert not round1["score_regression_mismatches"]
     assert not round2["score_regression_mismatches"]
+    assert logic_answer_matches(
+        "The selected module is Module Orion.",
+        "A",
+        ["Module Orion"],
+    )
+    assert not logic_answer_matches("A longer unrelated answer", "A", [])
 
     t1_score = score_type1("A", [0, 2], "A", [0, 1, 2])
     assert t1_score["answer_correct"]
@@ -5451,6 +6148,26 @@ def run_self_tests(repo_root: Path) -> None:
         or normalize_unit(component) not in UNIT_FAMILIES
     }
     assert not unsupported_gold_units, unsupported_gold_units
+
+    replay_args = build_parser().parse_args(
+        [
+            "--mode",
+            "full",
+            "--evaluation-data",
+            EVALUATION_BTC_ROUNDS,
+            "--temperature",
+            "0",
+            "--repeats",
+            "1",
+            "--deterministic-repeats",
+            "1",
+            "--latency-samples",
+            "0",
+        ]
+    )
+    assert sum(
+        int(row["expected"]) for row in expected_experiment_jobs(replay_args)
+    ) == 350
 
     z3_code = """
 from z3 import *
@@ -5613,8 +6330,9 @@ solve_yes_no(s, P)
         cache.close()
 
     print(
-        "SELF-TEST PASS: loaders, official P2 regression, scorers, restricted "
-        "Z3/PAL executors, JSONL recovery, and architecture generation."
+        "SELF-TEST PASS: public/BTC loaders, official scorer regressions, "
+        "350-job replay matrix, restricted Z3/PAL executors, JSONL recovery, "
+        "and architecture generation."
     )
 
 
@@ -5627,6 +6345,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode",
         choices=["full", "smoke", "dry-run", "official-only", "self-test"],
         default="full",
+    )
+    parser.add_argument(
+        "--evaluation-data",
+        choices=[EVALUATION_BTC_ROUNDS, EVALUATION_PUBLIC],
+        default=EVALUATION_BTC_ROUNDS,
+        help=(
+            "Inference dataset. btc-rounds replays the 100 private organizer "
+            "records; public retains the legacy 808/200 retrospective protocol."
+        ),
     )
     parser.add_argument("--tracks", choices=["both", "type1", "type2"], default="both")
     parser.add_argument(
@@ -5653,7 +6380,15 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["auto", "none", "4bit", "8bit"],
         default="auto",
     )
-    parser.add_argument("--temperature", type=float, default=0.1)
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=0.0,
+        help=(
+            "Sampling temperature. Canonical one-pass BTC replay uses greedy "
+            "temperature 0; pass 0.1 explicitly for the legacy public protocol."
+        ),
+    )
     parser.add_argument(
         "--max-tokens",
         type=int,
@@ -5683,10 +6418,19 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--code-timeout", type=float, default=8.0)
-    parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument("--deterministic-repeats", type=int, default=1)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEEDS[0])
-    parser.add_argument("--latency-samples", type=int, default=50)
+    parser.add_argument(
+        "--latency-samples",
+        type=int,
+        default=0,
+        help=(
+            "Separate uncached latency samples per track/variant. The canonical "
+            "BTC replay uses 0 because official end-to-end latency is already "
+            "present in the organizer logs."
+        ),
+    )
     parser.add_argument("--bootstrap-samples", type=int, default=2000)
     parser.add_argument("--type1-limit", type=int, default=0)
     parser.add_argument("--type2-limit", type=int, default=0)
@@ -5706,7 +6450,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--mount-drive", action="store_true")
     parser.add_argument("--output-dir", default="")
-    parser.add_argument("--run-name", default="full_ablation")
+    parser.add_argument("--run-name", default="btc_test_replay")
     parser.add_argument(
         "--round1-log", default="exact_eval_round1_Cay_Nha_La_Vuon.json"
     )
@@ -5758,7 +6502,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         args.deterministic_repeats = 1
         args.latency_samples = min(args.latency_samples, 2)
         args.bootstrap_samples = min(args.bootstrap_samples, 200)
-        if args.run_name == "full_ablation":
+        if args.run_name in {"full_ablation", "btc_test_replay"}:
             args.run_name = "smoke"
 
     # Self-test does not need a model backend or semantic RAG packages.
@@ -5789,16 +6533,33 @@ def main(argv: Optional[list[str]] = None) -> int:
             + ". Upload them in Colab or pass --round1-log and --round2-log."
         )
     official_source_manifest = [
-        {"filename": path.name, "sha256": sha256_file(path)}
+        {
+            "filename": path.name,
+            "sha256": sha256_file(path),
+            "bytes": path.stat().st_size,
+            "eval_round": json.loads(path.read_text(encoding="utf-8")).get(
+                "eval_round"
+            ),
+        }
         for path in official_paths
     ]
 
-    type1_all = load_type1_public(
-        repo_root / "Logic_Based_Educational_Queries.json"
-    )
-    type2_all = load_type2_public(repo_root / "data/physics/physics_dev.csv")
-    data_invariants = preflight_public_data(type1_all, type2_all)
-    dataset_manifest = public_dataset_manifest(repo_root)
+    if args.evaluation_data == EVALUATION_BTC_ROUNDS:
+        type1_all, type2_all = load_btc_test_replay(official_paths)
+        data_invariants = preflight_btc_test_data(type1_all, type2_all)
+        dataset_manifest = btc_test_dataset_manifest(
+            repo_root,
+            official_paths,
+            type1_all,
+            type2_all,
+        )
+    else:
+        type1_all = load_type1_public(
+            repo_root / "Logic_Based_Educational_Queries.json"
+        )
+        type2_all = load_type2_public(repo_root / "data/physics/physics_dev.csv")
+        data_invariants = preflight_public_data(type1_all, type2_all)
+        dataset_manifest = public_dataset_manifest(repo_root)
     source_manifest = code_source_manifest(repo_root)
 
     if args.type1_limit > 0:
@@ -5858,6 +6619,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         "code_source_manifest": source_manifest,
         "official_source_manifest": official_source_manifest,
         "mode": args.mode,
+        "evaluation_data": args.evaluation_data,
         "tracks": args.tracks,
         "backend": backend,
         "api_base": safe_url(args.api_base) if args.api_base else None,

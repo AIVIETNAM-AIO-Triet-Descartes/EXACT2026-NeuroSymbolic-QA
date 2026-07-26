@@ -1,200 +1,151 @@
-# EXACT 2026 paper experiments
+# EXACT 2026 paper evaluation
 
-`run_paper_experiments.py` is the only executable entrypoint. It aggregates the
-official Round 1/2 logs, runs the public-data ablation matrix, records component
-telemetry, profiles uncached latency, selects public case studies, and creates
-paper-ready tables and an architecture figure.
+[![Open BTC replay notebook in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AIVIETNAM-AIO-Triet-Descartes/EXACT2026-NeuroSymbolic-QA/blob/main/paper/EXACT2026_BTC_Test_Replay_T4_Colab.ipynb)
 
-## T4 Colab notebook
+The canonical paper protocol replays the two organizer-supplied EXACT 2026
+round logs:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AIVIETNAM-AIO-Triet-Descartes/EXACT2026-NeuroSymbolic-QA/blob/main/paper/EXACT2026_Paper_Experiments_T4_Colab.ipynb)
+- Round 1: 25 Type 1 + 25 Type 2;
+- Round 2: 25 Type 1 + 25 Type 2;
+- pooled replay: 50 Type 1 + 50 Type 2.
 
-[`EXACT2026_Paper_Experiments_T4_Colab.ipynb`](EXACT2026_Paper_Experiments_T4_Colab.ipynb)
-guides the complete T4 workflow: clone/pull and pin the validated code commit,
-mount Drive, upload the two private organizer logs, lock dependencies and model
-revisions, download Qwen2.5-7B-Instruct plus the semantic encoder, run
-preflight/smoke checks, execute the full matrix, resume checkpoints, and inspect
-paper-ready artifacts. It requires a T4, uses 4-bit NF4, keeps checkpoints on
-Drive, and defaults the roughly 15 GB model cache to ephemeral `/content` so a
-free 15 GB Drive is not exhausted.
+The original organizer scores and end-to-end latency are recomputed directly
+from the historical logs and remain the official evidence. The new ablation is
+a **post-hoc organizer-test replay**: labels were available after the
+competition, so replay values are not a second official result or a blind
+unseen-test score.
 
-The notebook validates the supplied organizer logs by SHA-256. Keep
-`MyDrive/EXACT2026-paper-inputs` private; share only aggregated experiment
-outputs.
+## Canonical replay
 
-## Google Colab
-
-Open the cloned repository in Colab, select a GPU runtime, then run one command:
-
-```bash
-!python paper/run_paper_experiments.py --mode full --mount-drive
-```
-
-The two organizer aggregate logs are intentionally not copied into `paper/`
-because they contain hidden-round records and are not tracked by Git. Upload or
-copy both supplied JSON files to the repository root first. If they live in
-Drive, pass their absolute paths:
-
-```bash
-!python paper/run_paper_experiments.py --mode full --mount-drive \
-  --round1-log /content/drive/MyDrive/exact_eval_round1_Cay_Nha_La_Vuon.json \
-  --round2-log /content/drive/MyDrive/exact_eval_round2_Cay_Nha_La_Vuon.json
-```
-
-The runner stops immediately if either log is missing; it records only each
-file's name and SHA-256 in generated manifests and never copies hidden
-questions into case studies.
-
-The runner installs only missing, paper-specific dependencies. If Google Drive
-is mounted, checkpoints default to:
+The runner executes each ablation variant once with greedy decoding:
 
 ```text
-/content/drive/MyDrive/EXACT2026-paper-results/full_ablation/
+Type 1: 50 questions × 3 variants = 150 jobs
+Type 2: 50 questions × 4 variants = 200 jobs
+Total:                              350 jobs
 ```
 
-Run the same command after a disconnect. Append-only JSONL checkpoints let it
-resume completed `(phase, variant, repeat, query_id)` entries without overwriting
-them. Failed or infrastructure-failed jobs are retried on the next invocation.
-`--no-resume` always creates a fresh timestamped directory, so it cannot append
-duplicates to an old run.
+No separate latency replay is scheduled. The two organizer logs already contain
+official per-request end-to-end duration; the 350 accuracy jobs still capture
+stage-level, LLM, Z3, PAL, and self-repair telemetry.
 
-For a fast preflight before committing to the long run:
+Canonical command:
 
 ```bash
-!python paper/run_paper_experiments.py --mode dry-run --mount-drive
-!python paper/run_paper_experiments.py --mode smoke --mount-drive
+python paper/run_paper_experiments.py \
+  --mode full \
+  --evaluation-data btc-rounds \
+  --temperature 0 \
+  --repeats 1 \
+  --deterministic-repeats 1 \
+  --latency-samples 0 \
+  --round1-log /private/path/exact_eval_round1_Cay_Nha_La_Vuon.json \
+  --round2-log /private/path/exact_eval_round2_Cay_Nha_La_Vuon.json
 ```
 
-The full experiment is large: 808 Type-1 and 200 Type-2 public examples. Neural
-variants use three seeds; the deterministic Type-2 variant uses one repeat.
-Type-1 CoT and first-pass Z3 generations are paired and cached across variants
-within a repeat. The declared matrix contains 9,272 logical accuracy
-evaluations plus 400 uncached latency evaluations (50 examples per variant);
-shared-stage caching substantially reduces physical Type-1 LLM calls. A
-separate uncached stratified profile supplies real latency.
-The runner pins a mutable Hugging Face revision to its immutable commit before
-choosing a run directory. GPU identity, code/prompt/config hashes, public-data
-hashes, official-log hashes, retrieval mode, model condition and timeouts are
-also part of the experiment identity; a changed condition cannot silently mix
-with an earlier checkpoint.
-
-The canonical T4 notebook fixes Qwen to
-`a09a35458c702b33eeacc393d103063234e8bc28` and the semantic encoder
-`sentence-transformers/all-MiniLM-L6-v2` to
-`1110a243fdf4706b3f48f1d95db1a4f5529b4d41`. The FAISS index carries an
-`encoder.json` provenance manifest; model ID, revision and embedding dimension
-must match before a semantic-RAG run can start. Before smoke inference, the
-notebook also re-encodes all 58 formula records and numerically compares them
-with the checked-in FAISS vectors.
-
-## Model backends
-
-With no endpoint argument, Colab loads `Qwen/Qwen2.5-7B-Instruct` through
-Transformers. `--quantization auto` uses FP16 on a GPU with at least 22 GiB and
-4-bit NF4 otherwise. Quantized results are automatically labeled as a
-non-production-parity condition.
-
-To use the production-like OpenAI-compatible endpoint instead:
-
-```bash
-!PAPER_LLM_BASE_URL=http://HOST:PORT/v1 \
-  python paper/run_paper_experiments.py --mode full --mount-drive
-```
-
-If authentication is needed, put the token in `PAPER_LLM_API_KEY`. Secrets are
-read from the environment and never written to logs. For a faithful FP16
-condition, use an L4/A100-class runtime or the original endpoint; T4-class GPUs
-normally require quantization.
-
-Endpoint runs record the served model IDs and refuse a resume when those IDs
-change. An API deployment can still change weights behind an unchanged ID, so
-the paper must name/version the endpoint deployment separately when possible.
+On a Colab T4, use
+[`EXACT2026_BTC_Test_Replay_T4_Colab.ipynb`](EXACT2026_BTC_Test_Replay_T4_Colab.ipynb).
+It clones GitHub, validates both private logs, pins model revisions, installs
+dependencies, runs public-data smoke validation, and then runs/resumes the
+350-job private replay.
 
 ## Ablations
 
 Type 1:
 
-- `t1_cot_only`: CoT plus the same deterministic post-processing, with Z3 off.
-- `t1_cot_z3_no_repair`: CoT plus exemplar-augmented Z3, repair off.
-- `t1_full`: the current Type-1 control flow with at most one Z3 repair, using
-  the paper-owned executor described below.
+- `t1_cot_only`: CoT with Z3 disabled;
+- `t1_cot_z3_no_repair`: CoT plus exemplar-augmented Z3, repair disabled;
+- `t1_full`: CoT, Z3, and at most one Z3 repair.
 
 Type 2:
 
-- `t2_cot_only`: direct CoT from the raw question.
-- `t2_rag_solver`: regex parser, formula RAG, SymPy/specialized solvers.
-- `t2_rag_solver_pal`: previous variant plus one first-pass PAL attempt.
-- `t2_full`: LLM-augmented parser, RAG/solvers, PAL, one repair, then CoT.
-- `t2_full_e2e`: latency-only profile adding the LLM presentation explainer.
+- `t2_cot_only`: direct CoT;
+- `t2_rag_solver`: parser, formula RAG, and deterministic solvers;
+- `t2_rag_solver_pal`: previous variant plus first-pass PAL;
+- `t2_full`: augmented parser, RAG/solver, PAL, one repair, then CoT fallback.
 
-All accuracy results are labeled retrospective public-data ablations. Type 1
-is a retrospective public corpus with no
-declared split; Type 2 is the public dev split. The public Type-1 request
-contract treats its 360 embedded-option questions as MCQ and its remaining 448
-questions as Yes/No/Uncertain, matching the repository's evaluation-set
-builder. Hidden round questions are used only to compute aggregate official
-scores and latency; they are never copied to case-study artifacts.
+Type-1 answers are scored against the organizer answer and aliases. Organizer
+premise indices are already zero-based and are not shifted. Type-2 uses
+answer-and-unit strict accuracy with numeric unit conversion.
 
-## Output
+## Label isolation and provenance
+
+`load_btc_test_replay()` enforces the boundary:
 
 ```text
-outputs/<run_name>/
-├── run_config.json
-├── environment.json
-├── dataset_manifest.json
-├── warmup.json
-├── stage_cache.jsonl
-├── events.jsonl
-├── predictions.jsonl
-├── errors.jsonl
-├── sessions.jsonl
-├── logs/runner.log
-├── metrics/
-├── tables/
-├── cases/
-├── figures/
-└── paper_results.md
+request_payload ──> inference question, premises, options, original query ID
+expected        ──> post-response scoring only
 ```
 
-`metrics/quality_gate.json` and `metrics/completeness.csv` contain the expected
-and observed count for every phase/variant/repeat. A `PAPER_READY` marker is
-created only after the full 808/200 protocol, three neural repeats, latency
-profile and all jobs finish without failures. Smoke, dry, limited and partial
-runs are prominently marked `NOT PAPER-READY`.
+Historical `model_response`, `result`, status, points, and duration never enter
+the inference example. Internal IDs are namespaced as `round1:<id>` and
+`round2:<id>` so resume/cache keys cannot collide. Source hashes, sample
+versions, code/model revisions, GPU identity, dependency versions, and all
+protocol arguments are captured in the run manifest.
 
-`predictions.jsonl` contains one complete record per query/variant/repeat,
-including stage timings, physical versus cached LLM calls, generated public-data
-Z3/PAL code, executor outcomes, repair state, final source, prediction and
-score. `events.jsonl` is an append-only lifecycle log. Events are buffered until
-the query timer stops so Drive I/O is excluded from the latency measurement.
-Generated programs run in scrubbed child processes with validation and a hard
-timeout. This reduces accidental side effects but is not a security sandbox;
-run only the trusted public corpus supplied with the project.
+The canonical source identities are:
 
-Success definitions are fixed:
+```text
+Round 1 SHA-256  6d5e7a86a5e0a7ed1e1c3e9f43b7228bd930d0e4a7a6133f62ad302483b7fd4b
+Round 2 SHA-256  03032ec92f384d3c0ccf76e9f7801cf0b107452805b97115b00061e9c6fdc813
+```
 
-- Z3/PAL success: final accepted executable result divided by logical calls.
-- Repair execution success: executable repaired result divided by repair
-  activations.
-- Repair task success: repaired output is accepted and the final benchmark
-  answer is correct, divided by repair activations.
-- Execution success and benchmark correctness are always separate columns.
-- Missing, failed and unparseable predictions remain in the metric denominator.
-- Type-1 answer accuracy uses all 808 examples; premise F1/combined/full-correct
-  use the 797 examples with non-empty premise annotations.
-- Type-2 numeric answers use 2% relative tolerance. Compatible scaled units
-  (for example T↔mT, J↔mJ, kg↔g) are normalized; distinct reported unit families
-  such as N/C and V/m are not conflated.
+## Model condition
 
-Controlled latency is one uncached, no-retry, stratified application-pipeline
-profile. It reports scheduled/completed/failed counts, observed timeout counts
-and the share of successful requests over 60 seconds. It is not model-only
-inference time. Organizer `duration_seconds` is reported separately as official
-per-request end-to-end latency.
+The Colab notebook pins:
 
-Semantic formula retrieval must initialize successfully for the default full
-run. To intentionally run a separately hashed keyword-only condition, pass
-`--disable-semantic-rag`.
+- `Qwen/Qwen2.5-7B-Instruct` at
+  `a09a35458c702b33eeacc393d103063234e8bc28`;
+- `sentence-transformers/all-MiniLM-L6-v2` at
+  `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`.
 
-The runner intentionally omits other-team comparisons because no
-organizer-published leaderboard was supplied.
+A T4 loads Qwen with 4-bit NF4. This is a reproducible local replay condition,
+not FP16 production parity. The paper must keep the historical official result
+and the local 4-bit replay clearly separated.
+
+## Outputs
+
+The quality gate requires exactly 350/350 completed jobs, zero ordinary
+failures, and zero infrastructure failures. A successful run creates
+`PAPER_READY` and `TEST_REPLAY_READY`.
+
+Important aggregate outputs:
+
+```text
+paper_results.md
+metrics/summary.json
+metrics/ablation.csv
+metrics/replay_by_round.csv
+metrics/component_stats.csv
+metrics/paired_bootstrap.csv
+metrics/quality_gate.json
+tables/*.csv|*.md|*.tex
+figures/architecture.{png,pdf,mmd}
+```
+
+Private audit outputs include `predictions.jsonl`, `events.jsonl`,
+`errors.jsonl`, and `stage_cache.jsonl`. They can contain organizer questions,
+premises, gold values, generated programs, or model text and must not be
+published.
+
+Raw case-study export is disabled for BTC replay. The runner writes only a
+privacy notice to `cases/`; reproduce a hidden test case in the paper only
+after receiving explicit organizer permission.
+
+## Validation and resume
+
+```bash
+python paper/run_paper_experiments.py --mode self-test
+python paper/run_paper_experiments.py \
+  --mode dry-run \
+  --evaluation-data btc-rounds \
+  --temperature 0
+```
+
+Checkpoints are append-only. Re-run the exact same command after an interrupted
+Colab session. Changing code, model revision, GPU, source hashes, or protocol
+arguments produces a different config hash and a separate experiment directory.
+
+The legacy retrospective public-data protocol remains available only when
+explicitly requested with `--evaluation-data public`; it is not the default
+paper evaluation.
