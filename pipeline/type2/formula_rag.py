@@ -9,12 +9,16 @@ No LangChain — calls faiss and sentence-transformers directly.
 import json
 import pickle
 import logging
+import os
 import re
 from typing import Optional
 
 from sympy import sympify, Symbol
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+DEFAULT_EMBEDDING_REVISION = "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
 
 # SymPy builtins that must stay as functions/constants, NOT be re-declared as
 # symbols. Mirror of sympy_solver._MATH_FNS — keeps validation consistent with
@@ -69,6 +73,20 @@ _faiss_docs: Optional[list] = None
 _faiss_model = None
 
 
+def embedding_model_identity() -> dict[str, Optional[str]]:
+    """Return the immutable encoder condition selected by the paper runner."""
+    return {
+        "model": os.environ.get(
+            "FORMULA_RAG_EMBEDDING_MODEL",
+            DEFAULT_EMBEDDING_MODEL,
+        ),
+        "revision": (
+            os.environ.get("FORMULA_RAG_EMBEDDING_REVISION")
+            or DEFAULT_EMBEDDING_REVISION
+        ),
+    }
+
+
 def _load_faiss_index(index_dir: str = "data/formula_index") -> tuple:
     """Load pre-built FAISS index + metadata. Returns (index, docs, model) or (None, None, None)."""
     try:
@@ -78,7 +96,30 @@ def _load_faiss_index(index_dir: str = "data/formula_index") -> tuple:
         index = faiss.read_index(f"{index_dir}/index.faiss")
         with open(f"{index_dir}/metadata.pkl", "rb") as f:
             docs = pickle.load(f)
-        model = SentenceTransformer("all-MiniLM-L6-v2")
+        embedding = embedding_model_identity()
+        encoder_manifest_path = f"{index_dir}/encoder.json"
+        if os.path.exists(encoder_manifest_path):
+            with open(encoder_manifest_path, encoding="utf-8") as f:
+                indexed_with = json.load(f)
+            selected = {
+                "model": embedding["model"],
+                "revision": embedding["revision"],
+            }
+            expected = {
+                "model": indexed_with.get("model"),
+                "revision": indexed_with.get("revision"),
+            }
+            if selected != expected:
+                raise RuntimeError(
+                    "[ENCODER DRIFT GUARD] FAISS index encoder does not match "
+                    f"the runtime encoder: index={expected}, runtime={selected}"
+                )
+        model_kwargs = (
+            {"revision": embedding["revision"]}
+            if embedding["revision"] is not None
+            else {}
+        )
+        model = SentenceTransformer(embedding["model"], **model_kwargs)
 
         # MD5 Drift Guard: strictly check if physics_formulas.json has been modified
         # without rebuilding the FAISS index. Crash if so.
@@ -100,7 +141,12 @@ def _load_faiss_index(index_dir: str = "data/formula_index") -> tuple:
                     f"You MUST run `python scripts/build_faiss_index.py` before starting the pipeline."
                 )
 
-        logger.info(f"[FORMULA_RAG] FAISS index loaded ({len(docs)} entries)")
+        logger.info(
+            "[FORMULA_RAG] FAISS index loaded (%d entries; encoder=%s@%s)",
+            len(docs),
+            embedding["model"],
+            embedding["revision"],
+        )
         return index, docs, model
     except Exception as e:
         logger.warning(f"[FORMULA_RAG] FAISS index not available: {e}")

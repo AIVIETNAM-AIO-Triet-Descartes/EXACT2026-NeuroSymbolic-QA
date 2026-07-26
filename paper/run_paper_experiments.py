@@ -64,6 +64,8 @@ from typing import Any, Callable, Iterable, Iterator, Optional
 
 SCHEMA_VERSION = "1.0"
 DEFAULT_MODEL = "Qwen/Qwen2.5-7B-Instruct"
+DEFAULT_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+DEFAULT_EMBEDDING_REVISION = "1110a243fdf4706b3f48f1d95db1a4f5529b4d41"
 DEFAULT_SEEDS = (2026, 2027, 2028)
 TYPE1_VARIANTS = (
     "t1_cot_only",
@@ -549,6 +551,8 @@ def environment_metadata(
         "api_base": safe_url(args.api_base) if args.api_base else None,
         "model_id": args.model,
         "requested_model_revision": args.model_revision,
+        "embedding_model_id": args.embedding_model,
+        "requested_embedding_model_revision": args.embedding_model_revision,
         "quantization": quantization,
         "temperature": args.temperature,
         "packages": {name: package_version(name) for name in packages},
@@ -1056,6 +1060,7 @@ def public_dataset_manifest(repo_root: Path) -> dict[str, Any]:
     formula_db = repo_root / "data/rag/physics_formulas.json"
     index = repo_root / "data/formula_index/index.faiss"
     metadata = repo_root / "data/formula_index/metadata.pkl"
+    encoder = repo_root / "data/formula_index/encoder.json"
     return {
         "type1": {
             "path": str(t1.relative_to(repo_root)),
@@ -1077,6 +1082,7 @@ def public_dataset_manifest(repo_root: Path) -> dict[str, Any]:
         "formula_index": {
             "index_sha256": sha256_file(index) if index.exists() else None,
             "metadata_sha256": sha256_file(metadata) if metadata.exists() else None,
+            "encoder_sha256": sha256_file(encoder) if encoder.exists() else None,
         },
         "hidden_round_data_policy": "aggregate_only; no hidden query copied",
     }
@@ -5234,12 +5240,17 @@ def preflight_public_data(
 
 
 def prepare_semantic_rag_on_cpu(
-    disabled: bool, logger: logging.Logger
+    disabled: bool,
+    logger: logging.Logger,
+    embedding_model: str,
+    embedding_model_revision: str,
 ) -> dict[str, Any]:
     if disabled:
         logger.warning("Semantic FAISS retrieval disabled; keyword retrieval remains.")
         return {"enabled": False, "status": "disabled_by_cli"}
     try:
+        os.environ["FORMULA_RAG_EMBEDDING_MODEL"] = embedding_model
+        os.environ["FORMULA_RAG_EMBEDDING_REVISION"] = embedding_model_revision
         from pipeline.type2 import formula_rag
 
         formula_rag._ensure_faiss_loaded()
@@ -5248,7 +5259,13 @@ def prepare_semantic_rag_on_cpu(
             model.to("cpu")
         status = "loaded" if getattr(formula_rag, "_faiss_index", None) is not None else "fallback"
         logger.info("Semantic formula retrieval status=%s (embedding model on CPU).", status)
-        return {"enabled": True, "status": status, "embedding_device": "cpu"}
+        return {
+            "enabled": True,
+            "status": status,
+            "embedding_device": "cpu",
+            "embedding_model": embedding_model,
+            "embedding_model_revision": embedding_model_revision,
+        }
     except Exception as exc:
         logger.warning("Semantic RAG unavailable; keyword fallback will be used: %s", exc)
         return {"enabled": True, "status": "fallback", "error": str(exc)}
@@ -5364,6 +5381,12 @@ def run_self_tests(repo_root: Path) -> None:
     t1 = load_type1_public(repo_root / "Logic_Based_Educational_Queries.json")
     t2 = load_type2_public(repo_root / "data/physics/physics_dev.csv")
     preflight_public_data(t1, t2)
+    encoder_manifest = json.loads(
+        (repo_root / "data/formula_index/encoder.json").read_text(encoding="utf-8")
+    )
+    assert encoder_manifest["model"] == DEFAULT_EMBEDDING_MODEL
+    assert encoder_manifest["revision"] == DEFAULT_EMBEDDING_REVISION
+    assert encoder_manifest["embedding_dimension"] == 384
     assert all(
         item.options == ["Yes", "No", "Uncertain"]
         for item in t1
@@ -5635,6 +5658,19 @@ def build_parser() -> argparse.ArgumentParser:
             "local Transformers."
         ),
     )
+    parser.add_argument(
+        "--embedding-model",
+        default=DEFAULT_EMBEDDING_MODEL,
+        help="SentenceTransformer encoder used by semantic formula retrieval.",
+    )
+    parser.add_argument(
+        "--embedding-model-revision",
+        default=DEFAULT_EMBEDDING_REVISION,
+        help=(
+            "Hugging Face revision for the semantic retrieval encoder. Mutable "
+            "revisions are resolved to an immutable commit before execution."
+        ),
+    )
     parser.add_argument("--code-timeout", type=float, default=8.0)
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--deterministic-repeats", type=int, default=1)
@@ -5771,15 +5807,27 @@ def main(argv: Optional[list[str]] = None) -> int:
         resolved_model_revision = resolve_hf_revision(
             args.model, args.model_revision, bootstrap_logger
         )
+    resolved_embedding_model_revision = args.embedding_model_revision
+    if not args.disable_semantic_rag and args.mode not in {"dry-run", "official-only"}:
+        resolved_embedding_model_revision = resolve_hf_revision(
+            args.embedding_model,
+            args.embedding_model_revision,
+            bootstrap_logger,
+        )
 
     if args.mode in {"dry-run", "official-only"}:
         rag_status = {
             "enabled": not args.disable_semantic_rag,
             "status": "not_initialized_in_non_execution_mode",
+            "embedding_model": args.embedding_model,
+            "embedding_model_revision": resolved_embedding_model_revision,
         }
     else:
         rag_status = prepare_semantic_rag_on_cpu(
-            args.disable_semantic_rag, bootstrap_logger
+            args.disable_semantic_rag,
+            bootstrap_logger,
+            args.embedding_model,
+            resolved_embedding_model_revision,
         )
         if (
             not args.disable_semantic_rag
@@ -5805,6 +5853,9 @@ def main(argv: Optional[list[str]] = None) -> int:
         "model": args.model,
         "requested_model_revision": args.model_revision,
         "resolved_model_revision": resolved_model_revision,
+        "embedding_model": args.embedding_model,
+        "requested_embedding_model_revision": args.embedding_model_revision,
+        "resolved_embedding_model_revision": resolved_embedding_model_revision,
         "quantization": quantization,
         "accelerator": accelerator,
         "temperature": args.temperature,
@@ -5889,6 +5940,9 @@ def main(argv: Optional[list[str]] = None) -> int:
             "quantization": quantization,
             "requested_model_revision": args.model_revision,
             "resolved_model_revision": resolved_model_revision,
+            "embedding_model": args.embedding_model,
+            "requested_embedding_model_revision": args.embedding_model_revision,
+            "resolved_embedding_model_revision": resolved_embedding_model_revision,
             "accelerator": accelerator,
         },
         "data_invariants": data_invariants,
@@ -5915,6 +5969,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     atomic_json(output_dir / "dataset_manifest.json", dataset_manifest)
     environment = environment_metadata(repo_root, args, backend, quantization)
     environment["resolved_model_revision"] = resolved_model_revision
+    environment["resolved_embedding_model_revision"] = (
+        resolved_embedding_model_revision
+    )
     environment["experiment_accelerator_identity"] = accelerator
     atomic_json(output_dir / "environment.json", environment)
     sessions_writer = JsonlWriter(output_dir / "sessions.jsonl", fsync=True)
