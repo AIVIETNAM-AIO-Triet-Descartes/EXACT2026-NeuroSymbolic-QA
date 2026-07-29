@@ -59,6 +59,9 @@ docs/APPROACHES.md
 docs/SETUP.md
 docs/exact2026_pipeline.mermaid
 
+# Claude context (local only, không commit)
+.context/
+
 # Misc
 .pytest_cache/
 .ruff_cache/
