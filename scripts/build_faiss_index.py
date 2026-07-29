@@ -18,13 +18,18 @@ import numpy as np
 # Allow imports from project root
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pipeline.type2.formula_rag import load_formula_db
+from pipeline.type2.formula_rag import (
+    DEFAULT_EMBEDDING_MODEL,
+    DEFAULT_EMBEDDING_REVISION,
+    load_formula_db,
+)
 
 
 def build_formula_index(
     docs: list[dict],
     save_dir: str = "data/formula_index",
-    model_name: str = "all-MiniLM-L6-v2",
+    model_name: str = DEFAULT_EMBEDDING_MODEL,
+    model_revision: str = DEFAULT_EMBEDDING_REVISION,
 ) -> None:
     """
     Encode formula docs with sentence-transformers, build IndexFlatL2, save to disk.
@@ -38,7 +43,7 @@ def build_formula_index(
 
     os.makedirs(save_dir, exist_ok=True)
 
-    model = SentenceTransformer(model_name)
+    model = SentenceTransformer(model_name, revision=model_revision)
     texts = [
         f"{d['domain']}: {d['formula_natural']} — {' '.join(d.get('keywords', []))}"
         for d in docs
@@ -56,9 +61,25 @@ def build_formula_index(
     faiss.write_index(index, index_path)
     with open(meta_path, "wb") as f:
         pickle.dump(docs, f)
+    encoder_path = os.path.join(save_dir, "encoder.json")
+    with open(encoder_path, "w", encoding="utf-8") as f:
+        import json
+
+        json.dump(
+            {
+                "model": model_name,
+                "revision": model_revision,
+                "embedding_dimension": int(embeddings.shape[1]),
+            },
+            f,
+            indent=2,
+            sort_keys=True,
+        )
+        f.write("\n")
 
     print(f"Saved FAISS index -> {index_path}")
     print(f"Saved metadata   -> {meta_path}")
+    print(f"Saved encoder    -> {encoder_path}")
     # MD5 Drift Guard: save hash
     db_path = "data/rag/physics_formulas.json"
     if os.path.exists(db_path):
